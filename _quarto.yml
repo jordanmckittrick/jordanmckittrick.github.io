@@ -1,0 +1,59 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Site-wide configuration. Edit the ALL-CAPS placeholders, then `quarto preview`.
+# Docs: https://quarto.org/docs/websites/
+# ─────────────────────────────────────────────────────────────────────────────
+
+project:
+  type: website
+  output-dir: _site          # build output (git-ignored; gets pushed to gh-pages)
+
+website:
+  title: "Jordan McKittrick"
+  description: "Notes on quantitative finance, statistical mechanics, and information."
+  site-url: "https://jordanmckittrick.github.io"   # ← your GitHub Pages URL (no trailing slash)
+  favicon: profile.jpeg
+  navbar:
+    pinned: true
+    left:
+      - href: index.qmd
+        text: Home
+      - href: blog.qmd
+        text: Blog
+      - href: about.qmd
+        text: About
+    right:
+      - icon: github
+        href: https://github.com/jordanmckittrick
+        aria-label: GitHub
+      - icon: linkedin
+        href: https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/
+        aria-label: LinkedIn
+  page-footer:
+    left: "© 2026 Jordan McKittrick"
+    center: "Built with [Quarto](https://quarto.org)."
+    right:
+      - icon: github
+        href: https://github.com/jordanmckittrick
+      - icon: linkedin
+        href: https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/
+
+format:
+  html:
+    theme:
+      light: [cosmo, theme/light.scss]
+      dark:  [darkly, theme/dark.scss]   # the moon toggle in the navbar switches these
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-overflow: wrap
+    code-tools: true        # adds a "view source" / code menu on posts
+    highlight-style: github
+    smooth-scroll: true
+    grid:
+      body-width: 920px
+
+# Cache executed code outputs. After the first render, code only re-runs when a
+# document changes — fast previews, and it means a CI runner wouldn't need Python.
+execute:
+  freeze: auto

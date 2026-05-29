@@ -1,0 +1,40 @@
+---
+title: "About"
+---
+
+## Background
+
+I trained as a mathematician with a focus on **statistical mechanics** — the part
+of physics where probability, large systems, and emergent structure meet. Along
+the way I picked up a working obsession with **information theory** and its
+surprisingly deep ties to **investing and decision-making under uncertainty**.
+
+Most recently I spent several years as a data scientist at an NGO, building
+models and pipelines for real-world impact. I've since left to focus on moving
+into **quantitative finance** or **AI**, where I can put the mathematical and
+computational side of my background to fuller use.
+
+## Research & writing interests
+
+- **Quantitative finance** — modern portfolio theory, log-optimal / Kelly
+  investing, risk and drawdown, market microstructure.
+- **Information theory** — entropy, the duality between gambling and coding,
+  and information geometry.
+- **Statistical mechanics & computational physics** — Monte Carlo methods,
+  phase transitions, and the math of large interacting systems.
+- **Bayesian statistics** — inference, hierarchical models, and the principled
+  handling of uncertainty.
+
+## Toolkit
+
+I write a lot of **Python** (NumPy, SciPy, pandas, the usual scientific stack)
+and I'm comfortable taking a problem from a whiteboard derivation in **LaTeX**
+all the way to a reproducible, tested implementation.
+
+## What I'm looking for
+
+Roles in **quantitative investing** or **applied AI / research** where rigorous
+mathematics, careful computation, and clear communication all matter. If that
+sounds like a fit, I'd love to talk — reach me on
+[LinkedIn](https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/) or by
+[email](mailto:you@example.com).

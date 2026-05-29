@@ -1,0 +1,8 @@
+/*-- scss:defaults --*/
+// Lighter accent so links stay readable on a dark background.
+$primary:   #6fb1d6;
+$link-color: #6fb1d6;
+
+/*-- scss:rules --*/
+body { line-height: 1.65; }
+h1, h2, h3 { letter-spacing: -0.01em; }

@@ -1,0 +1,5 @@
+# Defaults inherited by every post in this folder.
+author: "Jordan McKittrick"
+toc: true
+freeze: auto
+title-block-banner: false

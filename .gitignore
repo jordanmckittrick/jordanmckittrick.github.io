@@ -1,0 +1,19 @@
+# Quarto build output and scratch
+/_site/
+/.quarto/
+
+# Python / uv
+/.venv/
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# NOTE: we intentionally do NOT ignore /_freeze/ — committing it lets the site
+# rebuild without re-running Python (useful if you ever switch to CI).
+
+**/*.quarto_ipynb

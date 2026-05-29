@@ -1,0 +1,19 @@
+[project]
+name = "portfolio"
+version = "0.1.0"
+description = "Personal Quarto website and blog"
+requires-python = ">=3.11"
+dependencies = [
+    "jupyter",     # provides the kernel machinery Quarto needs to run code cells
+    "ipykernel",
+    "numpy",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "plotly>=6.7.0",
+]
+
+[tool.uv]
+# This is a website, not an installable Python package, so tell uv to manage
+# only the dependencies above and not try to "build" the project itself.
+package = false
