@@ -1,0 +1,11 @@
+/* Extra tweaks that apply in both light and dark mode. */
+
+/* A little air around displayed math. */
+.katex-display, mjx-container[display="true"] {
+  margin: 1.1em 0;
+}
+
+/* Keep listing thumbnails tidy. */
+.quarto-grid-item img.thumbnail-image {
+  object-fit: cover;
+}
