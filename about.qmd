@@ -2,6 +2,7 @@
 title: "About"
 ---
 
+
 ## Background
 
 I trained as a mathematician with a focus on **statistical mechanics** — the part
