@@ -1,6 +1,5 @@
 ---
 title: "Jordan McKittrick"
-subtitle: "Mathematician · Statistical Mechanician · Aspiring Quant"
 about:
   template: trestles      # try also: jolla, solana, marquee
   image: profile.jpeg
@@ -16,16 +15,11 @@ about:
       text: Email
       href: mailto:you@example.com
 ---
-
-I'm a mathematician working at the intersection of **statistical mechanics**,
-**information theory**, and **quantitative finance**. After several years doing
-data science in the nonprofit sector, I'm now looking toward roles in quantitative
-investing and AI.
+Some interests of mine: information theory, quantitative finance, machine learning and AI, statistical mechanics, probability theory, and Bayesian statistics.
 
 This site is mostly a **blog** — a place to work through ideas ranging from
 modern portfolio theory and log-optimal (Kelly) investing to Bayesian inference,
-computational physics, and the occasional excursion into whatever I find beautiful.
-Exposition ranges from late-undergraduate to research-seminar level.
+computational physics, and the occasional excursion into whatever I find beautiful, interesting, or useful.
 
 Have a look at the [blog](blog.qmd), read more [about me](about.qmd), or say hello
 on [LinkedIn](https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/).
