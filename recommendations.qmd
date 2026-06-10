@@ -1,0 +1,25 @@
+---
+title: "Recommendations"
+format: html
+---
+
+## Papers 
+
+
+#### Bayesian Statistics
+- [Why Most Published Research Findings Are False](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124)
+- [Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence](https://www2.stat.duke.edu/courses/Spring07/sta215/lec/BvP/BergSell1987.pdf)
+
+
+#### Information Theory
+
+- [Modeling by Shortest Data Description](https://www.semanticscholar.org/paper/Modeling-By-Shortest-Data-Description*-Rissanen/d382b9c11e5c6a8e173fbeb442545e3be8d3e3a5)
+- [A New Interpretation of Information Rate](https://www.princeton.edu/~wbialek/rome/refs/kelly_56.pdf)
+- [There Is No Universal Source Code for an Infinite Source Alphabet](https://www.szit.bme.hu/~gyorfi/IT94.pdf)
+- [Entropy and the Central Limit Theorem](http://www.stat.yale.edu/~arb4/publications_files/EntropyAndTheCentralLimitTheoremAnnalsProbability.pdf#:~:text=Page%201.%20Entropy%20and%20the%20Central%20Limit,Stable%20URL%3A%20http%3A%2F%2Fwww.jstor.org%2Fstable%2F2244098%20.%20Accessed%3A%2024%2F10%2F2012%2014%3A06.)
+
+
+## Other
+- [3Blue1Brown](https://www.youtube.com/@3blue1brown)
+- [Marginal Revolution](https://marginalrevolution.com)
+

@@ -2,40 +2,24 @@
 title: "About"
 ---
 
+## Short Introduction
 
-## Background
+I'm a researcher who started off in biochemistry and eventually moved into mathematics. The unifying thread of my interests and research is information theory, which as I learned as an undergraduate in biochemistry, explains how information is processed and transmitted in complex systems, even -- and especially -- those found in biology. This blog explores quantitative finance, probability, information theory, AI, and complex systems.
 
-I trained as a mathematician with a focus on **statistical mechanics** — the part
-of physics where probability, large systems, and emergent structure meet. Along
-the way I picked up a working obsession with **information theory** and its
-surprisingly deep ties to **investing and decision-making under uncertainty**.
 
-Most recently I spent several years as a data scientist at an NGO, building
-models and pipelines for real-world impact. I've since left to focus on moving
-into **quantitative finance** or **AI**, where I can put the mathematical and
-computational side of my background to fuller use.
+## Qualifications
 
-## Research & writing interests
+- **PhD**, Cambridge University — information theory (here is my [thesis](https://www.repository.cam.ac.uk/items/fa3aebe0-987d-44d2-a2c9-17b73cecb85a))
+- **MPhil**, Cambridge University — scientific computing
+- **MScRes**, Oxford University — stochastic differential equations
+- **BA**, Columbia University — biochemistry
 
-- **Quantitative finance** — modern portfolio theory, log-optimal / Kelly
-  investing, risk and drawdown, market microstructure.
-- **Information theory** — entropy, the duality between gambling and coding,
-  and information geometry.
-- **Statistical mechanics & computational physics** — Monte Carlo methods,
-  phase transitions, and the math of large interacting systems.
-- **Bayesian statistics** — inference, hierarchical models, and the principled
-  handling of uncertainty.
 
-## Toolkit
 
-I write a lot of **Python** (NumPy, SciPy, pandas, the usual scientific stack)
-and I'm comfortable taking a problem from a whiteboard derivation in **LaTeX**
-all the way to a reproducible, tested implementation.
 
-## What I'm looking for
 
-Roles in **quantitative investing** or **applied AI / research** where rigorous
-mathematics, careful computation, and clear communication all matter. If that
-sounds like a fit, I'd love to talk — reach me on
-[LinkedIn](https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/) or by
-[email](mailto:you@example.com).
+
+
+
+
+

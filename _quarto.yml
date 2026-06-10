@@ -21,6 +21,8 @@ website:
         text: Blog
       - href: about.qmd
         text: About
+      - href: recommendations.qmd
+        text: Recommendations
     right:
       - icon: github
         href: https://github.com/jordanmckittrick

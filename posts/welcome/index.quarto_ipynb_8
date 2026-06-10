@@ -59,7 +59,7 @@
         "**almost surely** despite holding a positive-expectation edge. Let's watch it\n",
         "happen."
       ],
-      "id": "20287b98"
+      "id": "e098fe30"
     },
     {
       "cell_type": "code",
@@ -104,7 +104,7 @@
         "fig.tight_layout()\n",
         "plt.show()"
       ],
-      "id": "677a906e",
+      "id": "dd39ac59",
       "execution_count": null,
       "outputs": []
     },
@@ -123,7 +123,7 @@
         "drawdowns that would get a real fund manager fired. **Fractional Kelly** trades a\n",
         "little growth for a lot of calm."
       ],
-      "id": "5b09e45a"
+      "id": "c08409cc"
     },
     {
       "cell_type": "code",
@@ -151,7 +151,7 @@
         "fig.tight_layout()\n",
         "plt.show()"
       ],
-      "id": "63146db4",
+      "id": "9df10d36",
       "execution_count": null,
       "outputs": []
     },
@@ -178,7 +178,7 @@
         "::: {#refs}\n",
         ":::"
       ],
-      "id": "7bec18ef"
+      "id": "819b5af4"
     }
   ],
   "metadata": {
