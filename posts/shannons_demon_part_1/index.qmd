@@ -1,0 +1,16 @@
+---
+title: "Shannon's Demon (Part 1)"
+subtitle: "How to make an exponential amount of money from a portfolio of almost sure losers"
+date: 2026-06-15
+categories: [quant finance, information theory, kelly, log-optimal]
+description: "Demonstrating how it's possible for a portfolio to have a positive growth rate even though each individual asset in the portfolio has a negative growth rate, and explaining this seeming paradox using information theory."
+bibliography: references.bib
+image: shannons_demon_fiend.svg
+---
+
+
+
+### References
+
+::: {#refs}
+:::

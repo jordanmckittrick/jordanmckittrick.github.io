@@ -2,9 +2,9 @@
 title: "About"
 ---
 
-## Short Introduction
+I'm a researcher with interests in information theory, quant finance, probability theory, AI, Bayesian statistics, and complex systems. 
 
-I'm a researcher who started off in biochemistry and eventually moved into mathematics. The unifying thread of my interests and research is information theory, which as I learned as an undergraduate in biochemistry, explains how information is processed and transmitted in complex systems, even -- and especially -- those found in biology. This blog explores quantitative finance, probability, information theory, AI, and complex systems.
+I write about whatever interests me. My goal is to be rigorous without being boring. If you find any mistakes, please let me know as soon as possible.
 
 
 ## Qualifications
