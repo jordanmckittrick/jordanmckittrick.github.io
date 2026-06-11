@@ -2,14 +2,15 @@
 title: "About"
 ---
 
+
 I'm a researcher with interests in information theory, quant finance, probability theory, AI, Bayesian statistics, and complex systems. 
 
-I write about whatever interests me. My goal is to be rigorous without being boring. If you find any mistakes, please let me know as soon as possible.
+I'll be writing about topics primarily from those fields, though occasionally I might wander. The technical level will generally be aimed at readers with some background in these areas, but I will try to keep things accessible. My goal is to be rigorous as I reasonably can without being unnecessarily academic. If you find any mistakes, please let me know.
 
 
-## Qualifications
+### Education
 
-- **PhD**, Cambridge University — information theory (here is my [thesis](https://www.repository.cam.ac.uk/items/fa3aebe0-987d-44d2-a2c9-17b73cecb85a))
+- **PhD**, Cambridge University — information theory (here's my [thesis](https://www.repository.cam.ac.uk/items/fa3aebe0-987d-44d2-a2c9-17b73cecb85a))
 - **MPhil**, Cambridge University — scientific computing
 - **MScRes**, Oxford University — stochastic differential equations
 - **BA**, Columbia University — biochemistry

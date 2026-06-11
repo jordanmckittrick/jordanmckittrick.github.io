@@ -4,13 +4,15 @@ version = "0.1.0"
 description = "Personal Quarto website and blog"
 requires-python = ">=3.11"
 dependencies = [
-    "jupyter",     # provides the kernel machinery Quarto needs to run code cells
+    "jupyter", # provides the kernel machinery Quarto needs to run code cells
     "ipykernel",
     "numpy",
     "scipy",
     "pandas",
     "matplotlib",
     "plotly>=6.7.0",
+    "nbclient>=0.10.4",
+    "nbformat>=5.10.4",
 ]
 
 [tool.uv]
