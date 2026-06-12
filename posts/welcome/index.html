@@ -357,6 +357,10 @@ window.Quarto = {
     <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../recommendations.html"> 
+<span class="menu-text">Recommendations</span></a>
+  </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
@@ -462,7 +466,7 @@ g'(f) \;=\; \frac{pb}{1 + bf} - \frac{q}{1 - f} \;=\; 0
 <section id="why-not-just-bet-more" class="level2">
 <h2 class="anchored" data-anchor-id="why-not-just-bet-more">Why not just bet more?</h2>
 <p>The catch lives in the curvature of the logarithm. Over-betting doesn’t merely reduce your growth rate — past a point it makes it <em>negative</em>, so you go broke <strong>almost surely</strong> despite holding a positive-expectation edge. Let’s watch it happen.</p>
-<div id="907b42f4" class="cell" data-execution_count="1">
+<div id="8b687d85" class="cell" data-execution_count="1">
 <details open="" class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -516,7 +520,7 @@ g'(f) \;=\; \frac{pb}{1 + bf} - \frac{q}{1 - f} \;=\; 0
 <section id="so-why-do-practitioners-bet-half" class="level2">
 <h2 class="anchored" data-anchor-id="so-why-do-practitioners-bet-half">So why do practitioners bet half?</h2>
 <p>Full Kelly is growth-optimal, but it is also brutally volatile: it tolerates drawdowns that would get a real fund manager fired. <strong>Fractional Kelly</strong> trades a little growth for a lot of calm.</p>
-<div id="55dae1a1" class="cell" data-execution_count="2">
+<div id="db448819" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fractions <span class="op">=</span> np.linspace(<span class="fl">0.0</span>, <span class="fl">2.0</span>, <span class="dv">41</span>) <span class="op">*</span> f_star</span>

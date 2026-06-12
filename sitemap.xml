@@ -2,18 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://jordanmckittrick.github.io/blog.html</loc>
-    <lastmod>2026-05-29T16:22:38.797Z</lastmod>
+    <lastmod>2026-05-29T16:22:38.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jordanmckittrick.github.io/recommendations.html</loc>
+    <lastmod>2026-06-10T18:31:15.625Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jordanmckittrick.github.io/posts/shannons_demon_part_1/index.html</loc>
+    <lastmod>2026-06-12T14:40:29.264Z</lastmod>
   </url>
   <url>
     <loc>https://jordanmckittrick.github.io/index.html</loc>
-    <lastmod>2026-05-29T21:46:07.473Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jordanmckittrick.github.io/posts/welcome/index.html</loc>
-    <lastmod>2026-05-29T16:22:38.798Z</lastmod>
+    <lastmod>2026-06-11T22:45:08.850Z</lastmod>
   </url>
   <url>
     <loc>https://jordanmckittrick.github.io/about.html</loc>
-    <lastmod>2026-05-29T21:44:12.939Z</lastmod>
+    <lastmod>2026-06-11T22:33:02.142Z</lastmod>
   </url>
 </urlset>

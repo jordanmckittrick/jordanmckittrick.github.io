@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Jordan McKittrick">
+<meta name="dcterms.date" content="2026-06-15">
 
-<title>Jordan McKittrick</title>
+<title>Shannon’s Demon, Made Exact (Part 1) – Jordan McKittrick</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -58,29 +60,49 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./profile.jpeg" rel="icon" type="image/jpeg">
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-6b6957c917596b414ec0b78690761e87.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-75f92438f0bb916613889ef8d69daad5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-9733cb5bb3a0dfe0a4ad659864b73c32.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-75f92438f0bb916613889ef8d69daad5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../profile.jpeg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-6b6957c917596b414ec0b78690761e87.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-75f92438f0bb916613889ef8d69daad5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-9733cb5bb3a0dfe0a4ad659864b73c32.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-75f92438f0bb916613889ef8d69daad5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -110,11 +132,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<link rel="stylesheet" href="styles.css">
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -283,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jordan McKittrick</span>
     </a>
   </div>
@@ -294,19 +345,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./blog.html"> 
+    <a class="nav-link" href="../../blog.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./recommendations.html"> 
+    <a class="nav-link" href="../../recommendations.html"> 
 <span class="menu-text">Recommendations</span></a>
   </li>  
 </ul>
@@ -333,45 +384,110 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#the-setup" id="toc-the-setup" class="nav-link" data-scroll-target="#the-setup">The setup</a></li>
+  <li><a href="#some-initial-remarks" id="toc-some-initial-remarks" class="nav-link" data-scroll-target="#some-initial-remarks">Some initial remarks</a></li>
+  <li><a href="#the-risky-asset-is-a-major-loser" id="toc-the-risky-asset-is-a-major-loser" class="nav-link" data-scroll-target="#the-risky-asset-is-a-major-loser">The risky asset is a major loser</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<div class="quarto-about-trestles">
-  <div class="about-entity">
-    <img src="profile.jpeg" class="about-image
-  round " style="height: 20em; width: 20em;">
+<main class="content" id="quarto-document-content">
+
+
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Jordan McKittrick</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
-</div>
-<div class="quarto-title-meta">
+<div class="quarto-title-block"><div><h1 class="title">Shannon’s Demon, Made Exact (Part 1)</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<p class="subtitle lead">How to make an exponential amount of money from a portfolio of almost sure losers without shorting anything</p>
+  <div class="quarto-categories">
+    <div class="quarto-category">quant finance</div>
+    <div class="quarto-category">information theory</div>
+    <div class="quarto-category">kelly criterion</div>
+    <div class="quarto-category">risk-neutral measure</div>
+    <div class="quarto-category">KL divergence</div>
   </div>
-</header>
-    <div class="about-links">
-  <a href="https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/" class="about-link" rel="" target="">
-    <i class="bi bi-linkedin"></i>
-     <span class="about-link-text">LinkedIn</span>
-  </a>
-  <a href="https://github.com/jordanmckittrick" class="about-link" rel="" target="">
-    <i class="bi bi-github"></i>
-     <span class="about-link-text">GitHub</span>
-  </a>
-  <a href="mailto:you@example.com" class="about-link" rel="" target="">
-    <i class="bi bi-envelope"></i>
-     <span class="about-link-text">Email</span>
-  </a>
-</div>
   </div>
-  <div class="about-contents"><main class="content" id="quarto-document-content">
 
-<p>THIS WEBSITE IS UNDER CONSTRUCTION.</p>
-<p>This website is about distinguishing signal from noise, pattern from randomness, and evidence from assumptions. If you’re interested in quant finance, information theory, probability theory, statistics and machine learning, or statistical phyics, I hope you will find this website useful and enjoyable.</p>
-<p>Have a look at the <a href="./blog.html">blog</a>, read more <a href="./about.html">about me</a>, or say hello on <a href="https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/">LinkedIn</a>.</p>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jordan McKittrick </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 15, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level3">
+<h3 class="anchored" data-anchor-id="introduction">Introduction</h3>
+<p>If intuition is to be believed, it shouldn’t be possible for a long-only portfolio to be profitable when each of its component assets is a major loser, unless, of course, one is clairvoyant and knows in advance when each asset will happen to perform well. Yet, as I’ll demonstrate in this post, not only is this possible but also an investor can (almost surely) guarantee an exponential amount of money in the long run from such a portfolio, if he knows what he’s doing. As I’ll show, information theory provides a lovely explanation for why this is the case.</p>
+</section>
+<section id="the-setup" class="level3">
+<h3 class="anchored" data-anchor-id="the-setup">The setup</h3>
+<p>Consider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as analogous to a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate. Therefore, its associated gross return satisfies <span class="math inline">\(r &lt; 1\)</span>. In the example below, I’ll set <span class="math inline">\(r = 0.97\)</span>, which corresponds to a negative interest rate of 3% per period.</p>
+<p>On the other hand, the risky asset, which I’ll model as a coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of <span class="math inline">\(\gamma_h\)</span> for heads and <span class="math inline">\(\gamma_t &lt; \gamma_h\)</span> for tails. In addition, I’ll let <span class="math inline">\(p_h\)</span> denote the probability of heads, and I’ll set <span class="math inline">\(\gamma_t = 1/(\alpha \gamma_h)\)</span>, for some <span class="math inline">\(\alpha &gt; 0\)</span>. In the example below, I choose <span class="math inline">\(\gamma_h = 2.0\)</span>, <span class="math inline">\(p_h = 0.5\)</span>, and <span class="math inline">\(\alpha = 1.25\)</span>, which implies that <span class="math inline">\(\gamma_t = 0.4\)</span>.</p>
+<p>Finally, I let <span class="math inline">\(f\)</span> denote the fraction of our money that we allocate to the risky asset, and <span class="math inline">\(1 - f\)</span> the fraction that we allocate to the riskless asset. Our goal is to choose <span class="math inline">\(f\)</span> intelligently.</p>
+</section>
+<section id="some-initial-remarks" class="level3">
+<h3 class="anchored" data-anchor-id="some-initial-remarks">Some initial remarks</h3>
+<ol type="1">
+<li>We need to have <span class="math inline">\(\gamma_t &lt; r &lt; \gamma_h\)</span> for the problem to be interesting, as otherwise one would put all of one’s money in the better asset. Concretely, if <span class="math inline">\(r &lt; \gamma_t &lt; \gamma_h\)</span>, then one would put all of one’s money in the risky asset, and if <span class="math inline">\(\gamma_t &lt; \gamma_h &lt; r\)</span>, then one would put all of one’s money in the riskless asset. Since our bank account pays negative interest, we have <span class="math inline">\(\gamma_t &lt; r &lt; 1 &lt; \gamma_h\)</span>.</li>
+<li>With these parameters, the expected gross return of the risky asset in a given period is given by <span class="math display">\[\mathbb{E}[\gamma] = p_h \gamma_h + (1 - p_h) \gamma_t = 1.2.\]</span> Not bad at all!</li>
+<li>In addition, notice that the gross return of our portfolio in a given period is given by <span class="math display">\[Y(f) = (1 - f)r + f\gamma,\]</span> where <span class="math inline">\(\gamma\)</span> is the random gross return of the risky asset; thus, in expectation, our portfolio’s gross return is given by <span class="math display">\[\mathbb{E}[Y(f)] = (1 - f)r + f\mathbb{E}[\gamma] = 0.97 + 0.23f,\]</span> which is greater than 1 for any <span class="math inline">\(f &gt; 0.13\)</span>. So, we can get an expected gross return greater than 1 by putting some (specifically <span class="math inline">\(f &gt; 0.13\)</span>) of our money in the risky asset.</li>
+</ol>
+</section>
+<section id="the-risky-asset-is-a-major-loser" class="level3">
+<h3 class="anchored" data-anchor-id="the-risky-asset-is-a-major-loser">The risky asset is a major loser</h3>
+<p>Obviously the riskless asset is a long-term loser, as its net return is <span class="math inline">\(r - 1 = -0.03 &lt; 0\)</span> per period. While it is less obvious, as its expected return is quite good (recall <span class="math inline">\(\mathbb{E}[\gamma] = 1.2\)</span>), the risky asset is also a long-term loser, which is easily seen from Monte Carlo simulations:</p>
+<ol start="3" type="1">
+<li>Because I chose <span class="math inline">\(\alpha &gt; 1\)</span>, however, the geometric mean of the risky asset’s gross returns is much more sobering: <span class="math display">\[\exp(\mathbb{E}[\log \gamma]) = 0.8944 &lt; 1.\]</span></li>
+</ol>
+<p>Here is a citation! <span class="citation" data-cites="kelly1956">(<a href="#ref-kelly1956" role="doc-biblioref">Kelly 1956</a>)</span></p>
+<div id="1af0d254" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Show setup code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.optimize <span class="im">as</span> opt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-kelly1956" class="csl-entry" role="listitem">
+Kelly, J. L. 1956. <span>“A New Interpretation of Information Rate.”</span> <em>Bell System Technical Journal</em> 35 (4): 917–26.
+</div>
+</div>
 
 
 <!-- -->
-</main></div>
-</div>
- <!-- /main -->
+
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -387,6 +503,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       window.document.body.appendChild(a);
     }
     setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
     const isCodeAnnotation = (el) => {
       for (const clz of el.classList) {
         if (clz.startsWith('code-annotation-')) {                     
@@ -829,29 +952,73 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Jordan McKittrick"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">about:</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">  template: trestles      # try also: jolla, solana, marquee</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">  image: profile.jpeg</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">  image-shape: round</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">  links:</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">    - icon: linkedin</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">      text: LinkedIn</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">      href: https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">    - icon: github</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">      text: GitHub</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">      href: https://github.com/jordanmckittrick</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">    - icon: envelope</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">      text: Email</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">      href: mailto:you@example.com</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>THIS WEBSITE IS UNDER CONSTRUCTION.</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>This website is about distinguishing signal from noise, pattern from randomness, and evidence from assumptions. If you're interested in quant finance, information theory, probability theory, statistics and machine learning, or statistical phyics, I hope you will find this website useful and enjoyable.</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>Have a look at the <span class="co">[</span><span class="ot">blog</span><span class="co">](blog.qmd)</span>, read more <span class="co">[</span><span class="ot">about me</span><span class="co">](about.qmd)</span>, or say hello</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>on <span class="co">[</span><span class="ot">LinkedIn</span><span class="co">](https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/)</span>.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Shannon's Demon, Made Exact (Part 1)"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "How to make an exponential amount of money from a portfolio of almost sure losers without shorting anything"</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2026-06-15</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [quant finance, information theory, kelly criterion, risk-neutral measure, KL divergence]</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="an">bibliography:</span><span class="co"> references.bib</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="an">image:</span><span class="co"> shannons_demon_fiend.svg</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> </span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">    html:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">        code-fold: true</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">        code-summary: "Show setup code"</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">### Introduction</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>If intuition is to be believed, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major loser, unless, of course, one is clairvoyant and knows in advance when each asset will happen to perform well. Yet, as I'll demonstrate in this post, not only is this possible but also an investor can (almost surely) guarantee an exponential amount of money in the long run from such a portfolio, if he knows what he's doing. As I'll show, information theory provides a lovely explanation for why this is the case.</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="fu">### The setup</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>Consider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as analogous to a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate. Therefore, its associated gross return satisfies $r &lt; 1$. In the example below, I'll set $r = 0.97$, which corresponds to a negative interest rate of 3% per period. </span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>On the other hand, the risky asset, which I'll model as a coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t &lt; \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = 1/(\alpha \gamma_h)$, for some $\alpha &gt; 0$. In the example below, I choose $\gamma_h = 2.0$, $p_h = 0.5$, and $\alpha = 1.25$, which implies that $\gamma_t = 0.4$.</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset, and $1 - f$ the fraction that we allocate to the riskless asset. Our goal is to choose $f$ intelligently.</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="fu">### Some initial remarks</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>We need to have $\gamma_t &lt; r &lt; \gamma_h$ for the problem to be interesting, as otherwise one would put all of one's money in the better asset. Concretely, if $r &lt; \gamma_t &lt; \gamma_h$, then one would put all of one's money in the risky asset, and if $\gamma_t &lt; \gamma_h &lt; r$, then one would put all of one's money in the riskless asset. Since our bank account pays negative interest, we have $\gamma_t &lt; r &lt; 1 &lt; \gamma_h$.</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>With these parameters, the expected gross return of the risky asset in a given period is given by $$\mathbb{E}<span class="co">[</span><span class="ot">\gamma</span><span class="co">]</span> = p_h \gamma_h + (1 - p_h) \gamma_t = 1.2.$$ Not bad at all!</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>In addition, notice that the gross return of our portfolio in a given period is given by $$Y(f) = (1 - f)r + f\gamma,$$ where $\gamma$ is the random gross return of the risky asset; thus, in expectation, our portfolio's gross return is given by $$\mathbb{E}<span class="co">[</span><span class="ot">Y(f)</span><span class="co">]</span> = (1 - f)r + f\mathbb{E}<span class="co">[</span><span class="ot">\gamma</span><span class="co">]</span> = 0.97 + 0.23f,$$ which is greater than 1 for any $f &gt; 0.13$. So, we can get an expected gross return greater than 1 by putting some (specifically $f &gt; 0.13$) of our money in the risky asset.</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="fu">### The risky asset is a major loser</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>Obviously the riskless asset is a long-term loser, as its net return is $r - 1 = -0.03 &lt; 0$ per period. While it is less obvious, as its expected return is quite good (recall $\mathbb{E}<span class="co">[</span><span class="ot">\gamma</span><span class="co">]</span> = 1.2$), the risky asset is also a long-term loser, which is easily seen from Monte Carlo simulations:</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Because I chose $\alpha &gt; 1$, however, the geometric mean of the risky asset's gross returns is much more sobering: $$\exp(\mathbb{E}<span class="co">[</span><span class="ot">\log \gamma</span><span class="co">]</span>) = 0.8944 &lt; 1.$$</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>Here is a citation! <span class="co">[</span><span class="ot">@kelly1956</span><span class="co">]</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.optimize <span class="im">as</span> opt</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="fu">### References</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>::: {#refs}</span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>:::</span>
+</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -884,5 +1051,5 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
 </body></html>

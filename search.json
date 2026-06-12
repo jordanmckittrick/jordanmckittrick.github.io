@@ -4,83 +4,48 @@
     "href": "blog.html",
     "title": "Blog",
     "section": "",
-    "text": "Betting Your Whole Bankroll Feels Great (Until It Doesn’t)\n\n\nThe Kelly criterion, or why information theory has opinions about your portfolio\n\n\n\nquant finance\n\ninformation theory\n\nkelly\n\n\n\nDeriving the log-optimal bet size, simulating it, and seeing why practitioners quietly bet half.\n\n\n\n\n\nMay 29, 2026\n\n\nJordan McKittrick\n\n\n\n\n\nNo matching items"
+    "text": "Shannon’s Demon, Made Exact (Part 1)\n\n\nHow to make an exponential amount of money from a portfolio of almost sure losers without shorting anything\n\n\n\nquant finance\n\ninformation theory\n\nkelly criterion\n\nrisk-neutral measure\n\nKL divergence\n\n\n\n\n\n\n\n\n\nJun 15, 2026\n\n\nJordan McKittrick\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "recommendations.html",
+    "href": "recommendations.html",
+    "title": "Recommendations",
+    "section": "",
+    "text": "Why Most Published Research Findings Are False\nTesting a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n\n\n\n\n\nModeling by Shortest Data Description\nA New Interpretation of Information Rate\nThere Is No Universal Source Code for an Infinite Source Alphabet\nEntropy and the Central Limit Theorem"
+  },
+  {
+    "objectID": "recommendations.html#papers",
+    "href": "recommendations.html#papers",
+    "title": "Recommendations",
+    "section": "",
+    "text": "Why Most Published Research Findings Are False\nTesting a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n\n\n\n\n\nModeling by Shortest Data Description\nA New Interpretation of Information Rate\nThere Is No Universal Source Code for an Infinite Source Alphabet\nEntropy and the Central Limit Theorem"
+  },
+  {
+    "objectID": "recommendations.html#other",
+    "href": "recommendations.html#other",
+    "title": "Recommendations",
+    "section": "Other",
+    "text": "Other\n\n3Blue1Brown\nMarginal Revolution\nRoger Federer as Religious Experience"
+  },
+  {
+    "objectID": "posts/shannons_demon_part_1/index.html",
+    "href": "posts/shannons_demon_part_1/index.html",
+    "title": "Shannon’s Demon, Made Exact (Part 1)",
+    "section": "",
+    "text": "Introduction\nIf intuition is to be believed, it shouldn’t be possible for a long-only portfolio to be profitable when each of its component assets is a major loser, unless, of course, one is clairvoyant and knows in advance when each asset will happen to perform well. Yet, as I’ll demonstrate in this post, not only is this possible but also an investor can (almost surely) guarantee an exponential amount of money in the long run from such a portfolio, if he knows what he’s doing. As I’ll show, information theory provides a lovely explanation for why this is the case.\n\n\nThe setup\nConsider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as analogous to a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate. Therefore, its associated gross return satisfies \\(r &lt; 1\\). In the example below, I’ll set \\(r = 0.97\\), which corresponds to a negative interest rate of 3% per period.\nOn the other hand, the risky asset, which I’ll model as a coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of \\(\\gamma_h\\) for heads and \\(\\gamma_t &lt; \\gamma_h\\) for tails. In addition, I’ll let \\(p_h\\) denote the probability of heads, and I’ll set \\(\\gamma_t = 1/(\\alpha \\gamma_h)\\), for some \\(\\alpha &gt; 0\\). In the example below, I choose \\(\\gamma_h = 2.0\\), \\(p_h = 0.5\\), and \\(\\alpha = 1.25\\), which implies that \\(\\gamma_t = 0.4\\).\nFinally, I let \\(f\\) denote the fraction of our money that we allocate to the risky asset, and \\(1 - f\\) the fraction that we allocate to the riskless asset. Our goal is to choose \\(f\\) intelligently.\n\n\nSome initial remarks\n\nWe need to have \\(\\gamma_t &lt; r &lt; \\gamma_h\\) for the problem to be interesting, as otherwise one would put all of one’s money in the better asset. Concretely, if \\(r &lt; \\gamma_t &lt; \\gamma_h\\), then one would put all of one’s money in the risky asset, and if \\(\\gamma_t &lt; \\gamma_h &lt; r\\), then one would put all of one’s money in the riskless asset. Since our bank account pays negative interest, we have \\(\\gamma_t &lt; r &lt; 1 &lt; \\gamma_h\\).\nWith these parameters, the expected gross return of the risky asset in a given period is given by \\[\\mathbb{E}[\\gamma] = p_h \\gamma_h + (1 - p_h) \\gamma_t = 1.2.\\] Not bad at all!\nIn addition, notice that the gross return of our portfolio in a given period is given by \\[Y(f) = (1 - f)r + f\\gamma,\\] where \\(\\gamma\\) is the random gross return of the risky asset; thus, in expectation, our portfolio’s gross return is given by \\[\\mathbb{E}[Y(f)] = (1 - f)r + f\\mathbb{E}[\\gamma] = 0.97 + 0.23f,\\] which is greater than 1 for any \\(f &gt; 0.13\\). So, we can get an expected gross return greater than 1 by putting some (specifically \\(f &gt; 0.13\\)) of our money in the risky asset.\n\n\n\nThe risky asset is a major loser\nObviously the riskless asset is a long-term loser, as its net return is \\(r - 1 = -0.03 &lt; 0\\) per period. While it is less obvious, as its expected return is quite good (recall \\(\\mathbb{E}[\\gamma] = 1.2\\)), the risky asset is also a long-term loser, which is easily seen from Monte Carlo simulations:\n\nBecause I chose \\(\\alpha &gt; 1\\), however, the geometric mean of the risky asset’s gross returns is much more sobering: \\[\\exp(\\mathbb{E}[\\log \\gamma]) = 0.8944 &lt; 1.\\]\n\nHere is a citation! (Kelly 1956)\n\n\nShow setup code\nimport numpy as np\nimport plotly.express as px\nimport scipy.optimize as opt\n\n\n\n\nReferences\n\n\nKelly, J. L. 1956. “A New Interpretation of Information Rate.” Bell System Technical Journal 35 (4): 917–26."
   },
   {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Jordan McKittrick",
     "section": "",
-    "text": "MOST EVERYTHING ON THIS WEBSITE WAS GENERATED BY AI AS A TEMPORARY PLACEHOLDER. I’LL BE UPDATING THE SITE WITH ACTUAL CONTENT SOON.\nSome interests of mine: information theory, quantitative finance, machine learning and AI, statistical mechanics, probability theory, and Bayesian statistics.\nThis site is mostly a blog — a place to work through ideas ranging from modern portfolio theory and log-optimal (Kelly) investing to Bayesian inference, computational physics, and the occasional excursion into whatever I find beautiful, interesting, or useful.\nHave a look at the blog, read more about me, or say hello on LinkedIn."
-  },
-  {
-    "objectID": "posts/welcome/index.html",
-    "href": "posts/welcome/index.html",
-    "title": "Betting Your Whole Bankroll Feels Great (Until It Doesn’t)",
-    "section": "",
-    "text": "There’s a particular flavor of overconfidence that shows up the first time someone proves an edge. The bet is favorable, so — surely — the move is to push in as many chips as possible? The trouble is that “favorable on average” and “favorable to your long-run wealth” are different statements, and the gap between them is exactly the thing John Kelly worked out in 1956 while sitting in a building full of information theorists (Kelly 1956)."
-  },
-  {
-    "objectID": "posts/welcome/index.html#the-setup",
-    "href": "posts/welcome/index.html#the-setup",
-    "title": "Betting Your Whole Bankroll Feels Great (Until It Doesn’t)",
-    "section": "The setup",
-    "text": "The setup\nConsider the simplest possible repeated bet. Each round you wager a fraction \\(f \\in [0, 1]\\) of your current wealth on a proposition that pays \\(b\\)-to-one and wins with probability \\(p\\) (with \\(q = 1 - p\\)). After one round your wealth is multiplied by either \\(1 + bf\\) (a win) or \\(1 - f\\) (a loss).\nBecause outcomes compound, the quantity that controls your fate over many rounds isn’t the arithmetic average return — it’s the expected logarithmic growth rate\n\\[\ng(f) \\;=\\; p \\,\\ln(1 + bf) \\;+\\; q \\,\\ln(1 - f).\n\\]\nMaximizing wealth over the long run means maximizing \\(g\\). Differentiating and setting \\(g'(f) = 0\\),\n\\[\ng'(f) \\;=\\; \\frac{pb}{1 + bf} - \\frac{q}{1 - f} \\;=\\; 0\n\\qquad\\Longrightarrow\\qquad\n\\boxed{\\,f^{*} = \\frac{bp - q}{b}\\,}.\n\\]\nFor an even-money bet (\\(b = 1\\)) this collapses to the famously tidy \\(f^{*} = p - q\\): bet your edge, nothing more.\nThe interpretation is what makes it beautiful. \\(g(f)\\) is, up to a sign, a relative entropy — the very same object that governs how fast you can transmit bits over a noisy channel. Optimal betting and optimal coding turn out to be the same optimization wearing different clothes."
-  },
-  {
-    "objectID": "posts/welcome/index.html#why-not-just-bet-more",
-    "href": "posts/welcome/index.html#why-not-just-bet-more",
-    "title": "Betting Your Whole Bankroll Feels Great (Until It Doesn’t)",
-    "section": "Why not just bet more?",
-    "text": "Why not just bet more?\nThe catch lives in the curvature of the logarithm. Over-betting doesn’t merely reduce your growth rate — past a point it makes it negative, so you go broke almost surely despite holding a positive-expectation edge. Let’s watch it happen.\n\n\nCode\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nrng = np.random.default_rng(42)\n\n# Favorable even-money bet: 55% win probability, pays 1:1.\np, b = 0.55, 1.0\nf_star = (b * p - (1 - p)) / b          # Kelly fraction = 0.10\n\nn_rounds = 250\nn_paths  = 2000\n\ndef simulate(fraction):\n    wins = rng.random((n_paths, n_rounds)) &lt; p\n    step = np.where(wins, 1 + b * fraction, 1 - fraction)\n    return np.cumprod(step, axis=1)      # wealth, starting from 1\n\nstrategies = {\n    \"Half Kelly (0.5×)\":  0.5 * f_star,\n    \"Full Kelly (1.0×)\":  1.0 * f_star,\n    \"Double Kelly (2.0×)\": 2.0 * f_star,\n}\n\nfig, ax = plt.subplots(figsize=(7, 4.2))\nfor label, frac in strategies.items():\n    wealth = simulate(frac)\n    ax.plot(np.median(wealth, axis=0), label=label, linewidth=2)\n\nax.set_yscale(\"log\")\nax.set_xlabel(\"Round\")\nax.set_ylabel(\"Median wealth (log scale, start = 1)\")\nax.set_title(f\"Edge of {100*(p-0.5):.0f}%  →  Kelly fraction f* = {f_star:.2f}\")\nax.legend(frameon=False)\nax.grid(True, which=\"both\", alpha=0.25)\nfig.tight_layout()\nplt.show()\n\n\n\n\n\nMedian wealth trajectories under different fractions of the Kelly bet.\n\n\n\n\nFull Kelly grows the fastest in the median. Double Kelly — betting twice your edge — has a positive expected return per round and yet its typical trajectory slumps toward zero, because the expected log growth rate has gone negative. That distinction is the entire lesson."
-  },
-  {
-    "objectID": "posts/welcome/index.html#so-why-do-practitioners-bet-half",
-    "href": "posts/welcome/index.html#so-why-do-practitioners-bet-half",
-    "title": "Betting Your Whole Bankroll Feels Great (Until It Doesn’t)",
-    "section": "So why do practitioners bet half?",
-    "text": "So why do practitioners bet half?\nFull Kelly is growth-optimal, but it is also brutally volatile: it tolerates drawdowns that would get a real fund manager fired. Fractional Kelly trades a little growth for a lot of calm.\n\n\nCode\nfractions = np.linspace(0.0, 2.0, 41) * f_star\nresults = []\nfor frac in fractions:\n    w = simulate(frac)\n    log_growth = np.mean(np.log(w[:, -1])) / n_rounds\n    max_dd = np.median(1 - w.min(axis=1) / np.maximum.accumulate(w, axis=1).max(axis=1))\n    results.append((frac / f_star, log_growth, max_dd))\n\nmult, growth, dd = np.array(results).T\nfig, ax1 = plt.subplots(figsize=(7, 4.2))\nax1.plot(mult, growth, color=\"#2f6f9f\", linewidth=2, label=\"log-growth rate\")\nax1.axvline(1.0, color=\"grey\", linestyle=\"--\", alpha=0.6)\nax1.set_xlabel(\"Bet size, in multiples of Kelly\")\nax1.set_ylabel(\"Expected log-growth per round\", color=\"#2f6f9f\")\nax2 = ax1.twinx()\nax2.plot(mult, dd, color=\"#c2603f\", linewidth=2, label=\"typical max drawdown\")\nax2.set_ylabel(\"Typical max drawdown\", color=\"#c2603f\")\nax1.set_title(\"Growth peaks at full Kelly; risk keeps climbing past it\")\nfig.tight_layout()\nplt.show()\n\n\n\n\n\n\n\n\n\nGrowth is flat-topped near \\(f^{*}\\) — you give up almost nothing by backing off to, say, half Kelly — while drawdown rises steadily the whole way. Sacrificing a sliver of theoretical growth to roughly halve your worst-case pain is a trade most people take happily. The math says bet your edge; survival says bet a little less."
-  },
-  {
-    "objectID": "posts/welcome/index.html#where-this-goes-next",
-    "href": "posts/welcome/index.html#where-this-goes-next",
-    "title": "Betting Your Whole Bankroll Feels Great (Until It Doesn’t)",
-    "section": "Where this goes next",
-    "text": "Where this goes next\nThe single-bet story generalizes: with many correlated assets, the log-optimal portfolio becomes a constrained optimization that looks a lot like a Markowitz mean–variance problem viewed through a logarithmic lens — a thread I’ll pull on in a future post.\n\n\nReferences\n\n\nKelly, J. L. 1956. “A New Interpretation of Information Rate.” Bell System Technical Journal 35 (4): 917–26."
+    "text": "THIS WEBSITE IS UNDER CONSTRUCTION.\nThis website is about distinguishing signal from noise, pattern from randomness, and evidence from assumptions. If you’re interested in quant finance, information theory, probability theory, statistics and machine learning, or statistical phyics, I hope you will find this website useful and enjoyable.\nHave a look at the blog, read more about me, or say hello on LinkedIn."
   },
   {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "I trained as a mathematician with a focus on statistical mechanics — the part of physics where probability, large systems, and emergent structure meet. Along the way I picked up a working obsession with information theory and its surprisingly deep ties to investing and decision-making under uncertainty.\nMost recently I spent several years as a data scientist at an NGO, building models and pipelines for real-world impact. I’ve since left to focus on moving into quantitative finance or AI, where I can put the mathematical and computational side of my background to fuller use."
-  },
-  {
-    "objectID": "about.html#background",
-    "href": "about.html#background",
-    "title": "About",
-    "section": "",
-    "text": "I trained as a mathematician with a focus on statistical mechanics — the part of physics where probability, large systems, and emergent structure meet. Along the way I picked up a working obsession with information theory and its surprisingly deep ties to investing and decision-making under uncertainty.\nMost recently I spent several years as a data scientist at an NGO, building models and pipelines for real-world impact. I’ve since left to focus on moving into quantitative finance or AI, where I can put the mathematical and computational side of my background to fuller use."
-  },
-  {
-    "objectID": "about.html#research-writing-interests",
-    "href": "about.html#research-writing-interests",
-    "title": "About",
-    "section": "Research & writing interests",
-    "text": "Research & writing interests\n\nQuantitative finance — modern portfolio theory, log-optimal / Kelly investing, risk and drawdown, market microstructure.\nInformation theory — entropy, the duality between gambling and coding, and information geometry.\nStatistical mechanics & computational physics — Monte Carlo methods, phase transitions, and the math of large interacting systems.\nBayesian statistics — inference, hierarchical models, and the principled handling of uncertainty."
-  },
-  {
-    "objectID": "about.html#toolkit",
-    "href": "about.html#toolkit",
-    "title": "About",
-    "section": "Toolkit",
-    "text": "Toolkit\nI write a lot of Python (NumPy, SciPy, pandas, the usual scientific stack) and I’m comfortable taking a problem from a whiteboard derivation in LaTeX all the way to a reproducible, tested implementation."
-  },
-  {
-    "objectID": "about.html#what-im-looking-for",
-    "href": "about.html#what-im-looking-for",
-    "title": "About",
-    "section": "What I’m looking for",
-    "text": "What I’m looking for\nRoles in quantitative investing or applied AI / research where rigorous mathematics, careful computation, and clear communication all matter. If that sounds like a fit, I’d love to talk — reach me on LinkedIn or by email."
+    "text": "I’m a researcher with interests in information theory, quant finance, probability theory, AI, Bayesian statistics, and complex systems.\nI’ll be writing about topics primarily from those fields, though occasionally I might wander. The technical level will generally be aimed at readers with some background in these areas, but I will try to keep things accessible. My goal is to be rigorous as I reasonably can without being unnecessarily academic. If you find any mistakes, please let me know.\n\nEducation\n\nPhD, Cambridge University — information theory (here’s my thesis)\nMPhil, Cambridge University — scientific computing\nMScRes, Oxford University — stochastic differential equations\nBA, Columbia University — biochemistry"
   }
 ]
