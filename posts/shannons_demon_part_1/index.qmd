@@ -1,6 +1,6 @@
 ---
 title: "Shannon's Demon, Made Exact (Part 1)"
-subtitle: "How to make an exponential amount of money from a portfolio of almost sure losers"
+subtitle: "How to make an exponential amount of money from a portfolio of almost sure losers without shorting anything"
 date: 2026-06-15
 categories: [quant finance, information theory, kelly criterion, risk-neutral measure, KL divergence]
 bibliography: references.bib

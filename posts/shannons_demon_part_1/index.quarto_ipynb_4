@@ -55,7 +55,7 @@
         "\n",
         "Here is a citation! [@kelly1956]\n"
       ],
-      "id": "49a701bb"
+      "id": "ce3920eb"
     },
     {
       "cell_type": "code",
@@ -65,7 +65,7 @@
         "import plotly.express as px\n",
         "import scipy.optimize as opt"
       ],
-      "id": "dfe61469",
+      "id": "4ff731bc",
       "execution_count": null,
       "outputs": []
     },
@@ -78,7 +78,7 @@
         "::: {#refs}\n",
         ":::"
       ],
-      "id": "390d290c"
+      "id": "7a614759"
     }
   ],
   "metadata": {
