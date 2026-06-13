@@ -13,9 +13,13 @@ dependencies = [
     "plotly>=6.7.0",
     "nbclient>=0.10.4",
     "nbformat>=5.10.4",
+    "finlib",
 ]
 
 [tool.uv]
 # This is a website, not an installable Python package, so tell uv to manage
 # only the dependencies above and not try to "build" the project itself.
 package = false
+
+[tool.uv.sources]
+finlib = { git = "https://github.com/jordanmckittrick/finlib" }

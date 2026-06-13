@@ -8,9 +8,28 @@ import scipy.optimize as opt
 
 from posts.shannons_demon_part_1.coin_flip_with_riskless_asset_model import CoinFlipWithRisklessAssetModel
 
+from finlib.ensemble_of_returns_paths import EnsembleOfReturnsPaths
 
 
 GOLDEN_RATIO = (1 + np.sqrt(5))/2
+
+
+ 
+def growth_rate_summary(paths: EnsembleOfReturnsPaths) -> pd.DataFrame:
+    return paths.summarize_across_paths(paths.running_growth_rate, threshold=0.0)
+ 
+ 
+def wealth_summary(paths: EnsembleOfReturnsPaths) -> pd.DataFrame:
+    return paths.summarize_across_paths(paths.running_wealth_ratio, threshold=1.0)
+
+
+
+
+
+
+
+
+
 
 
 
