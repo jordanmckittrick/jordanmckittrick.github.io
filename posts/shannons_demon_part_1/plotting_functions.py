@@ -14,21 +14,6 @@ from finlib.ensemble_of_returns_paths import EnsembleOfReturnsPaths
 GOLDEN_RATIO = (1 + np.sqrt(5))/2
 
 
- 
-def growth_rate_summary(paths: EnsembleOfReturnsPaths) -> pd.DataFrame:
-    return paths.summarize_across_paths(paths.running_growth_rate, threshold=0.0)
- 
- 
-def wealth_summary(paths: EnsembleOfReturnsPaths) -> pd.DataFrame:
-    return paths.summarize_across_paths(paths.running_wealth_ratio, threshold=1.0)
-
-
-
-
-
-
-
-
 
 
 
@@ -207,9 +192,9 @@ def create_wealth_over_time_plot(df_running_wealth_over_time: pd.DataFrame, titl
 
 
 
-def create_empirical_growth_rates_plot(df_augmented: pd.DataFrame, weights_vector: np.ndarray, params: CoinFlipWithRisklessAssetModel, title: str) -> go.Figure:
+def create_empirical_growth_rates_plot(df_augmented: pd.DataFrame, weights_vector: np.ndarray, coin_flip_model: CoinFlipWithRisklessAssetModel, title: str) -> go.Figure:
     
-    asymptotic_avg = params.return_expected_log_portfolio_gross_return(weights_vector)
+    asymptotic_avg = coin_flip_model.growth_rate(weights_vector)
     path_cols = [c for c in df_augmented.columns if type(c) is int]
 
     if asymptotic_avg > 0:
@@ -239,7 +224,7 @@ def create_empirical_growth_rates_plot(df_augmented: pd.DataFrame, weights_vecto
         xaxis2_title="Period",
         yaxis2_title="Fraction of Paths",
         height=500,
-        width=500*golden_ratio,
+        width=500*GOLDEN_RATIO,
     )    
 
 
@@ -391,7 +376,7 @@ def create_empirical_growth_rates_plot(df_augmented: pd.DataFrame, weights_vecto
 
 
 
-def generate_arithmetic_vs_geometric_plot(df: pd.DataFrame, opt_result_for_CRP: opt.OptimizeResult) -> go.Figure:
+def create_arithmetic_vs_geometric_plot(df: pd.DataFrame, opt_result_for_CRP: opt.OptimizeResult) -> go.Figure:
 
     optimal_allocation = opt_result_for_CRP.x
     optimal_growth_rate = -opt_result_for_CRP.fun

@@ -125,7 +125,7 @@ class CoinFlipWithRisklessAssetModel:
         # Bounds f to [0, 1]: the optimal Kelly fraction is sought with no
         # leverage (f <= 1) and no shorting of either asset (f >= 0).
         return opt.minimize_scalar(
-            lambda f: -self.growth_rate(np.array([1-f, f])),
+            lambda f: -self.growth_rate(np.array([1 - f, f])),
             bounds=(0.0, 1.0),
             method='bounded'
             )     # type: ignore
