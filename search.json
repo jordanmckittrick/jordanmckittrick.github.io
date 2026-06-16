@@ -11,14 +11,21 @@
     "href": "recommendations.html",
     "title": "Recommendations",
     "section": "",
-    "text": "Why Most Published Research Findings Are False\nTesting a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n\n\n\n\n\nModeling by Shortest Data Description\nA New Interpretation of Information Rate\nThere Is No Universal Source Code for an Infinite Source Alphabet\nEntropy and the Central Limit Theorem"
+    "text": "The word “recommendation” may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven’t yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions, but rather as a recommendation to read it and form your own opinion. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone."
+  },
+  {
+    "objectID": "recommendations.html#introduction",
+    "href": "recommendations.html#introduction",
+    "title": "Recommendations",
+    "section": "",
+    "text": "The word “recommendation” may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven’t yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions, but rather as a recommendation to read it and form your own opinion. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone."
   },
   {
     "objectID": "recommendations.html#papers",
     "href": "recommendations.html#papers",
     "title": "Recommendations",
-    "section": "",
-    "text": "Why Most Published Research Findings Are False\nTesting a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n\n\n\n\n\nModeling by Shortest Data Description\nA New Interpretation of Information Rate\nThere Is No Universal Source Code for an Infinite Source Alphabet\nEntropy and the Central Limit Theorem"
+    "section": "Papers",
+    "text": "Papers\n\n\nQuantitative Finance\n\n■A New Interpretation of Information Rate\n■Power Laws in Economics and Finance\n■■The Variation of Certain Speculative Prices\n▲The Pearson Diffusions: A Class of Statistically Tractable Diffusion Processes\n▲Martingales and Arbitrage in Multiperiod Securities Markets\n\n\n\nStatistics\n\n●Statistical Modeling: The Two Cultures\n●Why Most Published Research Findings Are False\n■■Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n\n\n\nInformation Theory\n\n▲Quantifying Causal Influences\n▲ Modeling by Shortest Data Description\n▲▲There Is No Universal Source Code for an Infinite Source Alphabet\n▲▲Entropy and the Central Limit Theorem\n\n\n\nPhysics\n\nMore Is Different\nThe Unreasonable Effectiveness of Mathematics in the Natural Sciences\n■Irreversibility and Heat Generation in the Computing Process\n■Information Theory and Statistical Mechanics\n▲ Nonequilibrium Equality for Free Energy Differences\n▲ Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences"
   },
   {
     "objectID": "recommendations.html#other",
@@ -39,13 +46,13 @@
     "href": "index.html",
     "title": "Jordan McKittrick",
     "section": "",
-    "text": "THIS WEBSITE IS UNDER CONSTRUCTION.\nThis website is about distinguishing signal from noise, pattern from randomness, and evidence from assumptions. If you’re interested in quant finance, information theory, probability theory, statistics and machine learning, or statistical phyics, I hope you will find this website useful and enjoyable.\nHave a look at the blog, read more about me, or say hello on LinkedIn."
+    "text": "THIS WEBSITE IS UNDER CONSTRUCTION.\nThis website is about distinguishing signal from noise, pattern from randomness, and evidence from assumptions. If you’re interested in quant finance, information theory, probability theory, statistics, and AI, I hope you will find this website useful and enjoyable.\nHave a look at the blog, read more about me, or say hello on LinkedIn."
   },
   {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "I’m a researcher with interests in information theory, quant finance, probability theory, AI, Bayesian statistics, and complex systems.\nI’ll be writing about topics primarily from those fields, though occasionally I might wander. The technical level will generally be aimed at readers with some background in these areas, but I will try to keep things accessible. My goal is to be rigorous as I reasonably can without being unnecessarily academic. If you find any mistakes, please let me know.\n\nEducation\n\nPhD, Cambridge University — information theory (here’s my thesis)\nMPhil, Cambridge University — scientific computing\nMScRes, Oxford University — stochastic differential equations\nBA, Columbia University — biochemistry"
+    "text": "I’m a researcher with interests in information theory, quant finance, probability theory, AI, Bayesian statistics, and complex systems.\nI’ll be writing about topics primarily from those fields, though occasionally I might wander. The technical level will generally be aimed at readers with some background in these areas, but I will try to keep things accessible. My goal is to be as rigorous as I reasonably can without being unnecessarily academic. Please let me know if you find any mistakes.\n\nEducation\n\nPhD, Cambridge University — information theory (here’s my thesis)\nMPhil, Cambridge University — scientific computing\nMScRes, Oxford University — stochastic differential equations\nBA, Columbia University — biochemistry"
   }
 ]

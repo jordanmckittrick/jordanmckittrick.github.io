@@ -1,0 +1,12 @@
+
+/* This file defines the styles for the ski rating system for the Recommendations page. */
+
+.ski { font-style: normal; margin-right: 0.5em; }
+.green { color: #639922; }
+.blue  { color: #378ADD; }
+.black { color: var(--bs-body-color); }   /* adapts to light/dark theme */
+
+.ratings ul {
+  list-style: none; /* remove default bullet points to minimize clutter */
+  padding-left: 0;
+}
