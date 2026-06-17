@@ -3,17 +3,7 @@ import numpy as np
 import pandas as pd
 
 from coin_flip_with_riskless_asset_model import CoinFlipWithRisklessAssetModel
-from finlib.ensemble_of_returns_paths import EnsembleOfReturnsPaths
 
-
-
- 
-def growth_rate_summary(paths: EnsembleOfReturnsPaths) -> pd.DataFrame:
-    return paths.summarize_across_paths(paths.running_growth_rate, threshold=0.0)
- 
- 
-def wealth_summary(paths: EnsembleOfReturnsPaths) -> pd.DataFrame:
-    return paths.summarize_across_paths(paths.running_wealth_ratio, threshold=1.0)
 
 
 
@@ -27,6 +17,13 @@ def generate_arithmetic_vs_geometric_data(
     the riskless asset), tabulates the competing return notions. The
     arithmetic-geometric gap -- the volatility drag, and the subject of
     the post -- is log(E[Y]) - E[log Y] >= 0 by Jensen's inequality.
+
+    The returned df has columns:
+    arithmetic_gross_return: E[Y]
+    growth_rate: E[log Y]
+    geometric_gross_return: exp(E[log Y])
+    growth_rate_ceiling: log(E[Y])
+    arithmetic_geometric_gap: log(E[Y]) - E[log Y]
 
     Returns a tidy frame, one row per f, indexed by f.
     """
