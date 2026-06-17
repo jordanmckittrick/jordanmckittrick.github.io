@@ -135,7 +135,9 @@ class CoinFlipWithRisklessAssetModel:
         Generates a 3D array of shape (num_paths, 2, num_periods) containing random gross returns for the riskless and risky
         assets. The gross returns for the risky asset are generated according to the coin flip model, while the gross returns
         for the riskless asset are constant and equal to r. The gross return at position (i, j, k) corresponds to the gross
-        return of asset j in path i at time k.
+        return of asset j in path i at time k. This method works by essentially pasting two matrices of shape
+        (num_paths, num_periods) together along a new axis: one matrix contains the gross returns of the riskless asset, and the
+        other matrix contains the gross returns of the risky asset, which are generated according to the coin flip model.
         '''
         random_coin_flip_gross_returns = rng.choice([self.gamma_tails, self.gamma_heads], size=(num_paths, num_periods), p=self.probabilities_vector)
         riskless_asset_gross_returns = np.full((num_paths, num_periods), self.r)
