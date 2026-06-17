@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Personal Quarto website and blog"
 requires-python = ">=3.12"
 dependencies = [
-    "jupyter", # provides the kernel machinery Quarto needs to run code cells
+    "jupyter",
     "ipykernel",
     "numpy",
     "scipy",
@@ -16,10 +16,20 @@ dependencies = [
     "finlib",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# Package ONLY the shared-code folder, not the whole website.
+packages = ["blogkit"]
+
 [tool.uv]
-# This is a website, not an installable Python package, so tell uv to manage
-# only the dependencies above and not try to "build" the project itself.
-package = false
+# Build and install just the blogkit package (above) as an editable install
+# in the venv, so notebooks can `import blogkit...` from any folder. The
+# website content (posts, .qmd, .ipynb) is NOT packaged — only blogkit/.
+package = true
 
 [tool.uv.sources]
 finlib = { git = "https://github.com/jordanmckittrick/finlib" }
+

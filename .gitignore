@@ -17,3 +17,6 @@ __pycache__/
 # rebuild without re-running Python (useful if you ever switch to CI).
 
 **/*.quarto_ipynb
+
+
+.env

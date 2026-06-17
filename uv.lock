@@ -446,7 +446,7 @@ wheels = [
 [[package]]
 name = "finlib"
 version = "0.1.0"
-source = { git = "https://github.com/jordanmckittrick/finlib#7b2a8af510aff2d0e7a021478142159d0f6e4126" }
+source = { git = "https://github.com/jordanmckittrick/finlib#4bac673d0bb57a482eb47cc278a1bea3944e7c05" }
 dependencies = [
     { name = "numpy" },
     { name = "pandas" },
@@ -1495,7 +1495,7 @@ wheels = [
 [[package]]
 name = "portfolio"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "finlib" },
     { name = "ipykernel" },
