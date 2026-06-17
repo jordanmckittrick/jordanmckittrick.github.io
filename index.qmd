@@ -1,23 +1,19 @@
----
-title: "Jordan McKittrick"
-about:
-  template: trestles      # try also: jolla, solana, marquee
-  image: profile.jpeg
-  image-shape: round
-  links:
-    - icon: linkedin
-      text: LinkedIn
-      href: https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/
-    - icon: github
-      text: GitHub
-      href: https://github.com/jordanmckittrick
-    - icon: envelope
-      text: Email
-      href: mailto:you@example.com
----
-THIS WEBSITE IS UNDER CONSTRUCTION.
 
-This website is about distinguishing signal from noise, pattern from randomness, and evidence from assumptions. If you're interested in quant finance, information theory, probability theory, statistics and machine learning, or statistical phyics, I hope you will find this website useful and enjoyable.
 
-Have a look at the [blog](blog.qmd), read more [about me](about.qmd), or say hello
-on [LinkedIn](https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/).
+---
+pagetitle: "My Name"
+page-layout: full
+code-tools: false
+---
+
+```{=html}
+<figure style="max-width: 860px; margin: 3rem auto; text-align: center;">
+  <img src="images/flow_hero.png"
+       alt="Natural-gradient flow of KL divergence on the 2-simplex, converging to the true distribution."
+       style="width: 100%; border-radius: 8px;">
+  <figcaption style="margin-top: 1rem; font-size: 0.95rem;
+                     font-style: italic; color: #5b5f66;">
+    Every belief flows to the truth — the natural-gradient descent of KL divergence on the simplex.
+  </figcaption>
+</figure>
+```
