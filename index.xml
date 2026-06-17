@@ -6,8 +6,8 @@
       version="2.0">
 <channel>
 <title>Jordan McKittrick</title>
-<link>https://jordanmckittrick.github.io/blog.html</link>
-<atom:link href="https://jordanmckittrick.github.io/blog.xml" rel="self" type="application/rss+xml"/>
+<link>https://jordanmckittrick.github.io/</link>
+<atom:link href="https://jordanmckittrick.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Notes on quantitative finance, information theory, and complex systems.</description>
 <generator>quarto-1.9.38</generator>
 <lastBuildDate>Mon, 15 Jun 2026 04:00:00 GMT</lastBuildDate>

@@ -25,7 +25,7 @@
     "href": "recommendations.html#papers",
     "title": "Recommendations",
     "section": "Papers",
-    "text": "Papers\n\n\nQuantitative Finance\n\n■A New Interpretation of Information Rate\n■Power Laws in Economics and Finance\n■■The Variation of Certain Speculative Prices\n▲The Pearson Diffusions: A Class of Statistically Tractable Diffusion Processes\n▲Martingales and Arbitrage in Multiperiod Securities Markets\n\n\n\nStatistics\n\n●Statistical Modeling: The Two Cultures\n●Why Most Published Research Findings Are False\n■■Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n\n\n\nInformation Theory\n\n▲Quantifying Causal Influences\n▲ Modeling by Shortest Data Description\n▲▲There Is No Universal Source Code for an Infinite Source Alphabet\n▲▲Entropy and the Central Limit Theorem\n\n\n\nPhysics\n\nMore Is Different\n■Irreversibility and Heat Generation in the Computing Process\n■Information Theory and Statistical Mechanics\n▲ Nonequilibrium Equality for Free Energy Differences\n▲ Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences"
+    "text": "Papers\n\n\nQuantitative Finance\n\n■A New Interpretation of Information Rate\n■Power Laws in Economics and Finance\n■■The Variation of Certain Speculative Prices\n▲The Pearson Diffusions: A Class of Statistically Tractable Diffusion Processes\n▲Martingales and Arbitrage in Multiperiod Securities Markets\n\n\n\nStatistics\n\n●Statistical Modeling: The Two Cultures\n●Why Most Published Research Findings Are False\n■■Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n■■On the Foundations of Statistical Inference\n■■On the Birnbaum Argument for the Strong Likelihood Principle\n\n\n\nInformation Theory\n\n▲Quantifying Causal Influences\n▲ Modeling by Shortest Data Description\n▲▲There Is No Universal Source Code for an Infinite Source Alphabet\n▲▲Entropy and the Central Limit Theorem\n\n\n\nPhysics\n\nMore Is Different\n■Irreversibility and Heat Generation in the Computing Process\n■Information Theory and Statistical Mechanics\n▲ Nonequilibrium Equality for Free Energy Differences\n▲ Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences"
   },
   {
     "objectID": "recommendations.html#other",
@@ -46,13 +46,27 @@
     "href": "index.html",
     "title": "Jordan McKittrick",
     "section": "",
-    "text": "THIS WEBSITE IS UNDER CONSTRUCTION.\nThis website is about distinguishing signal from noise, pattern from randomness, and evidence from assumptions. If you’re interested in quant finance, information theory, probability theory, statistics, and AI, I hope you will find this website useful and enjoyable.\nHave a look at the blog, read more about me, or say hello on LinkedIn."
+    "text": "Every belief flows to the truth — the natural-gradient descent of KL divergence on the simplex."
   },
   {
     "objectID": "about.html",
     "href": "about.html",
-    "title": "About",
+    "title": "Jordan McKittrick",
     "section": "",
-    "text": "I’m a researcher with interests in information theory, quant finance, probability theory, AI, Bayesian statistics, and complex systems.\nI’ll be writing about topics primarily from those fields, though occasionally I might wander. The technical level will generally be aimed at readers with some background in these areas, but I will try to keep things accessible. My goal is to be as rigorous as I reasonably can without being unnecessarily academic. Please let me know if you find any mistakes.\n\nEducation\n\nPhD, Cambridge University — information theory (here’s my thesis)\nMPhil, Cambridge University — scientific computing\nMScRes, Oxford University — stochastic differential equations\nBA, Columbia University — biochemistry"
+    "text": "I’m an independent researcher with interests in quant finance, information theory, AI, Bayesian statistics, and complex systems.\nI’ll be writing about topics primarily from those fields, though occasionally I might wander. The technical level will generally be aimed at readers with some background in these areas, but I will try to keep things accessible. My goal is to be as rigorous as I reasonably can without being unnecessarily academic. Please let me know if you find any mistakes."
+  },
+  {
+    "objectID": "about.html#education",
+    "href": "about.html#education",
+    "title": "Jordan McKittrick",
+    "section": "Education",
+    "text": "Education\n\nPhD, Cambridge University — information theory (here’s my thesis)\nMPhil, Cambridge University — scientific computing\nMScRes, Oxford University — stochastic differential equations\nBA, Columbia University — biochemistry"
+  },
+  {
+    "objectID": "about.html#contact",
+    "href": "about.html#contact",
+    "title": "Jordan McKittrick",
+    "section": "Contact",
+    "text": "Contact\n\nEmail:\nLinkedIn: https://www.linkedin.com/in/jordanmckittrick"
   }
 ]
