@@ -9,20 +9,20 @@ project:
 
 website:
   title: "Jordan McKittrick"
-  description: "Notes on quantitative finance, statistical mechanics, and information."
+  description: "Notes on quantitative finance, information theory, and complex systems."
   site-url: "https://jordanmckittrick.github.io"   # ← your GitHub Pages URL (no trailing slash)
   favicon: profile.jpeg
   navbar:
     pinned: true
     left:
-      - href: index.qmd
-        text: Home
+      # - href: index.qmd
+      #   text: Home
       - href: blog.qmd
         text: Blog
-      - href: about.qmd
-        text: About
       - href: recommendations.qmd
         text: Recommendations
+      - href: about.qmd
+        text: About        
     right:
       - icon: github
         href: https://github.com/jordanmckittrick
@@ -30,6 +30,7 @@ website:
       - icon: linkedin
         href: https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/
         aria-label: LinkedIn
+    background: "#ffffff" # white
   page-footer:
     left: "© 2026 Jordan McKittrick"
     center: "Built with [Quarto](https://quarto.org)."
