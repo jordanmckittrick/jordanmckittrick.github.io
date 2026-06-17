@@ -1,23 +1,54 @@
 ---
 title: "Recommendations"
-format: html
+format: 
+    html:
+        css: ratings.css
 ---
+
+## Introduction
+
+The word "recommendation" may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven't yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions, but rather as a recommendation to read it and form your own opinion. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone.
 
 ## Papers 
 
+::: {.ratings}
 
-#### Bayesian Statistics
-- [Why Most Published Research Findings Are False](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124)
-- [Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence](https://www2.stat.duke.edu/courses/Spring07/sta215/lec/BvP/BergSell1987.pdf)
+#### Quantitative Finance
+- [■]{.ski .blue title="challenging"}[A New Interpretation of Information Rate](https://www.princeton.edu/~wbialek/rome/refs/kelly_56.pdf)
+- [■]{.ski .blue title="challenging"}[Power Laws in Economics and Finance](https://www.annualreviews.org/content/journals/10.1146/annurev.economics.050708.142940)
+- [■■]{.ski .blue title="more challenging"}[The Variation of Certain Speculative Prices](https://link.springer.com/chapter/10.1007/978-1-4757-2763-0_14)
+- [▲]{.ski .black title="advanced"}[The Pearson Diffusions: A Class of Statistically Tractable Diffusion Processes](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9469.2007.00592.x)
+- [▲]{.ski .black title="advanced"}[Martingales and Arbitrage in Multiperiod Securities Markets](https://www.sciencedirect.com/science/article/abs/pii/0022053179900437)
+
+
+#### Statistics
+- [●]{.ski .green title="approachable"}[Statistical Modeling: The Two Cultures](https://projecteuclid.org/journals/statistical-science/volume-16/issue-3/Statistical-Modeling--The-Two-Cultures-with-comments-and-a/10.1214/ss/1009213726.full)
+- [●]{.ski .green title="approachable"}[Why Most Published Research Findings Are False](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124)
+- [■■]{.ski .blue title="more challenging"}[Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence](https://www2.stat.duke.edu/courses/Spring07/sta215/lec/BvP/BergSell1987.pdf)
+- [■■]{.ski .blue title="more challenging"}[On the Foundations of Statistical Inference](https://www.tandfonline.com/doi/abs/10.1080/01621459.1962.10480660)
+- [■■]{.ski .blue title="more challenging"}[On the Birnbaum Argument for the Strong Likelihood Principle](https://arxiv.org/abs/1302.7021)
 
 
 #### Information Theory
 
-- [Modeling by Shortest Data Description](https://www.semanticscholar.org/paper/Modeling-By-Shortest-Data-Description*-Rissanen/d382b9c11e5c6a8e173fbeb442545e3be8d3e3a5)
-- [A New Interpretation of Information Rate](https://www.princeton.edu/~wbialek/rome/refs/kelly_56.pdf)
-- [There Is No Universal Source Code for an Infinite Source Alphabet](https://www.szit.bme.hu/~gyorfi/IT94.pdf)
-- [Entropy and the Central Limit Theorem](http://www.stat.yale.edu/~arb4/publications_files/EntropyAndTheCentralLimitTheoremAnnalsProbability.pdf#:~:text=Page%201.%20Entropy%20and%20the%20Central%20Limit,Stable%20URL%3A%20http%3A%2F%2Fwww.jstor.org%2Fstable%2F2244098%20.%20Accessed%3A%2024%2F10%2F2012%2014%3A06.)
+- [▲]{.ski .black title="advanced"}[Quantifying Causal Influences](https://projecteuclid.org/journals/annals-of-statistics/volume-41/issue-5/Quantifying-causal-influences/10.1214/13-AOS1145.pdf)
+- [▲]{.ski .black title="advanced"} [Modeling by Shortest Data Description](https://www.semanticscholar.org/paper/Modeling-By-Shortest-Data-Description*-Rissanen/d382b9c11e5c6a8e173fbeb442545e3be8d3e3a5)
+- [▲▲]{.ski .black title="expert"}[There Is No Universal Source Code for an Infinite Source Alphabet](https://www.szit.bme.hu/~gyorfi/IT94.pdf)
+- [▲▲]{.ski .black title="expert"}[Entropy and the Central Limit Theorem](http://www.stat.yale.edu/~arb4/publications_files/EntropyAndTheCentralLimitTheoremAnnalsProbability.pdf#:~:text=Page%201.%20Entropy%20and%20the%20Central%20Limit,Stable%20URL%3A%20http%3A%2F%2Fwww.jstor.org%2Fstable%2F2244098%20.%20Accessed%3A%2024%2F10%2F2012%2014%3A06.)
 
+
+#### Physics
+- [More Is Different](https://www.rpgroup.caltech.edu/embl_pboc_2023/assets/pdfs/anderson1972.pdf)
+- [■]{.ski .blue title="challenging"}[Irreversibility and Heat Generation in the Computing Process
+](https://ieeexplore.ieee.org/document/5392446)
+- [■]{.ski .blue title="challenging"}[Information Theory and Statistical Mechanics](https://journals.aps.org/pr/abstract/10.1103/PhysRev.106.620)
+- [▲]{.ski .black title="advanced"} [Nonequilibrium Equality for Free Energy Differences](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.2690)
+- [▲]{.ski .black title="advanced"} [Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences
+](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.60.2721)
+
+
+
+:::
 
 ## Other
 - [3Blue1Brown](https://www.youtube.com/@3blue1brown)
