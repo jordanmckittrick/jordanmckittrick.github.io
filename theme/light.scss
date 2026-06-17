@@ -1,18 +1,22 @@
 /*-- scss:defaults --*/
-// A restrained, professional accent. Change $primary to recolor links/buttons.
-$primary:   #2f6f9f;
-$link-color: #2f6f9f;
+$web-font-path: "https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap";
+$font-family-base:      Baskerville, "Libre Baskerville", Georgia, serif;
+$headings-font-family:  $font-family-base;
+
+$primary:    #1e3a8a;
+$link-color: #1e3a8a;
 $body-color: #1f2328;
+
+// Navbar text on the white bar: quiet ink at rest, navy on hover/active.
+$navbar-light-color:         #1f2328;   // resting links ('ink' color)
+$navbar-light-hover-color:   #1e3a8a;   // hover -> navy ('hermes' color)
+$navbar-light-active-color:  #1e3a8a;   // current page -> navy ('hermes' color)
+$navbar-light-brand-color:        #1f2328;  // the "blog"/site title at rest ('ink' color)
+$navbar-light-brand-hover-color:  #1e3a8a;  // and on hover ('hermes' color)
 
 /*-- scss:rules --*/
 body { line-height: 1.65; }
-
 .navbar { border-bottom: 1px solid #e8e8e8; }
-
 a { text-underline-offset: 2px; }
-
-// Give code blocks a touch more breathing room.
 div.sourceCode { border-radius: 6px; }
-
-// Slightly tighter, more confident headings.
 h1, h2, h3 { letter-spacing: -0.01em; }
