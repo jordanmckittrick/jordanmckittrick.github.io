@@ -1,0 +1,29 @@
+
+
+# _brand.yml — single source of truth for the SITE's brand (colour + type).
+# Lives at the project root, beside _quarto.yml. Quarto (>= 1.6) detects it
+# automatically and themes the HTML output. It does NOT style Plotly figures;
+# those are themed by blogkit/brand_plotly.py, which keeps its own palette.
+
+color: # Note that these colors are used as a reference for the brand. You can't reference them in _quarto.yml or the .scss files.
+  palette:
+    hermes: "#1e3a8a" # a navy with a hint of purple mixed in
+    lapis_lazuli: "#3730a3" 
+    periwinkle: "#7575f7"   
+    lime:       "#84cc16" 
+    orange:     "#f4511e"
+    ink:        "#1c1c22" # essentially black, but softer on the eyes for text and code
+  foreground: ink
+  background: "#ffffff" # white
+  primary: lapis_lazuli           
+
+typography:
+  fonts:
+    - family: Libre Baskerville
+      source: google         # Quarto loads it; Apple users get true Baskerville
+  base:
+    family: Libre Baskerville
+    size: 1.0rem           
+    line-height: 1.65
+  headings:
+    family: Libre Baskerville
