@@ -9,7 +9,7 @@ code-tools: false
 
 THIS SITE IS CURRENTLY UNDER CONSTRUCTION.
 
-I'm an independent researcher with interests in quant finance, information theory, AI, Bayesian statistics, and complex systems. 
+I'm an independent researcher with interests in quant finance, information theory, AI, Bayesian statistics, and complex systems. Of course, whenever I discuss quant finance, nothing here should be taken as financial advice.
 
 I'll be writing about topics primarily from those fields, though occasionally I might wander. The technical level will generally be aimed at readers with some background in these areas, but I will try to keep things accessible. My goal is to be as rigorous as I reasonably can without being unnecessarily academic. Please let me know if you find any mistakes.
 
@@ -22,8 +22,7 @@ I'll be writing about topics primarily from those fields, though occasionally I 
 - **BA**, Columbia University — biochemistry
 
 ## Contact
-
-- Email: 
+<!-- - Email:  -->
 - LinkedIn: [https://www.linkedin.com/in/jordanmckittrick](https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/)
 
 
