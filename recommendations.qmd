@@ -34,7 +34,7 @@ The word "recommendation" may be a bit too strong, but for those interested in t
 - [▲]{.ski .black title="advanced"}[Quantifying Causal Influences](https://projecteuclid.org/journals/annals-of-statistics/volume-41/issue-5/Quantifying-causal-influences/10.1214/13-AOS1145.pdf)
 - [▲]{.ski .black title="advanced"} [Modeling by Shortest Data Description](https://www.semanticscholar.org/paper/Modeling-By-Shortest-Data-Description*-Rissanen/d382b9c11e5c6a8e173fbeb442545e3be8d3e3a5)
 - [▲▲]{.ski .black title="expert"}[There Is No Universal Source Code for an Infinite Source Alphabet](https://www.szit.bme.hu/~gyorfi/IT94.pdf)
-- [▲▲]{.ski .black title="expert"}[Entropy and the Central Limit Theorem](http://www.stat.yale.edu/~arb4/publications_files/EntropyAndTheCentralLimitTheoremAnnalsProbability.pdf#:~:text=Page%201.%20Entropy%20and%20the%20Central%20Limit,Stable%20URL%3A%20http%3A%2F%2Fwww.jstor.org%2Fstable%2F2244098%20.%20Accessed%3A%2024%2F10%2F2012%2014%3A06.)
+- [▲▲]{.ski .black title="expert"}[Entropy and the Central Limit Theorem](https://projecteuclid.org/journals/annals-of-probability/volume-14/issue-1/Entropy-and-the-Central-Limit-Theorem/10.1214/aop/1176992632.full)
 
 
 #### Physics
