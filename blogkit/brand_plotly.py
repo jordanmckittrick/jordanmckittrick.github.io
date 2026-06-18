@@ -29,6 +29,24 @@ HERO = "rgba(117, 117, 247, 1.0)"   # the quantity you keep
 SECONDARY = "#84cc16"               # its Jensen-overstating sibling
 ACCENT = "#f4511e"                  # optima / "look here" marks
 
+
+def with_alpha(color: str, alpha: float) -> str:
+    """Return ``color`` as an ``rgba(...)`` string at the given ``alpha``.
+
+    Accepts either a hex string (``"#rrggbb"``) or an existing
+    ``"rgb(...)"``/``"rgba(...)"`` string, so it works on every colour this
+    module exports (the neutrals and SECONDARY/ACCENT are hex; HERO is rgba).
+    """
+    c = color.strip()
+    if c.startswith("#"):
+        c = c.lstrip("#")
+        r, g, b = (int(c[i:i + 2], 16) for i in (0, 2, 4))
+    elif c.startswith("rgb"):
+        r, g, b = (float(v) for v in c[c.index("(") + 1:c.index(")")].split(",")[:3])
+    else:
+        raise ValueError(f"Unrecognized color format: {color!r}")
+    return f"rgba({r:.0f}, {g:.0f}, {b:.0f}, {alpha})"
+
 _axis = dict(
     gridcolor=GRID, zerolinecolor=GRID, linecolor=LABEL,
     tickfont=dict(color=LABEL), title=dict(font=dict(color=LABEL)),
