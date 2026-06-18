@@ -20,6 +20,3 @@ __pycache__/
 
 
 .env
-
-git rm --cached posts/shannons_demon_part_1/index.quarto_ipynb_*
-fatal: pathspec 'posts/shannons_demon_part_1/index.quarto_ipynb_10' did not match any files
