@@ -16,7 +16,10 @@ __pycache__/
 # NOTE: we intentionally do NOT ignore /_freeze/ — committing it lets the site
 # rebuild without re-running Python (useful if you ever switch to CI).
 
-**/*.quarto_ipynb
+*.quarto_ipynb*
 
 
 .env
+
+git rm --cached posts/shannons_demon_part_1/index.quarto_ipynb_*
+fatal: pathspec 'posts/shannons_demon_part_1/index.quarto_ipynb_10' did not match any files
