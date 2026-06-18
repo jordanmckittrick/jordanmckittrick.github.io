@@ -21,7 +21,7 @@ If intuition is to be believed, it shouldn't be possible for a long-only portfol
 ### The setup
 Consider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as analogous to a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate. Therefore, its associated gross return satisfies $r < 1$. In the example below, I'll set $r = 0.97$, which corresponds to a negative interest rate of 3% per period. 
 
-On the other hand, the risky asset, which I'll model as a coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t < \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = 1/(\alpha \gamma_h)$, for some $\alpha > 0$. In the example below, I choose $\gamma_h = 2.0$, $p_h = 0.5$, and $\alpha = 1.25$, which implies that $\gamma_t = 0.4$.
+On the other hand, the risky asset, which I'll model as a fair coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t < \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = \alpha/\gamma_h$, for some $\alpha > 0$. In the example below, I choose $\gamma_h = 2$, $p_h = 1/2$ (it's a fair coin), and $\alpha = 0.8$, which implies that $\gamma_t = 0.4$.
 
 Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset, and $1 - f$ the fraction that we allocate to the riskless asset. Our goal is to choose $f$ intelligently.
 
@@ -39,7 +39,8 @@ Obviously the riskless asset is a long-term loser, as its net return is $r - 1 =
 
 
 
-3. Because I chose $\alpha > 1$, however, the geometric mean of the risky asset's gross returns is much more sobering: $$\exp(\mathbb{E}[\log \gamma]) = 0.8944 < 1.$$
+
+3. Because I chose $\alpha < 1$, however, the geometric mean of the risky asset's gross returns is much more sobering: $$\exp(\mathbb{E}[\log \gamma]) = 0.8944 < 1.$$
 
 
 
