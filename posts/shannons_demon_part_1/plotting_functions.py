@@ -139,20 +139,39 @@ def create_wealth_plot(
 ) -> go.Figure:
     """Log-wealth fan chart over time, with the median/mean gap made visible.
 
+    Two stacked panels sharing a period axis. Top: the individual wealth paths
+    as a faint cloud (subsampled by ``_add_spaghetti``), the empirical 95%
+    band, and the median and mean on top; wealth is a multiple of starting
+    wealth, so the dashed guide at 1.0 marks break-even and the y-axis is
+    logarithmic. Bottom: the fraction of paths above break-even at each period.
+
+    On the log axis the mean sits above the median because a few high paths
+    pull the average up; that gap is the volatility drag.
+
     Parameters
     ----------
     simulations
-        One column per simulated path, indexed by period; values are wealth.
+        Wide frame of wealth paths: one column per path, indexed by period,
+        values being wealth as a multiple of the start (e.g. an ensemble's
+        ``running_wealth_ratio``, where 1.0 is break-even).
     summary
-        Per-period reduction across paths (e.g. the output of
-        ``summarize_across_paths`` at threshold 1.0): must carry ``Mean``,
-        ``Median``, ``CI Lower``, ``CI Upper`` and ``Fraction Above``.
+        Per-period cross-path reduction on the same index -- e.g.
+        ``EnsembleOfReturnsPaths.summarize_across_paths(..., threshold=1.0)``.
+        Must carry ``Mean``, ``Median``, ``CI Lower``, ``CI Upper`` and
+        ``Fraction Above``; the 1.0 threshold is what makes "Fraction Above"
+        read as "above break-even". ``CI Lower``/``CI Upper`` are the empirical
+        2.5/97.5 percentiles -- an asymmetric band, not a parametric interval.
     title
-        Figure title; the drawn path count is appended automatically.
+        Figure title; the total path count (columns of ``simulations``) is
+        appended automatically as ``(N paths)``.
+    max_paths, seed
+        Forwarded to ``_add_spaghetti``: the cap on how many raw paths are
+        drawn, and the RNG seed for the reproducible subsample above that cap.
 
-    The median (periwinkle) is the typical outcome; the mean (orange, dashed)
-    is dragged upward by a few lucky paths -- the gap between them, on a log
-    axis, is the volatility-drag story in one picture.
+    Returns
+    -------
+    go.Figure
+        The assembled two-panel figure.
     """
     n_total = simulations.shape[1]
 
@@ -213,14 +232,59 @@ def create_empirical_growth_rates_plot(
     max_paths: int = 300,
     seed: int = 0,
 ) -> go.Figure:
-    """Empirical growth rate per path converging on the theoretical rate.
+    """Per-path empirical growth rate converging on the theoretical rate.
 
-    Same skeleton as the wealth plot (spaghetti + percentile band + fraction
-    panel). The horizontal dashed line is the asymptotic growth rate
-    ``g(weights)``; it is drawn lime when positive (the demon wins) and orange
-    when negative (over-betting), so the sign reads at a glance.
+    The same two-panel layout as :func:`create_wealth_plot`, without the
+    central lines: the per-path running growth rates as a faint cloud, the
+    empirical 95% band, and two horizontal references (the theoretical
+    asymptote and break-even). The lower panel tracks the fraction of paths
+    above break-even -- here, growth > 0.
+
+    The empirical series and the asymptotic reference
+    ``coin_flip_model.growth_rate(weights_vector) = E[log Y]`` are natural-log
+    growth rates (nats/period) as supplied; both are converted to bits (log
+    base 2) for display, to match the rest of the post. The asymptote line is
+    drawn lime when positive and orange when negative, and its label and the
+    break-even label swap top/bottom with the sign so neither overlaps the
+    curves.
+
+    Parameters
+    ----------
+    simulations
+        Wide frame of per-path growth rates: one column per path, indexed by
+        period (e.g. an ensemble's ``running_growth_rate``), in nats/period.
+    summary
+        Per-period cross-path reduction on the same index -- e.g.
+        ``summarize_across_paths(..., threshold=0.0)``. Must carry
+        ``CI Lower``, ``CI Upper`` and ``Fraction Above`` (``Mean``/``Median``
+        are not drawn here); the 0.0 threshold is what makes "Fraction Above"
+        read as "growth above break-even".
+    weights_vector
+        The CRP weights ``[1 - f, f]`` whose theoretical growth rate is drawn
+        as the asymptote -- should match the weights the paths were simulated
+        under.
+    coin_flip_model
+        Model supplying ``growth_rate(weights_vector) = E[log Y]`` for the
+        asymptote (and its sign, which sets the colour and label placement).
+    title
+        Figure title; the total path count is appended automatically.
+    max_paths, seed
+        Forwarded to ``_add_spaghetti`` (see :func:`create_wealth_plot`).
+
+    Returns
+    -------
+    go.Figure
+        The assembled two-panel figure.
     """
-    asymptotic_avg = float(coin_flip_model.growth_rate(weights_vector))
+    # The model and the summary arrive in nats (natural log); convert the
+    # growth-rate quantities to bits (log base 2) for display, to match the
+    # rest of the post. Work on a copy so the caller's summary is untouched;
+    # the dimensionless "Fraction Above" column is left as-is.
+    asymptotic_avg = float(coin_flip_model.growth_rate(weights_vector)) / _LN2
+    simulations = simulations / _LN2
+    summary = summary.copy()
+    summary[["CI Lower", "CI Upper"]] /= _LN2
+
     winning = asymptotic_avg > 0
     rate_color = SECONDARY if winning else ACCENT
     pos_rate = "top right" if winning else "bottom right"
@@ -239,7 +303,7 @@ def create_empirical_growth_rates_plot(
 
     fig.add_hline(y=asymptotic_avg, line_width=1.5, line_dash="dash",
                   line_color=rate_color,
-                  annotation_text=f"asymptotic growth = {asymptotic_avg:.3f}",
+                  annotation_text=f"asymptotic growth = {asymptotic_avg:.3f} bits",
                   annotation_position=pos_rate, row=1, col=1)
     fig.add_hline(y=0.0, line_width=1.2, line_dash="dash",
                   line_color=with_alpha(INK, 0.55),
@@ -250,7 +314,7 @@ def create_empirical_growth_rates_plot(
     _add_fraction_panel(fig, summary, 2, 1)
 
     # ---- Layout ----
-    fig.update_yaxes(title_text="Empirical growth rate", hoverformat=".3f",
+    fig.update_yaxes(title_text="Empirical growth rate (bits / period)", hoverformat=".3f",
                      row=1, col=1)
     fig.update_xaxes(title_text="Period", row=2, col=1)
     fig.update_layout(
@@ -407,17 +471,17 @@ def create_arithmetic_vs_geometric_plot(
                    hoverinfo="skip", showlegend=False, zorder=5),
         row=2, col=1,
     )
-    # label sent DOWN-right into open space below the growth line (clear of both lines)
+    # label sent UP-left into open space ABOVE break-even (clear of the "growth = 0" tags below)
     fig.add_annotation(
         x=f_star, y=growth_star_bits,
         text=f"max growth = {growth_star_bits:.3f} bits at f* = {f_star:.3f}",
-        showarrow=True, arrowhead=3, standoff=_ARROW_STANDOFF, ax=80, ay=32,
+        showarrow=True, arrowhead=3, standoff=_ARROW_STANDOFF, ax=-70, ay=-56,
         font=dict(size=12), bgcolor=_CALLOUT_BG,
         bordercolor=_CALLOUT_BORDER, borderwidth=1, row=2, col=1,
     )
-    label_i = int(0.55 * (len(f) - 1))     # "drag" tag where the band is mid-width
+    label_i = int(np.argmin(np.abs(f - 0.8)))   # "drag" tag out near f=0.8, in the bulk of the band
     fig.add_annotation(
-        x=f[label_i], y=0.5 * (ceiling_bits[label_i] + growth_bits[label_i]),
+        x=f[label_i], y=0.5 * ceiling_bits[label_i],   # halfway between break-even (0) and the ceiling
         text="drag", showarrow=False, font=dict(size=12, color=_DRAG_LABEL),
         row=2, col=1,
     )
