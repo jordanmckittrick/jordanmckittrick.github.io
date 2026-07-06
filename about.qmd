@@ -1,17 +1,31 @@
 ---
 title: "Jordan McKittrick"
 about:
-  template: trestles      # try also: jolla, solana, marquee
+  template: trestles
   image: images/profile.jpeg
   image-shape: round
-code-tools: false
+  links:
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/
+    - icon: github
+      text: GitHub
+      href: https://github.com/jordanmckittrick
+    # --- Add once your dedicated address is live (see below) ---
+    # - icon: envelope
+    #   text: Email
+    #   href: mailto:you@yourfullname.dev
+    # --- Optional, only if you actually maintain one ---
+    # - icon: mortarboard
+    #   text: Scholar
+    #   href: https://scholar.google.com/citations?user=XXXXXXXX
 ---
 
 THIS SITE IS CURRENTLY UNDER CONSTRUCTION.
 
-I'm an independent researcher with interests in quant finance, information theory, AI, Bayesian statistics, and complex systems. Of course, whenever I discuss quant finance, nothing here should be taken as financial advice.
+I'm an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems.
 
-I'll be writing about topics primarily from those fields, though occasionally I might wander. The technical level will generally be aimed at readers with some background in these areas, but I will try to keep things accessible. My goal is to be as rigorous as I reasonably can without being unnecessarily academic. Please let me know if you find any mistakes.
+This blog is where I think out loud about those topics — aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please let me know if you find any mistakes.
 
 
 ## Education
@@ -21,8 +35,5 @@ I'll be writing about topics primarily from those fields, though occasionally I 
 - **MScRes**, Oxford University — stochastic differential equations
 - **BA**, Columbia University — biochemistry
 
-## Contact
-<!-- - Email:  -->
-- LinkedIn: [https://www.linkedin.com/in/jordanmckittrick](https://www.linkedin.com/in/jordan-mckittrick-3b1bb638/)
 
 
