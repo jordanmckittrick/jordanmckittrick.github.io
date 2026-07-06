@@ -15,7 +15,7 @@ format:
 
 
 ### Introduction
-If intuition is to be believed, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major loser, unless, of course, one is clairvoyant and knows in advance when each asset will happen to perform well. Yet, as I'll demonstrate in this post, not only is this possible but also an investor can (almost surely) guarantee an exponential amount of money in the long run from such a portfolio, if he knows what he's doing. As I'll show, information theory provides a lovely explanation for why this is the case.
+If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major loser, unless, of course, one is clairvoyant and knows in advance when each asset will happen to perform well. Yet, as I'll demonstrate in this post, not only is this possible but also an investor can (almost surely) guarantee an exponential amount of money in the long run from such a portfolio, if he knows what he's doing. As I'll show, information theory provides a lovely explanation for why this is the case.
 
 
 ### The setup
