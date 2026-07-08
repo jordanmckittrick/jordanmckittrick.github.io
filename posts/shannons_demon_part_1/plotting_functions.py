@@ -3,10 +3,11 @@
 All colour comes from the brand module (``blogkit.brand_plotly``), which also
 registers the default Plotly template, so nothing here hard-codes a hex value:
 
-    HERO       periwinkle  -- the quantity you keep (geometric / growth / median)
-    SECONDARY  lime        -- its Jensen-overstating sibling (arithmetic / ceiling)
-                             and "fraction above break-even"
-    ACCENT     orange      -- optima and the arithmetic mean ("look here")
+    HERO       periwinkle  -- the quantity you keep (geometric / growth / median),
+                             its 95% band, and the fraction above break-even
+    SECONDARY  lime        -- its Jensen-overstating sibling (arithmetic mean /
+                             ceiling), shown only in contrast to periwinkle
+    ACCENT     orange      -- optima and "look here" marks (never a whole series)
     INK/LABEL/GRID         -- neutrals for axes, guides, and the data cloud
 
 The two Monte-Carlo figures (wealth, empirical growth) share a common skeleton
@@ -99,7 +100,7 @@ def _add_fraction_panel(
     *,
     frac_col: str = "Fraction Above",
     hover_label: str = "Above break-even",
-    color: str = SECONDARY,
+    color: str = HERO,
 ) -> None:
     """Lower panel: the fraction of paths above break-even, with a 50% guide.
 
@@ -116,7 +117,7 @@ def _add_fraction_panel(
     fig.add_hline(y=0.5, line_width=1.0, line_dash="dot",
                   line_color=with_alpha(LABEL, 0.7), row=row, col=col)
     fig.update_yaxes(range=[0, 1], tickformat=".0%",
-                     title_text="Fraction of paths", row=row, col=col)
+                     title_text="", row=row, col=col)
 
 
 def _apply_spikes(fig: go.Figure) -> None:
@@ -141,12 +142,16 @@ def create_wealth_plot(
 
     Two stacked panels sharing a period axis. Top: the individual wealth paths
     as a faint cloud (subsampled by ``_add_spaghetti``), the empirical 95%
-    band, and the median and mean on top; wealth is a multiple of starting
-    wealth, so the dashed guide at 1.0 marks break-even and the y-axis is
-    logarithmic. Bottom: the fraction of paths above break-even at each period.
+    band, and the median (periwinkle) and mean (lime, dashed) on top; wealth is
+    a multiple of starting wealth, so the dashed guide at 1.0 marks break-even
+    and the y-axis is logarithmic. Bottom: the fraction of paths above
+    break-even at each period.
 
-    On the log axis the mean sits above the median because a few high paths
-    pull the average up; that gap is the volatility drag.
+    On the log axis the mean sits above the median because a few high paths pull
+    the average up; that gap is the volatility drag. The colours make the point:
+    periwinkle (median, band, fraction) is the honest, typical outcome; lime
+    (mean) is its Jensen-overstating sibling, deliberately not the neutral or
+    "look here" hue -- the reader should not mistake it for the baseline.
 
     Parameters
     ----------
@@ -162,8 +167,8 @@ def create_wealth_plot(
         read as "above break-even". ``CI Lower``/``CI Upper`` are the empirical
         2.5/97.5 percentiles -- an asymmetric band, not a parametric interval.
     title
-        Figure title; the total path count (columns of ``simulations``) is
-        appended automatically as ``(N paths)``.
+        Text for the top subplot title (e.g. "Wealth over time"). No separate
+        figure-level title is drawn.
     max_paths, seed
         Forwarded to ``_add_spaghetti``: the cap on how many raw paths are
         drawn, and the RNG seed for the reproducible subsample above that cap.
@@ -173,12 +178,10 @@ def create_wealth_plot(
     go.Figure
         The assembled two-panel figure.
     """
-    n_total = simulations.shape[1]
-
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True, row_heights=[2, 1],
         vertical_spacing=0.09,
-        subplot_titles=("Wealth", "Fraction of paths above break-even"),
+        subplot_titles=(title, "Fraction of paths above break-even"),
     )
 
     # ---- Top: raw paths, percentile band, then median & mean on top ----
@@ -187,33 +190,56 @@ def create_wealth_plot(
 
     fig.add_trace(
         go.Scatter(x=summary.index, y=summary["Median"], name="Median",
-                   line=dict(color=HERO, width=2.5),
-                   hovertemplate="<b>Median:</b> %{y:.3f}<extra></extra>"),
+                   line=dict(color=HERO, width=2.5), showlegend=False,
+                   hovertemplate="<b>Median:</b> %{y:.3e}<extra></extra>"),
         row=1, col=1,
     )
     fig.add_trace(
         go.Scatter(x=summary.index, y=summary["Mean"], name="Mean",
-                   line=dict(color=ACCENT, width=2, dash="dash"),
-                   hovertemplate="<b>Mean:</b> %{y:.3f}<extra></extra>"),
+                   line=dict(color=SECONDARY, width=2, dash="dash"), showlegend=False,
+                   hovertemplate="<b>Mean:</b> %{y:.3e}<extra></extra>"),
         row=1, col=1,
     )
+    # Label the two lines directly at their right ends instead of via a legend
+    # (consistent with the other figures in this module). A text trace carries
+    # raw data values, so it lands correctly on the log y-axis -- unlike a layout
+    # annotation, which would need the log10 of the value.
+    x_end = summary.index[-1]
+    for label, col_name, color in (("Median", "Median", HERO), ("Mean", "Mean", SECONDARY)):
+        fig.add_trace(
+            go.Scatter(x=[x_end], y=[summary[col_name].iloc[-1]], mode="text",
+                       text=[label], textposition="middle right",
+                       textfont=dict(size=12, color=color),
+                       cliponaxis=False, hoverinfo="skip", showlegend=False),
+            row=1, col=1,
+        )
     fig.add_hline(y=1.0, line_width=1.2, line_dash="dash",
                   line_color=with_alpha(INK, 0.55),
                   annotation_text="break-even = 1",
-                  annotation_position="bottom right", row=1, col=1)
+                  annotation_position="bottom right", annotation_yshift=-8,
+                  row=1, col=1)
 
     # ---- Bottom: fraction of paths above break-even ----
     _add_fraction_panel(fig, summary, 2, 1)
 
     # ---- Layout ----
-    fig.update_yaxes(type="log", title_text="Wealth (log scale)",
-                     hoverformat=".3f", row=1, col=1)
+    # exponentformat="power" + showexponent="all" force every tick into
+    # scientific notation (10^n); the evenly-spaced powers of ten also make the
+    # log scaling self-evident. The "Wealth over time" subplot title labels the
+    # panel, so the y-axis carries no (redundant) title of its own; automargin
+    # keeps the wider 10^n tick labels from being clipped.
+    fig.update_yaxes(type="log", title_text="",
+                     exponentformat="power", showexponent="all", automargin=True,
+                     hoverformat=".3e", row=1, col=1)
     fig.update_xaxes(title_text="Period", row=2, col=1)
     fig.update_layout(
-        title=dict(text=f"{title}  ({n_total:,} paths)", x=0.5, xanchor="center"),
         hovermode="x unified", hoverlabel=dict(namelength=-1),
         width=int(520 * GOLDEN_RATIO), height=560,
-        legend=dict(orientation="h", y=-0.14),
+        # No figure-level title (the subplot titles label each panel); the top
+        # margin just clears the top subplot title, and the right margin leaves
+        # room for the direct end-of-line labels.
+        margin=dict(t=54, r=74),
+        showlegend=False,
     )
     _apply_spikes(fig)
     return fig
