@@ -21,4 +21,9 @@ __pycache__/
 
 .env
 
+# Quarto project env file: machine-specific absolute PYTHONPATH (see the file's
+# header). Kept out of the repo for the same reason as .env.
+_environment
+_environment.local
+
 **/*.quarto_ipynb
