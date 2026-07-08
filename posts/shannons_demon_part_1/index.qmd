@@ -20,7 +20,9 @@ If intuition is any guide, it shouldn't be possible for a long-only portfolio to
 
 
 ### The setup
-Consider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as analogous to a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a fair coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t < r < \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = \alpha/\gamma_h$, for some $\alpha > 0$. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset, and $1 - f$ the fraction that we allocate to the riskless asset. Our goal is to choose $f$ intelligently. (The reader should pause for a moment to convince himself that $r$ must be between $\gamma_t$ and $\gamma_h$ for this game to be interesting.) 
+Consider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as analogous to a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a fair coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t < r < \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = \alpha / \gamma_h$, for some $\alpha > 0$. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset; hence, $1 - f$ is the fraction that we allocate to the riskless asset. Our goal is to choose $f$ intelligently so that we make as much money as possible in the long run (or lose the least possible). I'll let $S_0$ denote the initial wealth. (Obviously, $r$ must be between $\gamma_t$ and $\gamma_h$ for this game to be interesting.) 
+
+In what follows, let $w^T = (1 - f, f)$ denote the allocation vector and $X^T = (r, \gamma)$ the random gross returns vector, where $\gamma$ takes the value $\gamma_h$ with probability $p_h$ and $\gamma_t$ with probability $1 - p_h$. Note that $w = (1,0)$ corresponds to a portfolio consisting solely of the riskless asset, and $w = (0,1)$ corresponds to a portfolio consisting solely of the risky asset. The portfolio gross return for a particular period is then given by $$Y(w) = w^T X = (1 - f)r + f\gamma,$$ so the wealth after $n$ periods is $$S_n(w) = \prod_{i=1}^n Y_i(w),$$ where $Y_i(w)$ is the portfolio gross return in period $i$.
 
 For the specific example below, I'll set:
 
@@ -28,6 +30,7 @@ For the specific example below, I'll set:
 2. $\gamma_h = 2$: a 100% net gain on heads.
 3. $p_h = 0.5$: it's a fair coin.
 4. $\alpha = 0.8$: this implies $\gamma_t = 0.4$, i.e. a 60% net loss on tails.
+5. $S_0 = 1$: initial wealth is normalized to 1.
 
 ```{python}
 from coin_flip_with_riskless_asset_model import CoinFlipWithRisklessAssetModel
@@ -39,7 +42,7 @@ coin_flip_model = CoinFlipWithRisklessAssetModel(r=0.97, gamma_heads=2.0, p=0.5,
 
 ### The risky asset is a major loser
 
-Obviously the riskless asset is a long-term loser, as it bleeds 3% each period. While it is less obvious, the risky asset is also a major loser, which is easily seen using Monte Carlo simulations. 
+Obviously the riskless asset is a long-term loser, as it bleeds 3% each period. While it is less obvious, the risky asset is also a major loser, which can be seen using Monte Carlo simulations. 
 
 ```{python}
 import numpy as np
@@ -60,7 +63,7 @@ growth_rate_summary_df_risky = ensemble_risky.summarize_across_paths(ensemble_ri
 wealth_summary_df_risky = ensemble_risky.summarize_across_paths(ensemble_risky.running_wealth_ratio, threshold=1.0) 
 ```
 
-The figure below summarizes `{python} num_paths` simulated wealth paths over `{python} num_periods` periods for the risky asset, where the initial wealth is normalized to 1. The shaded region indicates the middle 95% of these wealth paths.
+The figure below summarizes `{python} num_paths` simulated wealth paths over `{python} num_periods` periods (coin flips) for the risky asset, where the initial wealth is normalized to 1. The shaded region indicates the middle 95% of these wealth paths.
 
 ```{python}
 #| echo: false
@@ -80,17 +83,51 @@ create_wealth_plot(
 )
 ```
 
-Clearly the typical path through log wealth space is downward sloping in the long run (top panel). In addition, after only 100 coin flips, we see that fewer than 10% of the paths have made money, and after 250 flips, that fraction rapidly drops below 1% (bottom panel). 
+Clearly the typical path through log wealth space is downward sloping in the long run (top panel). In addition, after only 100 coin flips, we see that fewer than 10% of the paths have made money, and after 250 flips, that fraction rapidly drops below 1%, and after all 500 flips, it is essentially zero (bottom panel). Indeed, the wealth path tends to zero with probability one. 
 
-The mean path, however, tells a very different story. After 500 periods, the mean path sits around 10,000, nearly 30 orders of magnitude better than the median. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the binomial theorem, we see that the expected wealth after $n$ periods is given by $$\mathbb{E}[S_n] = \sum_{k=0}^n {n \choose k} p_h^k (1 - p_h)^{n - k} \gamma_h^k \gamma_t^{n - k} = (p_h \gamma_h + (1 - p_h) \gamma_t)^n = 1.2^n,$$ which grows exponentially in $n$.
+To see this, we begin with the observation that since the sequence of random variables is i.i.d., the strong law of large numbers implies that the empirical growth rate, $W_n$, converges to the expected growth rate almost surely:
+$$
+\begin{align}
+W_n(w) &:= \frac{1}{n} \log \left(\frac{S_n(w)}{S_0}\right) \\
+&= \frac{1}{n} \sum_{i=1}^n \log Y_i(w) \\
+&\rightarrow \mathbb{E}\left[\log Y(w)\right] \\
+&=: W(w).
+\end{align}
+$$
+For the risky asset, we have $w^T = (0,1)$; hence, 
+$$
+\begin{align}
+W_n(w) &\rightarrow p_h \log \gamma_h + (1 - p_h) \log \gamma_t \\
+&= \frac{1}{2} \big(\log \gamma_h + \log \gamma_t \big) \\
+&= \frac{1}{2} \log \alpha \\
+&< 0,
+\end{align}
+$$
+since $\alpha < 1$. Let $x$ be any number satisfying $\log \sqrt{\alpha} < x < 0$. Then, by the definition of almost sure convergence, with probability one there exists some positive integer $N$ such that for all $n > N$, we have $W_n(w) < x < 0$. This implies that $S_n(w) = e^{n W_n(w)} < e^{n x} \rightarrow 0$ with probability one, which makes rigorous the claim that the risky asset is a major loser.
+
+
+The _mean_ path, however, tells a very different story. After 500 periods, the mean path sits around $10^4$, nearly 30 orders of magnitude better than the median. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the binomial theorem, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
+$$
+\begin{aligned}
+\mathbb{E}[S_n] &= \sum_{k=0}^n {n \choose k} p_h^k (1 - p_h)^{n - k} \gamma_h^k \gamma_t^{n - k} \\
+&= \big(p_h \gamma_h + (1 - p_h) \gamma_t \big)^n \\
+&= \mathbb{E}[\gamma]^n \\
+&= 1.2^n \\
+&\rightarrow \infty.
+\end{aligned}
+$$
  
 
-### Some initial remarks
-2. With these parameters, the expected gross return of the risky asset in a given period is given by $$\mathbb{E}[\gamma] = p_h \gamma_h + (1 - p_h) \gamma_t = 1.2.$$ Not bad at all!
-3. In addition, notice that the gross return of our portfolio in a given period is given by $$Y(f) = (1 - f)r + f\gamma,$$ where $\gamma$ is the random gross return of the risky asset; thus, in expectation, our portfolio's gross return is given by $$\mathbb{E}[Y(f)] = (1 - f)r + f\mathbb{E}[\gamma] = 0.97 + 0.23f,$$ which is greater than 1 for any $f > 0.13$. So, we can get an expected gross return greater than 1 by putting some (specifically $f > 0.13$) of our money in the risky asset.
+This enormous discrepancy makes plain one of the pitfalls of thinking solely in terms of expected value: the expected value is dominated by a small number of rare events, which are not representative of the typical outcome. In this case, the typical long-run outcome is a catastrophic loss, while the expected long-run outcome is a spectacular gain.
 
 
-3. Because I chose $\alpha < 1$, however, the geometric mean of the risky asset's gross returns is much more sobering: $$\exp(\mathbb{E}[\log \gamma]) = 0.8944 < 1.$$
+### How to salvage a long-only portfolio of major losers
+
+
+
+
+
+
 
 
 
