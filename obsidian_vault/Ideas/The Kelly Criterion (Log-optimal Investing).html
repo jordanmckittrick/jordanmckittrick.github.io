@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Recommendations – Jordan McKittrick</title>
+<title>the-kelly-criterion-(log-optimal-investing – Jordan McKittrick</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -61,27 +61,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./profile.jpeg" rel="icon" type="image/jpeg">
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-6b6957c917596b414ec0b78690761e87.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-efe09ce8a5d56f262236ac5cfe8bc908.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-0f50aac2d3774719e7d3140d78dbfeea.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-efe09ce8a5d56f262236ac5cfe8bc908.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../profile.jpeg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-6b6957c917596b414ec0b78690761e87.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-efe09ce8a5d56f262236ac5cfe8bc908.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0f50aac2d3774719e7d3140d78dbfeea.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-efe09ce8a5d56f262236ac5cfe8bc908.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -111,9 +111,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="ratings.css">
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -285,7 +313,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jordan McKittrick</span>
     </a>
   </div>
@@ -296,15 +324,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./blog.html"> 
+    <a class="nav-link" href="../../blog.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="./recommendations.html" aria-current="page"> 
+    <a class="nav-link" href="../../recommendations.html"> 
 <span class="menu-text">Recommendations</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
 </ul>
@@ -331,95 +359,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
-  <li><a href="#papers" id="toc-papers" class="nav-link" data-scroll-target="#papers">Papers</a></li>
-  <li><a href="#other" id="toc-other" class="nav-link" data-scroll-target="#other">Other</a></li>
-  </ul>
-</nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
-
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Recommendations</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
-</div>
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><h1 class="title display-7"></h1></header><div class="quarto-title-block"><div class="quarto-title-tools-only"><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 
 
 
-<div class="quarto-title-meta">
-
-    
-  
-    
-  </div>
-  
 
 
-</header>
-
-
-<section id="introduction" class="level2">
-<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>The word “recommendation” may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven’t yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions, but rather as a recommendation to read it and form your own opinion. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone.</p>
+<section id="notation" class="level4">
+<h4 class="anchored" data-anchor-id="notation">Notation</h4>
+<p>Let <span class="math inline">\(S_n = S_0 \prod_{i=1}^n b^T X_i\)</span> denote the wealth after <span class="math inline">\(n\)</span> trading days, where <span class="math inline">\(b\)</span> denotes portfolio weights (i.e.&nbsp;<span class="math inline">\(b\)</span> lives on the probability simplex), <span class="math inline">\(X_i\)</span> represents the prices relatives vector of all the stocks in the portfolio on the <span class="math inline">\(i^{th}\)</span> trading day, and <span class="math inline">\(S_0\)</span> is the initial capital.</p>
 </section>
-<section id="papers" class="level2">
-<h2 class="anchored" data-anchor-id="papers">Papers</h2>
-<div class="ratings">
-<section id="quantitative-finance" class="level4">
-<h4 class="anchored" data-anchor-id="quantitative-finance">Quantitative Finance</h4>
-<ul>
-<li><span class="ski blue" title="challenging">■</span><a href="https://www.princeton.edu/~wbialek/rome/refs/kelly_56.pdf">A New Interpretation of Information Rate</a></li>
-<li><span class="ski blue" title="challenging">■</span><a href="https://www.annualreviews.org/content/journals/10.1146/annurev.economics.050708.142940">Power Laws in Economics and Finance</a></li>
-<li><span class="ski blue" title="more challenging">■■</span><a href="https://link.springer.com/chapter/10.1007/978-1-4757-2763-0_14">The Variation of Certain Speculative Prices</a></li>
-<li><span class="ski black" title="advanced">▲</span><a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9469.2007.00592.x">The Pearson Diffusions: A Class of Statistically Tractable Diffusion Processes</a></li>
-<li><span class="ski black" title="advanced">▲</span><a href="https://www.sciencedirect.com/science/article/abs/pii/0022053179900437">Martingales and Arbitrage in Multiperiod Securities Markets</a></li>
-</ul>
+<section id="the-growth-rate" class="level4">
+<h4 class="anchored" data-anchor-id="the-growth-rate">The growth rate</h4>
+<p>We can rewrite this as <span class="math display">\[
+\begin{align}
+S_n &amp;= S_0 \exp \left(n \frac{\sum_{i=1}^n \log b^T X_i}{n} \right),
+\end{align}
+\]</span> and, under conditions where the strong law of large numbers holds, we have <span class="math display">\[
+\begin{align}
+\frac{1}{n}\log \frac{S_n}{S_0} &amp;= \frac{1}{n}\sum_{i=1}^n \log b^T X_i \\
+&amp;\rightarrow \mathbb{E}\left[\log b^T X \right],
+\end{align}
+\]</span> almost surely.</p>
+<blockquote class="blockquote">
+<p>[! Growth rate] We define the <em>growth rate</em> with respect to the portfolio weights as <span class="math inline">\(W(b, F) = \mathbb{E}\left[\log b^T X \right]\)</span>, where <span class="math inline">\(F\)</span> is the probability measure used in the expectation.</p>
+</blockquote>
 </section>
-<section id="statistics" class="level4">
-<h4 class="anchored" data-anchor-id="statistics">Statistics</h4>
-<ul>
-<li><span class="ski green" title="approachable">●</span><a href="https://projecteuclid.org/journals/statistical-science/volume-16/issue-3/Statistical-Modeling--The-Two-Cultures-with-comments-and-a/10.1214/ss/1009213726.full">Statistical Modeling: The Two Cultures</a></li>
-<li><span class="ski green" title="approachable">●</span><a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124">Why Most Published Research Findings Are False</a></li>
-<li><span class="ski blue" title="more challenging">■■</span><a href="https://www2.stat.duke.edu/courses/Spring07/sta215/lec/BvP/BergSell1987.pdf">Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence</a></li>
-<li><span class="ski blue" title="more challenging">■■</span><a href="https://www.tandfonline.com/doi/abs/10.1080/01621459.1962.10480660">On the Foundations of Statistical Inference</a></li>
-<li><span class="ski blue" title="more challenging">■■</span><a href="https://arxiv.org/abs/1302.7021">On the Birnbaum Argument for the Strong Likelihood Principle</a></li>
-</ul>
+<section id="the-kelly-criterion" class="level4">
+<h4 class="anchored" data-anchor-id="the-kelly-criterion">The Kelly criterion</h4>
+<p>The growth rate is the principal object in Kelly investing, and the Kelly criterion is simply to choose <span class="math inline">\(b\)</span> so as to maximize <span class="math inline">\(W\)</span>.</p>
+<blockquote class="blockquote">
+<p>[!Kelly Criterion] Choose a member <span class="math inline">\(b\)</span> of the probability simplex according to the following optimization problem: <span class="math display">\[
+\begin{align}
+b^*_{K} &amp;= \text{argmax}_b \mathbb{E}\left[\log b^T X \right].
+\end{align}
+\]</span></p>
+</blockquote>
+<p>We let <span class="math inline">\(W^* = W^*(F)\)</span> denote the maximized value of the growth rate, i.e.&nbsp;<span class="math inline">\(W^*(F) = W(b_K^*, F)\)</span>.</p>
 </section>
-<section id="information-theory" class="level4">
-<h4 class="anchored" data-anchor-id="information-theory">Information Theory</h4>
-<ul>
-<li><span class="ski black" title="advanced">▲</span><a href="https://projecteuclid.org/journals/annals-of-statistics/volume-41/issue-5/Quantifying-causal-influences/10.1214/13-AOS1145.pdf">Quantifying Causal Influences</a></li>
-<li><span class="ski black" title="advanced">▲</span> <a href="https://www.semanticscholar.org/paper/Modeling-By-Shortest-Data-Description*-Rissanen/d382b9c11e5c6a8e173fbeb442545e3be8d3e3a5">Modeling by Shortest Data Description</a></li>
-<li><span class="ski black" title="expert">▲▲</span><a href="https://www.szit.bme.hu/~gyorfi/IT94.pdf">There Is No Universal Source Code for an Infinite Source Alphabet</a></li>
-<li><span class="ski black" title="expert">▲▲</span><a href="https://projecteuclid.org/journals/annals-of-probability/volume-14/issue-1/Entropy-and-the-Central-Limit-Theorem/10.1214/aop/1176992632.full">Entropy and the Central Limit Theorem</a></li>
-</ul>
-</section>
-<section id="physics" class="level4">
-<h4 class="anchored" data-anchor-id="physics">Physics</h4>
-<ul>
-<li><a href="https://www.rpgroup.caltech.edu/embl_pboc_2023/assets/pdfs/anderson1972.pdf">More Is Different</a></li>
-<li><span class="ski blue" title="challenging">■</span><a href="https://ieeexplore.ieee.org/document/5392446">Irreversibility and Heat Generation in the Computing Process</a></li>
-<li><span class="ski blue" title="challenging">■</span><a href="https://journals.aps.org/pr/abstract/10.1103/PhysRev.106.620">Information Theory and Statistical Mechanics</a></li>
-<li><span class="ski black" title="advanced">▲</span> <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.2690">Nonequilibrium Equality for Free Energy Differences</a></li>
-<li><span class="ski black" title="advanced">▲</span> <a href="https://journals.aps.org/pre/abstract/10.1103/PhysRevE.60.2721">Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences</a></li>
-</ul>
-</section>
-</div>
-</section>
-<section id="other" class="level2">
-<h2 class="anchored" data-anchor-id="other">Other</h2>
-<ul>
-<li><a href="https://www.youtube.com/@3blue1brown">3Blue1Brown</a></li>
-<li><a href="https://marginalrevolution.com">Marginal Revolution</a></li>
-<li><a href="https://www.nytimes.com/2006/08/20/sports/playmagazine/20federer.html">Roger Federer as Religious Experience</a></li>
-</ul>
+<section id="elementary-properties-of-the-growth-rate" class="level4">
+<h4 class="anchored" data-anchor-id="elementary-properties-of-the-growth-rate">Elementary properties of the growth rate</h4>
+<p>From Jensen’s inequality, we see that there is an important relationship between <span class="math inline">\(W(b, F)\)</span> and the mean returns vector, namely that <span class="math inline">\(W(b, F) = \mathbb{E}\left[\log b^T X \right] \leq \log \mathbb{E}\left[b^T X \right] = \log b^T \mu\)</span>, so the mean return vector, which is of central important to the Markowitz investor, sets an upper bound on the growth rate.</p>
+<blockquote class="blockquote">
+<p>[!Proposition] <span class="math inline">\(W\)</span> is linear in <span class="math inline">\(F\)</span> and concave in <span class="math inline">\(b\)</span>. In addition, <span class="math inline">\(W^*\)</span> is a convex function of <span class="math inline">\(F\)</span>.</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>[!Proof] As an integral, <span class="math inline">\(W\)</span> is trivially linear in the probability measure, and its concavity in <span class="math inline">\(b\)</span> follows directly from the concavity of the logarithm. To show that <span class="math inline">\(W^*\)</span> is convex in <span class="math inline">\(F\)</span>….</p>
+</blockquote>
 
 
 <!-- -->
@@ -891,62 +881,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Recommendations"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> </span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">    html:</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">        css: ratings.css</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>The word "recommendation" may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven't yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions, but rather as a recommendation to read it and form your own opinion. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone.</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## Papers </span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>::: {.ratings}</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Quantitative Finance</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">■</span><span class="co">]</span>{.ski .blue title="challenging"}<span class="co">[</span><span class="ot">A New Interpretation of Information Rate</span><span class="co">](https://www.princeton.edu/~wbialek/rome/refs/kelly_56.pdf)</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">■</span><span class="co">]</span>{.ski .blue title="challenging"}<span class="co">[</span><span class="ot">Power Laws in Economics and Finance</span><span class="co">](https://www.annualreviews.org/content/journals/10.1146/annurev.economics.050708.142940)</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">■■</span><span class="co">]</span>{.ski .blue title="more challenging"}<span class="co">[</span><span class="ot">The Variation of Certain Speculative Prices</span><span class="co">](https://link.springer.com/chapter/10.1007/978-1-4757-2763-0_14)</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">▲</span><span class="co">]</span>{.ski .black title="advanced"}<span class="co">[</span><span class="ot">The Pearson Diffusions: A Class of Statistically Tractable Diffusion Processes</span><span class="co">](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9469.2007.00592.x)</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">▲</span><span class="co">]</span>{.ski .black title="advanced"}<span class="co">[</span><span class="ot">Martingales and Arbitrage in Multiperiod Securities Markets</span><span class="co">](https://www.sciencedirect.com/science/article/abs/pii/0022053179900437)</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Statistics</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">●</span><span class="co">]</span>{.ski .green title="approachable"}<span class="co">[</span><span class="ot">Statistical Modeling: The Two Cultures</span><span class="co">](https://projecteuclid.org/journals/statistical-science/volume-16/issue-3/Statistical-Modeling--The-Two-Cultures-with-comments-and-a/10.1214/ss/1009213726.full)</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">●</span><span class="co">]</span>{.ski .green title="approachable"}<span class="co">[</span><span class="ot">Why Most Published Research Findings Are False</span><span class="co">](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124)</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">■■</span><span class="co">]</span>{.ski .blue title="more challenging"}<span class="co">[</span><span class="ot">Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence</span><span class="co">](https://www2.stat.duke.edu/courses/Spring07/sta215/lec/BvP/BergSell1987.pdf)</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">■■</span><span class="co">]</span>{.ski .blue title="more challenging"}<span class="co">[</span><span class="ot">On the Foundations of Statistical Inference</span><span class="co">](https://www.tandfonline.com/doi/abs/10.1080/01621459.1962.10480660)</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">■■</span><span class="co">]</span>{.ski .blue title="more challenging"}<span class="co">[</span><span class="ot">On the Birnbaum Argument for the Strong Likelihood Principle</span><span class="co">](https://arxiv.org/abs/1302.7021)</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Information Theory</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">▲</span><span class="co">]</span>{.ski .black title="advanced"}<span class="co">[</span><span class="ot">Quantifying Causal Influences</span><span class="co">](https://projecteuclid.org/journals/annals-of-statistics/volume-41/issue-5/Quantifying-causal-influences/10.1214/13-AOS1145.pdf)</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">▲</span><span class="co">]</span>{.ski .black title="advanced"} <span class="co">[</span><span class="ot">Modeling by Shortest Data Description</span><span class="co">](https://www.semanticscholar.org/paper/Modeling-By-Shortest-Data-Description*-Rissanen/d382b9c11e5c6a8e173fbeb442545e3be8d3e3a5)</span></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">▲▲</span><span class="co">]</span>{.ski .black title="expert"}<span class="co">[</span><span class="ot">There Is No Universal Source Code for an Infinite Source Alphabet</span><span class="co">](https://www.szit.bme.hu/~gyorfi/IT94.pdf)</span></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">▲▲</span><span class="co">]</span>{.ski .black title="expert"}<span class="co">[</span><span class="ot">Entropy and the Central Limit Theorem</span><span class="co">](https://projecteuclid.org/journals/annals-of-probability/volume-14/issue-1/Entropy-and-the-Central-Limit-Theorem/10.1214/aop/1176992632.full)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Notation</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Let $S_n = S_0 \prod_{i=1}^n b^T X_i$ denote the wealth after $n$ trading days, where $b$ denotes portfolio weights (i.e. $b$ lives on the probability simplex), $X_i$ represents the prices relatives vector of all the stocks in the portfolio on the $i^{th}$ trading day, and $S_0$ is the initial capital. </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">#### The growth rate</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>We can rewrite this as</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>\begin{align}</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>S_n &amp;= S_0 \exp \left(n \frac{\sum_{i=1}^n \log b^T X_i}{n} \right),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>\end{align}</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>and, under conditions where the strong law of large numbers holds, we have</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>\begin{align}</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>\frac{1}{n}\log \frac{S_n}{S_0} &amp;= \frac{1}{n}\sum_{i=1}^n \log b^T X_i <span class="sc">\\</span> </span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>&amp;\rightarrow \mathbb{E}\left<span class="co">[</span><span class="ot">\log b^T X \right</span><span class="co">]</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>\end{align}</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>almost surely.</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; </span><span class="co">[</span><span class="ot">! Growth rate</span><span class="co">]</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; We define the *growth rate* with respect to the portfolio weights as $W(b, F) = \mathbb{E}\left</span><span class="co">[</span><span class="ot">\log b^T X \right</span><span class="co">]</span><span class="at">$, where $F$ is the probability measure used in the expectation. </span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">#### The Kelly criterion</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>The growth rate is the principal object in Kelly investing, and the Kelly criterion is simply to choose $b$ so as to maximize $W$.</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; </span><span class="co">[</span><span class="ot">!Kelly Criterion</span><span class="co">]</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Choose a member $b$ of the probability simplex according to the following optimization problem:</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; $$</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="at">\begin{align}</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="at">b^*_{K} &amp;= \text{argmax}_b \mathbb{E}\left</span><span class="co">[</span><span class="ot">\log b^T X \right</span><span class="co">]</span><span class="at">.</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="at">\end{align}</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="at">$$</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>We let $W^* = W^*(F)$ denote the maximized value of the growth rate, i.e. $W^*(F) = W(b_K^*, F)$.</span>
 <span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Physics</span></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">More Is Different</span><span class="co">](https://www.rpgroup.caltech.edu/embl_pboc_2023/assets/pdfs/anderson1972.pdf)</span></span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">■</span><span class="co">]</span>{.ski .blue title="challenging"}[Irreversibility and Heat Generation in the Computing Process</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>](https://ieeexplore.ieee.org/document/5392446)</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">■</span><span class="co">]</span>{.ski .blue title="challenging"}<span class="co">[</span><span class="ot">Information Theory and Statistical Mechanics</span><span class="co">](https://journals.aps.org/pr/abstract/10.1103/PhysRev.106.620)</span></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">▲</span><span class="co">]</span>{.ski .black title="advanced"} <span class="co">[</span><span class="ot">Nonequilibrium Equality for Free Energy Differences</span><span class="co">](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.2690)</span></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">▲</span><span class="co">]</span>{.ski .black title="advanced"} [Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.60.2721)</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Elementary properties of the growth rate</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>From Jensen's inequality, we see that there is an important relationship between $W(b, F)$ and the mean returns vector, namely that $W(b, F) = \mathbb{E}\left<span class="co">[</span><span class="ot">\log b^T X \right</span><span class="co">]</span> \leq \log \mathbb{E}\left<span class="co">[</span><span class="ot">b^T X \right</span><span class="co">]</span> = \log b^T \mu$, so the mean return vector, which is of central important to the Markowitz investor, sets an upper bound on the growth rate.</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; </span><span class="co">[</span><span class="ot">!Proposition</span><span class="co">]</span><span class="at"> </span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; $W$ is linear in $F$ and concave in $b$. In addition, $W^*$ is a convex function of $F$.</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; </span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; </span><span class="co">[</span><span class="ot">!Proof</span><span class="co">]</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; As an integral, $W$ is trivially linear in the probability measure, and its concavity in $b$ follows directly from the concavity of the logarithm. To show that $W^*$ is convex in $F$....</span></span>
 <span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Other</span></span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">3Blue1Brown</span><span class="co">](https://www.youtube.com/@3blue1brown)</span></span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">Marginal Revolution</span><span class="co">](https://marginalrevolution.com)</span></span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">Roger Federer as Religious Experience</span><span class="co">](https://www.nytimes.com/2006/08/20/sports/playmagazine/20federer.html)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -979,5 +966,5 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
 </body></html>

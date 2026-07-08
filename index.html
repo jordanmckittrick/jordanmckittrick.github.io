@@ -305,13 +305,21 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<figure style="max-width: 860px; margin: 3rem auto; text-align: center;" class="figure">
-  <img src="images/flow_hero.png" alt="Natural-gradient flow of KL divergence on the 2-simplex, converging to the true distribution." style="width: 100%; border-radius: 8px;" class="figure-img">
-  <figcaption style="margin-top: 1rem; font-size: 0.95rem;
-                     font-style: italic; color: #5b5f66;">
-    Every belief flows to the truth — the natural-gradient descent of KL divergence on the simplex.
-  </figcaption>
-</figure>
+<div style="min-height: calc(100vh - 6rem);
+            display: flex; flex-direction: column;
+            justify-content: flex-start; align-items: center; padding-top: 0rem">
+  <figure style="margin: 0; text-align: center;" class="figure">
+    <img src="images/flow_hero.png" alt="Natural-gradient flow of KL divergence on the 2-simplex, converging to the true distribution." style="display: block; margin: 0 auto;
+                max-width: min(860px, 100%);
+                max-height: calc(100vh - 12rem);
+                width: auto; height: auto;
+                border-radius: 8px;" class="figure-img">
+    <figcaption style="margin-top: 1rem; font-size: 0.95rem;
+                       font-style: italic; color: #5b5f66;">
+      Every belief flows to the truth — the natural-gradient descent of KL divergence on the simplex.
+    </figcaption>
+  </figure>
+</div>
 
 
 
