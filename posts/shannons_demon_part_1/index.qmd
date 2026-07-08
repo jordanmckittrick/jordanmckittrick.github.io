@@ -16,7 +16,7 @@ format:
 
 
 ### Introduction
-If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major loser, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is this possible but also an investor can (almost surely) guarantee an exponential amount of money in the long run from such a portfolio, if he knows what he's doing. It turns out that information theory provides a lovely explanation for why this is possible.
+If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major loser, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from such a portfolio, if he knows what he's doing. It turns out that information theory provides a lovely explanation for why this is possible.
 
 
 ### The setup
@@ -117,11 +117,34 @@ $$
 \end{aligned}
 $$
  
+This enormous discrepancy makes plain one of the pitfalls of thinking solely in terms of expected value: the expected value is dominated by a small number of rare events, which are not representative of the typical outcome. Though the expected long-run outcome is a spectacular gain, the typical long-run outcome is a catastrophic loss. 
 
-This enormous discrepancy makes plain one of the pitfalls of thinking solely in terms of expected value: the expected value is dominated by a small number of rare events, which are not representative of the typical outcome. In this case, the typical long-run outcome is a catastrophic loss, while the expected long-run outcome is a spectacular gain.
 
 
-### How to salvage a long-only portfolio of major losers
+### How to salvage a portfolio of major losers
+
+Earlier I invoked the strong law of large numbers to show that the risky asset is a major loser since $W(w) < 0$ whenever $\alpha < 1$. Instead of letting our portfolio consist solely of the risky asset, however, we can instead choose $w$ to maximize $W(w) = \mathbb{E}[\log Y(w)]$ -- we maximize the expected growth rate. Clearly $W$ is a concave function of $w$, so it has a unique maximum. If we think of $W(w)$ as a function of $f$, we can find the optimal fraction to allocate to the risky asset by taking the derivative and setting it equal to zero. Doing so, we find that the optimal fraction is given by
+$$
+\begin{align}
+f^* = r \frac{\mathbb{E}[\gamma] - r}{ab},
+\end{align}
+$$
+where I've defined $a = \gamma_h - r$ and $b = r - \gamma_t$. For our specific example, we have $f^* \approx 0.38$. In general, however, we will need to solve problems of this type numerically.
+
+```{python}
+####### FIND THE OPTIMAL CRP STRATEGY #####
+opt_result_for_CRP = coin_flip_model.solve_growth_rate_maximization_problem()
+f_star = opt_result_for_CRP.x
+weights_for_optimal_CRP = np.array([1 - f_star, f_star])
+```
+
+```{python}
+# | echo: false
+from plotting_data import generate_arithmetic_vs_geometric_data
+from plotting_functions import create_arithmetic_vs_geometric_plot
+arith_geo_df = generate_arithmetic_vs_geometric_data(coin_flip_model)
+create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP)
+```
 
 
 
