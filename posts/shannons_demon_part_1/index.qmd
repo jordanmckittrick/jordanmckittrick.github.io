@@ -1,6 +1,6 @@
 ---
 title: "Shannon's Demon, Made Exact (Part 1)"
-subtitle: "How to make an exponential amount of money from a portfolio of almost sure losers without shorting anything"
+subtitle: "How to make an exponential amount of money from a portfolio of almost sure lemons without shorting anything"
 date: 2026-07-15
 categories: [quant finance, information theory, kelly criterion, risk-neutral measure, KL divergence]
 bibliography: references.bib
@@ -16,11 +16,11 @@ format:
 
 
 ### Introduction
-If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major loser, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from such a portfolio, if he knows what he's doing. It turns out that information theory provides a lovely explanation for why this is possible.
+If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio. It turns out that information theory provides a lovely explanation for why this is possible.
 
 
 ### The setup
-Consider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as analogous to a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a fair coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t < r < \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = \alpha / \gamma_h$, for some $\alpha > 0$. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset; hence, $1 - f$ is the fraction that we allocate to the riskless asset. Our goal is to choose $f$ intelligently so that we make as much money as possible in the long run (or lose the least possible). I'll let $S_0$ denote the initial wealth. (Obviously, $r$ must be between $\gamma_t$ and $\gamma_h$ for this game to be interesting.) 
+Consider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as reminiscent of a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a fair coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t < r < \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = \alpha / \gamma_h$, for some $\alpha > 0$. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset; hence, $1 - f$ is the fraction that we allocate to the riskless asset. Our goal is to choose $f$ intelligently so that we make as much money as possible in the long run (or lose the least possible). I'll let $S_0$ denote the initial wealth. (Obviously, $r$ must be between $\gamma_t$ and $\gamma_h$ for this game to be interesting.) 
 
 In what follows, let $w^T = (1 - f, f)$ denote the allocation vector and $X^T = (r, \gamma)$ the random gross returns vector, where $\gamma$ takes the value $\gamma_h$ with probability $p_h$ and $\gamma_t$ with probability $1 - p_h$. Note that $w = (1,0)$ corresponds to a portfolio consisting solely of the riskless asset, and $w = (0,1)$ corresponds to a portfolio consisting solely of the risky asset. The portfolio gross return for a particular period is then given by $$Y(w) = w^T X = (1 - f)r + f\gamma,$$ so the wealth after $n$ periods is $$S_n(w) = \prod_{i=1}^n Y_i(w),$$ where $Y_i(w)$ is the portfolio gross return in period $i$.
 
@@ -40,9 +40,9 @@ coin_flip_model = CoinFlipWithRisklessAssetModel(r=0.97, gamma_heads=2.0, p=0.5,
 
 
 
-### The risky asset is a major loser
+### The risky asset is a major lemon
 
-Obviously the riskless asset is a long-term loser, as it bleeds 3% each period. While it is less obvious, the risky asset is also a major loser, which can be seen using Monte Carlo simulations. 
+Obviously the riskless asset is a major lemon, as it bleeds 3% each period. While it is less obvious, the risky asset is also a major lemon, which can be seen using Monte Carlo simulations. 
 
 ```{python}
 import numpy as np
@@ -63,7 +63,7 @@ growth_rate_summary_df_risky = ensemble_risky.summarize_across_paths(ensemble_ri
 wealth_summary_df_risky = ensemble_risky.summarize_across_paths(ensemble_risky.running_wealth_ratio, threshold=1.0) 
 ```
 
-The figure below summarizes `{python} num_paths` simulated wealth paths over `{python} num_periods` periods (coin flips) for the risky asset, where the initial wealth is normalized to 1. The shaded region indicates the middle 95% of these wealth paths.
+The figure below summarizes `{python} num_paths` simulated wealth paths over `{python} num_periods` periods (coin flips) for the risky asset. The shaded region indicates the middle 95% of these wealth paths.
 
 ```{python}
 #| echo: false
@@ -83,7 +83,7 @@ create_wealth_plot(
 )
 ```
 
-Clearly the typical path through log wealth space is downward sloping in the long run (top panel). In addition, after only 100 coin flips, we see that fewer than 10% of the paths have made money, and after 250 flips, that fraction rapidly drops below 1%, and after all 500 flips, it is essentially zero (bottom panel). Indeed, the wealth path tends to zero with probability one. 
+Clearly the typical path through log wealth space is downward sloping in the long run (top panel). In addition, after only 100 coin flips, we see that fewer than 10% of the paths have made money, and after 250 flips, that fraction rapidly drops below 1%. After all 500 flips, it is essentially zero (bottom panel). Indeed, the wealth path tends to zero with probability one. 
 
 To see this, we begin with the observation that since the sequence of random variables is i.i.d., the strong law of large numbers implies that the empirical growth rate, $W_n$, converges to the expected growth rate almost surely:
 $$
@@ -103,27 +103,58 @@ W_n(w) &\rightarrow p_h \log \gamma_h + (1 - p_h) \log \gamma_t \\
 &< 0,
 \end{align}
 $$
-since $\alpha < 1$. Let $x$ be any number satisfying $\log \sqrt{\alpha} < x < 0$. Then, by the definition of almost sure convergence, with probability one there exists some positive integer $N$ such that for all $n > N$, we have $W_n(w) < x < 0$. This implies that $S_n(w) = e^{n W_n(w)} < e^{n x} \rightarrow 0$ with probability one, which makes rigorous the claim that the risky asset is a major loser.
+since $\alpha < 1$. Let $x$ be any number satisfying $\log \sqrt{\alpha} < x < 0$. Then, by the definition of almost sure convergence, with probability one there exists some positive integer $N$ such that for all $n > N$, we have $W_n(w) < x < 0$. This implies that $S_n(w) = e^{n W_n(w)} < e^{n x} \rightarrow 0$ with probability one, which proves the claim that the risky asset is a major lemon.
 
 
-The _mean_ path, however, tells a very different story. After 500 periods, the mean path sits around $10^4$, nearly 30 orders of magnitude better than the median. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the binomial theorem, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
+
+
+### The expected value is a mirage
+
+The _expected value_ path, however, tells a very different story. After 500 periods, the expected value path (not shown in the figure) for the risky assets sits around $10^{40}$, which is dozens of orders of magnitude better than both the median and the (empirical) mean. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the independence of the coin flips, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
 $$
-\begin{aligned}
-\mathbb{E}[S_n] &= \sum_{k=0}^n {n \choose k} p_h^k (1 - p_h)^{n - k} \gamma_h^k \gamma_t^{n - k} \\
-&= \big(p_h \gamma_h + (1 - p_h) \gamma_t \big)^n \\
+\begin{align}
+\mathbb{E}[S_n] &= \mathbb{E}\left[\prod_{i=1}^n Y_i\right] \\
+&= \prod_{i=1}^n \mathbb{E}[Y_i] \\
+&= \prod_{i=1}^n \mathbb{E}[\gamma_i] \\
 &= \mathbb{E}[\gamma]^n \\
+&= \big(p_h \gamma_h + (1 - p_h) \gamma_t \big)^n \\
 &= 1.2^n \\
 &\rightarrow \infty.
-\end{aligned}
+\end{align}
 $$
- 
-This enormous discrepancy makes plain one of the pitfalls of thinking solely in terms of expected value: the expected value is dominated by a small number of rare events, which are not representative of the typical outcome. Though the expected long-run outcome is a spectacular gain, the typical long-run outcome is a catastrophic loss. 
+
+Given that the a wealth path tends to zero with probability one, the expected value path is a mirage. The expected value is dominated by a small number of rare events, which are not representative of the typical outcome. Let's now consider the probability that the path after $n$ periods at least hasn't lost any money, i.e. that $S_n \geq S_0 = 1$. For this simple model, we can actually compute this probability exactly. Letting $k$ denote the number of heads in $n$ flips, we have
+$$
+\begin{align}
+\mathbb{P}(S_n \geq 1) &= \mathbb{P}(W_n \geq 0) \\
+&= \mathbb{P}\left(\frac{1}{n} \sum_{i=1}^n \log \gamma_i \geq 0\right) \\ 
+&= \mathbb{P}\left(\frac{k}{n} \log \gamma_h + \frac{n-k}{n} \log \gamma_t \geq 0\right) \\ 
+&= \mathbb{P}\left(k \geq \lceil c \rceil \right) \\ 
+&= \sum_{k=\lceil c \rceil}^{n} \binom{n}{k} p_h^k (1 - p_h)^{n-k}, \\ 
+\end{align}
+$$
+```{python}
+# |echo: false
+cut_off_as_fraction = -np.log(coin_flip_model.gamma_tails) / (np.log(coin_flip_model.gamma_heads) - np.log(coin_flip_model.gamma_tails))
+
+import scipy.stats as ss
+n = num_periods
+m = np.ceil(cut_off_as_fraction*num_periods)
+p_u = coin_flip_model.p
+upper_tail_prob = ss.binom.sf(m - 1, n, p_u)
+```
+
+where $c/n = \frac{-\log \gamma_t}{\log \gamma_h - \log \gamma_t} \approx{}$ `{python} f'{cut_off_as_fraction:.3f}'` solves $\frac{c}{n} \log \gamma_h + \frac{n-c}{n} \log \gamma_t = 0$. For $n = `{python} num_periods`$, this implies $c \approx {}$ `{python} f'{cut_off_as_fraction*num_periods:.3f}'`, yielding $\mathbb{P}(S_n \geq 1) \approx {}$ `{python} f'{upper_tail_prob:.3e}'`, or about one in a thousand. So much for the expected value path being representative of the typical outcome!
+
+To further underscore this point, we can compute an upper bound on this same tail probability by borrowing Sanov's theorem from large deviations theory. The actual probability of heads and tails are $\tilde{p} = (p_h, 1 - p_h) = `{python} (coin_flip_model.p, 1 - coin_flip_model.p)`$, while the empirical probability of heads and tails that would yield a non-negative growth rate is $\tilde{q} = (\lceil c \rceil / n, 1 - \lceil c \rceil / n) \approx {}$ (`{python} f'{cut_off_as_fraction:.3f}'`, `{python} f'{1 - cut_off_as_fraction:.3f}'`). Of all the empirical distributions that would achieve a non-negative growth rate, $\tilde{q}$ is the "closest" to the actual distribution $\tilde{p}$ in the sense that $\tilde{q} = \argmin_q D_{KL}(q||\tilde{p})$.
+
+This enormous discrepancy makes plain one of the pitfalls of thinking solely in terms of expected value: the expected value is dominated by a small number of rare events, which are not representative of the typical outcome. Though the expected long-run outcome is a spectacular gain, the long-run outcome is an almost certain total loss. 
 
 
 
-### How to salvage a portfolio of major losers
+### How to salvage a portfolio of major lemons
 
-Earlier I invoked the strong law of large numbers to show that the risky asset is a major loser since $W(w) < 0$ whenever $\alpha < 1$. Instead of letting our portfolio consist solely of the risky asset, however, we can instead choose $w$ to maximize $W(w) = \mathbb{E}[\log Y(w)]$ -- we maximize the expected growth rate. Clearly $W$ is a concave function of $w$, so it has a unique maximum. If we think of $W(w)$ as a function of $f$, we can find the optimal fraction to allocate to the risky asset by taking the derivative and setting it equal to zero. Doing so, we find that the optimal fraction is given by
+Earlier I invoked the strong law of large numbers to show that the risky asset is a major lemon since the expected growth rate, $W(w)$, is negative whenever $\alpha < 1$. Instead of letting our portfolio consist solely of the risky asset, however, we can instead choose $w$ to maximize $W(w) = \mathbb{E}[\log Y(w)]$ -- we maximize the expected growth rate. Clearly $W$ is a concave function of $w$, so it has a unique maximum. If we think of $W(w)$ as a function of $f$, we can find the optimal fraction to allocate to the risky asset by taking the derivative and setting it equal to zero. Doing so, we find that the optimal fraction is given by
 $$
 \begin{align}
 f^* = r \frac{\mathbb{E}[\gamma] - r}{ab},
