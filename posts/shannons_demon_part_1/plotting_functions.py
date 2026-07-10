@@ -407,9 +407,11 @@ def create_no_loss_probability_plot(
                    hovertemplate="<b>exact probability:</b> %{y:.3e}<extra></extra>"),
     )
 
-    # Direct labels (bold), floated above each line at 80% of the horizon -- the
-    # same lifted text-trace approach as create_wealth_plot, so the line never
-    # cuts through the text on the log axis.
+    # Direct labels floated above each line at 80% of the horizon -- the same
+    # lifted text-trace approach as create_wealth_plot, so the line never cuts
+    # through the text on the log axis. Not bold: unlike the wealth chart, whose
+    # labels sit over the spaghetti cloud, these sit on clean white, so the
+    # weight would be gratuitous.
     i_label = int(round(0.8 * (len(df) - 1)))
     x_label = n[i_label]
     span = np.log10(df["Chernoff bound"].max()) - np.log10(df["Exact"].min())
@@ -418,7 +420,7 @@ def create_no_loss_probability_plot(
                                    ("Chernoff bound", "Chernoff bound", SECONDARY)):
         fig.add_trace(
             go.Scatter(x=[x_label], y=[df[col_name].iloc[i_label] * lift],
-                       mode="text", text=[f"<b>{label}</b>"], textposition="top right",
+                       mode="text", text=[label], textposition="top right",
                        textfont=dict(size=13, color=color),
                        cliponaxis=False, hoverinfo="skip", showlegend=False),
         )
@@ -472,9 +474,18 @@ def _interior_growth_rate_zeros(
     return zeros
 
 
-def _direct_label(fig, x, y, text, color, row, col):
-    """Tiny coloured tag at a curve's right end -- replaces a legend entry."""
-    fig.add_annotation(x=x, y=y, text=text, xanchor="left", xshift=7,
+def _direct_label(fig, x, y, text, color, row, col, *, above: bool, xshift: int = 0):
+    """Tiny coloured tag riding on a curve -- replaces a legend entry.
+
+    Sits inside the plotting area, centred on ``x`` and pushed clear of the line
+    by a fixed pixel offset (not a data offset, so it holds whatever the y-range
+    or scale). Lime rides above its curve and periwinkle below, which keeps each
+    tag on the side where the two series are pulling apart. ``xshift`` nudges a
+    tag along the axis when a steep curve would otherwise close on its far end.
+    """
+    fig.add_annotation(x=x, y=y, text=text, xanchor="center",
+                       yanchor="bottom" if above else "top",
+                       yshift=6 if above else -6, xshift=xshift,
                        showarrow=False, font=dict(size=12, color=color),
                        row=row, col=col)
 
@@ -482,7 +493,6 @@ def _direct_label(fig, x, y, text, color, row, col):
 def create_arithmetic_vs_geometric_plot(
     df: pd.DataFrame,
     opt_result_for_CRP: opt.OptimizeResult,
-    subtitle: str | None = None,
 ) -> go.Figure:
     """Two-panel arithmetic-vs-geometric figure with the compounding drag.
 
@@ -491,10 +501,12 @@ def create_arithmetic_vs_geometric_plot(
     ``log E[Y] - E[log Y]`` (leading term the volatility drag sigma^2/2, but
     carrying every higher cumulant too).
 
-    Curves are labelled directly at their right ends rather than via a legend:
-    the bottom panel repeats the top panel's two colours (periwinkle = the
-    quantity you keep, lime = its Jensen-overstating sibling), so a single
-    shared legend would show each colour twice and read as ambiguous.
+    Curves are labelled directly, riding on the lines themselves rather than via
+    a legend: the bottom panel repeats the top panel's two colours (periwinkle =
+    the quantity you keep, lime = its Jensen-overstating sibling), so a single
+    shared legend would show each colour twice and read as ambiguous. The panels
+    are named by their subplot headings, so the figure draws no title of its own
+    -- a rendered figure carries its caption instead.
     """
     f = df.index.to_numpy()
     f_star = float(opt_result_for_CRP.x)
@@ -508,9 +520,12 @@ def create_arithmetic_vs_geometric_plot(
     ceiling_bits = df["Growth Rate Ceiling"].to_numpy() / _LN2
     zeros = _interior_growth_rate_zeros(f, df["Growth Rate"].to_numpy())
 
-    title = "Arithmetic vs Geometric Return, and the Drag"
-    if subtitle:
-        title = f"{title}<br><sub>{subtitle}</sub>"
+    # Curves are tagged here rather than at f = 1: the two series have separated
+    # cleanly by this point, and the tags stay inside the plotting area. Anchored
+    # at f = 0.82 so the longest tag ("arithmetic mean"), centred on this x, still
+    # clears the right edge.
+    at_label = int(np.argmin(np.abs(f - 0.82)))
+    label_x = f[at_label]
 
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.10,
@@ -520,21 +535,20 @@ def create_arithmetic_vs_geometric_plot(
     # ---- Top: gross returns (levels) ----
     fig.add_trace(
         go.Scatter(x=f, y=arithmetic, line=dict(color=SECONDARY, width=2),
-                   name="Arithmetic", showlegend=False,
-                   hovertemplate="<b>Arithmetic:</b> %{y:.3f}<extra></extra>"),
+                   name="arithmetic mean", showlegend=False,
+                   hovertemplate="<b>arithmetic mean:</b> %{y:.3f}<extra></extra>"),
         row=1, col=1,
     )
     fig.add_trace(
         go.Scatter(x=f, y=geometric, line=dict(color=HERO, width=3),
-                   name="Geometric", showlegend=False,
-                   hovertemplate="<b>Geometric:</b> %{y:.3f}<extra></extra>"),
+                   name="geometric mean", showlegend=False,
+                   hovertemplate="<b>geometric mean:</b> %{y:.3f}<extra></extra>"),
         row=1, col=1,
     )
-    _direct_label(fig, f[-1], arithmetic[-1], "Arithmetic", SECONDARY, 1, 1)
-    _direct_label(fig, f[-1], geometric[-1], "Geometric", HERO, 1, 1)
+    _direct_label(fig, label_x, arithmetic[at_label], "arithmetic mean", SECONDARY, 1, 1, above=True)
+    _direct_label(fig, label_x, geometric[at_label], "geometric mean", HERO, 1, 1, above=False)
 
     fig.add_hline(y=1.0, line_width=1.5, line_dash="dash", line_color="black",
-                  annotation_text="break-even = 1", annotation_position="bottom right",
                   row=1, col=1)
     fig.add_trace(
         go.Scatter(x=[f_star], y=[geometric_star], mode="markers",
@@ -564,21 +578,23 @@ def create_arithmetic_vs_geometric_plot(
     )
     fig.add_trace(  # visible ceiling line, on top of the fill
         go.Scatter(x=f, y=ceiling_bits, line=dict(color=SECONDARY, width=2),
-                   name="Ceiling", showlegend=False,
-                   hovertemplate="<b>Ceiling:</b> %{y:.3f}<extra></extra>"),
+                   name="ceiling", showlegend=False,
+                   hovertemplate="<b>ceiling:</b> %{y:.3f}<extra></extra>"),
         row=2, col=1,
     )
     fig.add_trace(  # visible growth line, on top of the fill
         go.Scatter(x=f, y=growth_bits, line=dict(color=HERO, width=3),
-                   name="Growth rate", showlegend=False,
-                   hovertemplate="<b>Growth rate:</b> %{y:.3f}<extra></extra>"),
+                   name="growth rate", showlegend=False,
+                   hovertemplate="<b>growth rate:</b> %{y:.3f}<extra></extra>"),
         row=2, col=1,
     )
-    _direct_label(fig, f[-1], ceiling_bits[-1], "Ceiling", SECONDARY, 2, 1)
-    _direct_label(fig, f[-1], growth_bits[-1], "Growth rate", HERO, 2, 1)
+    _direct_label(fig, label_x, ceiling_bits[at_label], "ceiling", SECONDARY, 2, 1, above=True)
+    # The growth curve steepens as it falls, so it closes on the tag's trailing
+    # edge; nudge the tag a character to the left to keep clear of the line.
+    _direct_label(fig, label_x, growth_bits[at_label], "growth rate", HERO, 2, 1,
+                  above=False, xshift=-7)
 
     fig.add_hline(y=0.0, line_width=1.5, line_dash="dash", line_color="black",
-                  annotation_text="break-even = 0", annotation_position="bottom right",
                   row=2, col=1)
     fig.add_trace(
         go.Scatter(x=[f_star], y=[growth_star_bits], mode="markers",
@@ -623,9 +639,12 @@ def create_arithmetic_vs_geometric_plot(
     fig.update_xaxes(title_text="Fraction f invested in the risky asset",
                      hoverformat=".3f", row=2, col=1)
     fig.update_layout(
-        title=dict(text=title, x=0.5, xanchor="center"),
+        # No figure-level title: it collided with the top subplot heading, and
+        # the heading is the more useful of the two. The top margin now only has
+        # to clear that heading, and the labels ride on the curves rather than
+        # off the right edge, so the wide right margin is gone too.
         hovermode="x unified", hoverlabel=dict(namelength=-1),
-        width=820, height=700, margin=dict(r=120),   # room for right-end labels
+        width=820, height=700, margin=dict(t=40, r=40),
         showlegend=False,
     )
     return fig
