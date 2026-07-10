@@ -72,7 +72,7 @@ wealth_summary_df_risky = ensemble_risky.summarize_across_paths(ensemble_risky.r
 ```{python}
 #| echo: false
 #| label: fig-risky-wealth
-#| fig-cap: "Simulated wealth paths for a portfolio held entirely in the risky asset. Top: log wealth as a multiple of starting wealth, with the median, the mean, and the middle 95% of paths. Bottom: the fraction of paths still at or above break-even."
+#| fig-cap: "Simulated wealth paths for a portfolio held entirely in the risky asset. Top: wealth as a multiple of starting wealth, drawn on a logarithmic scale, with the median, the mean, and the middle 95% of paths. Bottom: the fraction of paths still at or above break-even."
 ##### WEALTH OVER TIME (spaghetti paths), risky asset #####
 
 import pandas as pd
@@ -164,7 +164,7 @@ The Chernoff bound then implies that $\mathbb{P}(S_n \geq 1) \leq e^{-n D_{KL}}$
 ```{python}
 #| echo: false
 #| label: fig-no-loss-probability
-#| fig-cap: "The probability of not having lost money after $n$ coin flips, $\\mathbb{P}(S_n \\geq 1)$, together with its Chernoff upper bound $e^{-n D_{KL}}$. Both decay exponentially in $n$, so the vertical axis is logarithmic."
+#| fig-cap: "The probability of not having lost money after $n$ coin flips, $\\mathbb{P}(S_n \\geq 1)$, together with its Chernoff upper bound $e^{-n D_{KL}}$. This is the same quantity the bottom panel of @fig-risky-wealth estimates by simulation, resolved far into the tail."
 ##### PROBABILITY OF NOT LOSING MONEY (exact vs Chernoff bound) #####
 from plotting_data import generate_no_loss_probability_data
 from plotting_functions import create_no_loss_probability_plot
