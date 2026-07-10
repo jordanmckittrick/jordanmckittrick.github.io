@@ -18,11 +18,13 @@ format:
 ### Introduction
 If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio. It turns out that information theory provides a lovely explanation for why this is possible.
 
-![Still Life with Lemons on a Plate -- Vincent van Gogh (1887)](still-life-with-lemons-on-a-plate.jpg)
+![_Still Life with Lemons on a Plate_ -- Vincent van Gogh (1887)](still-life-with-lemons-on-a-plate-1887.jpg){#fig-van-gogh width="60%" fig-align="center" fig-alt="An impressionist painting by Vincent van Gogh depicting several bright yellow lemons piled on a simple ceramic plate against a textured, light-colored background."}
 
 
 ### The setup
-Consider a two-asset portfolio consisting of a riskless asset and a risky asset. We will think of the riskless asset as reminiscent of a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a fair coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t < r < \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = \alpha / \gamma_h$, for some $\alpha > 0$. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset; hence, $1 - f$ is the fraction that we allocate to the riskless asset. Our goal is to choose $f$ intelligently so that we make as much money as possible in the long run (or lose the least possible). I'll let $S_0$ denote the initial wealth. (Obviously, $r$ must be between $\gamma_t$ and $\gamma_h$ for this game to be interesting.)  
+In order to most clearly illustrate the concepts at play, I have necessarily chosen a very simple (and therefore unrealistic) example, in which there are only two assets to invest in: a "risk-free" asset with a negative interest rate and a risky asset modelled by a coin flip. The qualitative results, however, are robust to more realistic settings with many assets and more complex return distributions.
+
+We will think of the riskless asset as reminiscent of a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a fair coin flip, will be highly volatile in its outcome, where heads comes with a very handsome return and tails with a very steep loss. When the coin flip comes up heads, the risky asset will have a gross return of $\gamma_h$ for heads and $\gamma_t < r < \gamma_h$ for tails. In addition, I'll let $p_h$ denote the probability of heads, and I'll set $\gamma_t = \alpha / \gamma_h$, for some $\alpha > 0$. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset; hence, $1 - f$ is the fraction that we allocate to the riskless asset. Our goal is to choose $f$ intelligently so that we make as much money as possible in the long run (or lose the least possible). I'll let $S_0$ denote the initial wealth. (Obviously, $r$ must be between $\gamma_t$ and $\gamma_h$ for this game to be interesting.)  
 
 In what follows, let $w^T = (1 - f, f)$ denote the allocation vector and $X^T = (r, \gamma)$ the random gross returns vector, where $\gamma$ takes the value $\gamma_h$ with probability $p_h$ and $\gamma_t$ with probability $1 - p_h$. Note that $w = (1,0)$ corresponds to a portfolio consisting solely of the riskless asset, and $w = (0,1)$ corresponds to a portfolio consisting solely of the risky asset. The portfolio gross return for a particular period is then given by $$Y(w) = w^T X = (1 - f)r + f\gamma,$$ so the wealth after $n$ periods is $$S_n(w) = \prod_{i=1}^n Y_i(w),$$ where $Y_i(w)$ is the portfolio gross return in period $i$.
 
@@ -65,10 +67,12 @@ growth_rate_summary_df_risky = ensemble_risky.summarize_across_paths(ensemble_ri
 wealth_summary_df_risky = ensemble_risky.summarize_across_paths(ensemble_risky.running_wealth_ratio, threshold=1.0) 
 ```
 
-The figure below summarizes `{python} num_paths` simulated wealth paths over `{python} num_periods` periods (coin flips) for the risky asset. The shaded region indicates the middle 95% of these wealth paths.
+@fig-risky-wealth summarizes `{python} num_paths` simulated wealth paths over `{python} num_periods` periods (coin flips) for the risky asset. The shaded region indicates the middle 95% of these wealth paths.
 
 ```{python}
 #| echo: false
+#| label: fig-risky-wealth
+#| fig-cap: "Simulated wealth paths for a portfolio held entirely in the risky asset. Top: log wealth as a multiple of starting wealth, with the median, the mean, and the middle 95% of paths. Bottom: the fraction of paths still at or above break-even."
 ##### WEALTH OVER TIME (spaghetti paths), risky asset #####
 
 import pandas as pd
@@ -81,11 +85,10 @@ wealth_paths_risky_asset = pd.DataFrame(
 create_wealth_plot(
     wealth_paths_risky_asset,
     wealth_summary_df_risky,
-    title="Wealth over time",
 )
 ```
 
-Clearly the typical path through log wealth space is downward sloping in the long run (top panel). In addition, after only 100 coin flips, we see that fewer than 10% of the paths have made money, and after 250 flips, that fraction rapidly drops below 1%. After all 500 flips, it is essentially zero (bottom panel). Indeed, the wealth path tends to zero with probability one. 
+Clearly the typical path through log wealth space is downward sloping in the long run (top panel of @fig-risky-wealth). In addition, after only 100 coin flips, we see that fewer than 10% of the paths have made money, and after 250 flips, that fraction rapidly drops below 1%. After all 500 flips, it is essentially zero (bottom panel). Indeed, the wealth path tends to zero with probability one. 
 
 To see this, we begin with the observation that since the sequence of random variables is i.i.d., the strong law of large numbers implies that the empirical growth rate, $W_n$, converges to the expected growth rate almost surely:
 $$
@@ -110,9 +113,9 @@ since $\alpha < 1$. Let $x$ be any number satisfying $\ln \sqrt{\alpha} < x < 0$
 
 
 
-### The expected value is a mirage
+### The expected wealth is a mirage
 
-The _expected value_ path, however, tells a very different story. After 500 periods, the expected value path (not shown in the figure) for the risky assets sits around $10^{40}$, which is dozens of orders of magnitude better than both the median and the (empirical) mean. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the independence of the coin flips, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
+The _expected value_ path for the risky asset, however, tells a very different story. After 500 periods, the expected value path (not shown in @fig-risky-wealth) for the risky assets sits around $10^{40}$, which is dozens of orders of magnitude better than both the median and the (empirical) mean. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the independence of the coin flips, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
 $$
 \begin{align}
 \mathbb{E}[S_n] &= \mathbb{E}\left[\prod_{i=1}^n Y_i\right] \\
@@ -136,7 +139,7 @@ $$
 \end{align}
 $$
 ```{python}
-# |echo: false
+#| echo: false
 cut_off_as_fraction = -np.log(coin_flip_model.gamma_tails) / (np.log(coin_flip_model.gamma_heads) - np.log(coin_flip_model.gamma_tails))
 
 import scipy.stats as ss
@@ -148,7 +151,7 @@ upper_tail_prob = ss.binom.sf(m - 1, n, p_u)
 
 where $c/n = \frac{-\ln \gamma_t}{\ln \gamma_h - \ln \gamma_t} \approx{}$ `{python} f'{cut_off_as_fraction:.3f}'` solves $\frac{c}{n} \ln \gamma_h + \frac{n-c}{n} \ln \gamma_t = 0$. For $n = `{python} num_periods`$, this implies $c \approx {}$ `{python} f'{cut_off_as_fraction*num_periods:.3f}'`, yielding $\mathbb{P}(S_n \geq 1) \approx {}$ `{python} f'{upper_tail_prob:.3e}'`, or about one in a thousand. On the other hand, for $n = 500$, we have $\mathbb{E}[S_n] = 1.2^{500} \approx 4*10^{39}$ -- so much for the expected value path being representative of the typical outcome!
 
-To further underscore this point, we can compute an upper bound on this same tail probability by borrowing the Chernoff bound from large deviations theory. The actual probability of heads $p_h = 0.5$, while the empirical probability of heads that would yield a non-negative growth rate is $\lceil c \rceil / n = 0.57 > 0.5$. Of all the empirical distributions of heads/tails that would achieve a non-negative growth rate, $(\lceil c \rceil / n, 1 - \lceil c \rceil / n)$ is the "closest" to the actual distribution $(0.5, 0.5)$ in the sense of minimizing Kullback Leibler divergence. The relevant KL divergence is given by 
+To further underscore this point, we can compute an upper bound on this same tail probability by applying a Chernoff bound. The actual probability of heads $p_h = 0.5$, while the empirical probability of heads that would yield a non-negative growth rate is $\lceil c \rceil / n = 0.57 > 0.5$. Of all the empirical distributions of heads/tails that would achieve a non-negative growth rate, $(\lceil c \rceil / n, 1 - \lceil c \rceil / n)$ is the "closest" to the actual distribution $(0.5, 0.5)$ in the sense of minimizing Kullback Leibler divergence. The KL divergence is
 $$
 \begin{align}
 D_{KL} &= \frac{\lceil c \rceil}{n} \ln \left(\frac{\lceil c \rceil / n}{p_h}\right) + \left(1 - \frac{\lceil c \rceil}{n}\right) \ln \left(\frac{1 - \lceil c \rceil / n}{1 - p_h}\right) \\
@@ -156,10 +159,12 @@ D_{KL} &= \frac{\lceil c \rceil}{n} \ln \left(\frac{\lceil c \rceil / n}{p_h}\ri
 &\approx 0.0098
 \end{align}
 $$
-The Chernoff bound then implies that $\mathbb{P}(S_n \geq 1) \leq e^{-n D_{KL}}$, which decays exponentially in $n$.
+The Chernoff bound then implies that $\mathbb{P}(S_n \geq 1) \leq e^{-n D_{KL}}$, which decays exponentially in $n$. @fig-no-loss-probability plots the exact tail probability against this bound.
 
 ```{python}
 #| echo: false
+#| label: fig-no-loss-probability
+#| fig-cap: "The probability of not having lost money after $n$ coin flips, $\\mathbb{P}(S_n \\geq 1)$, together with its Chernoff upper bound $e^{-n D_{KL}}$. Both decay exponentially in $n$, so the vertical axis is logarithmic."
 ##### PROBABILITY OF NOT LOSING MONEY (exact vs Chernoff bound) #####
 from plotting_data import generate_no_loss_probability_data
 from plotting_functions import create_no_loss_probability_plot
@@ -167,9 +172,6 @@ from plotting_functions import create_no_loss_probability_plot
 no_loss_probability_df = generate_no_loss_probability_data(coin_flip_model, num_periods)
 create_no_loss_probability_plot(no_loss_probability_df)
 ```
-
-This enormous discrepancy makes plain one of the pitfalls of thinking solely in terms of expected value: the expected value is dominated by a small number of rare events, which are not representative of the typical outcome. Though the expected long-run outcome is a spectacular gain, the long-run outcome is an almost certain total loss. 
-
 
 
 ### How to salvage a portfolio of major lemons
@@ -180,7 +182,7 @@ $$
 f^* = r \frac{\mathbb{E}[\gamma] - r}{ab},
 \end{align}
 $$
-where I've defined $a = \gamma_h - r$ and $b = r - \gamma_t$. For our specific example, we have $f^* \approx 0.38$. In general, however, we will need to solve problems of this type numerically.
+where I've defined $a = \gamma_h - r$ and $b = r - \gamma_t$. For our specific example, we have $f^* \approx 0.38$, as shown in @fig-arithmetic-vs-geometric. In general, however, we will need to solve problems of this type numerically.
 
 ```{python}
 ####### FIND THE OPTIMAL CRP STRATEGY #####
@@ -190,7 +192,9 @@ weights_for_optimal_CRP = np.array([1 - f_star, f_star])
 ```
 
 ```{python}
-# | echo: false
+#| echo: false
+#| label: fig-arithmetic-vs-geometric
+#| fig-cap: "Arithmetic and geometric returns as a function of the fraction $f$ allocated to the risky asset. Top: gross returns. Bottom: the same quantities in log space, where the shaded band is the compounding drag $\\ln \\mathbb{E}[Y] - \\mathbb{E}[\\ln Y]$. The growth-rate-maximizing allocation $f^*$ is marked."
 from plotting_data import generate_arithmetic_vs_geometric_data
 from plotting_functions import create_arithmetic_vs_geometric_plot
 arith_geo_df = generate_arithmetic_vs_geometric_data(coin_flip_model)
