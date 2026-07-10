@@ -133,7 +133,7 @@ def _apply_spikes(fig: go.Figure) -> None:
 def create_wealth_plot(
     simulations: pd.DataFrame,
     summary: pd.DataFrame,
-    title: str,
+    title: str = "",
     *,
     max_paths: int = 300,
     seed: int = 0,
@@ -142,10 +142,13 @@ def create_wealth_plot(
 
     Two stacked panels sharing a period axis. Top: the individual wealth paths
     as a faint cloud (subsampled by ``_add_spaghetti``), the empirical 95%
-    band, and the median (periwinkle) and mean (lime, dashed) on top; wealth is
-    a multiple of starting wealth, so the dashed guide at 1.0 marks break-even
+    band, and the median (periwinkle) and mean (lime) on top; wealth is a
+    multiple of starting wealth, so the dashed guide at 1.0 marks break-even
     and the y-axis is logarithmic. Bottom: the fraction of paths above
     break-even at each period.
+
+    Both series are solid: dashes are reserved for reference lines (break-even,
+    asymptotes), never for data, and each curve is labelled in place anyway.
 
     On the log axis the mean sits above the median because a few high paths pull
     the average up; that gap is the volatility drag. The colours make the point:
@@ -167,8 +170,9 @@ def create_wealth_plot(
         read as "above break-even". ``CI Lower``/``CI Upper`` are the empirical
         2.5/97.5 percentiles -- an asymmetric band, not a parametric interval.
     title
-        Text for the top subplot title (e.g. "Wealth over time"). No separate
-        figure-level title is drawn.
+        Optional heading for the top subplot; omitted when empty. Each panel is
+        labelled by its y-axis regardless, so a rendered figure carrying its own
+        caption can leave this blank.
     max_paths, seed
         Forwarded to ``_add_spaghetti``: the cap on how many raw paths are
         drawn, and the RNG seed for the reproducible subsample above that cap.
@@ -181,7 +185,7 @@ def create_wealth_plot(
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True, row_heights=[2, 1],
         vertical_spacing=0.09,
-        subplot_titles=(title, "Fraction of paths above break-even"),
+        subplot_titles=(title, "") if title else None,
     )
 
     # ---- Top: raw paths, percentile band, then median & mean on top ----
@@ -189,56 +193,63 @@ def create_wealth_plot(
     _add_percentile_band(fig, summary, 1, 1)
 
     fig.add_trace(
-        go.Scatter(x=summary.index, y=summary["Median"], name="Median",
+        go.Scatter(x=summary.index, y=summary["Median"], name="empirical median",
                    line=dict(color=HERO, width=2.5), showlegend=False,
-                   hovertemplate="<b>Median:</b> %{y:.3e}<extra></extra>"),
+                   hovertemplate="<b>empirical median:</b> %{y:.3e}<extra></extra>"),
         row=1, col=1,
     )
     fig.add_trace(
-        go.Scatter(x=summary.index, y=summary["Mean"], name="Mean",
-                   line=dict(color=SECONDARY, width=2, dash="dash"), showlegend=False,
-                   hovertemplate="<b>Mean:</b> %{y:.3e}<extra></extra>"),
+        go.Scatter(x=summary.index, y=summary["Mean"], name="empirical mean",
+                   line=dict(color=SECONDARY, width=2), showlegend=False,
+                   hovertemplate="<b>empirical mean:</b> %{y:.3e}<extra></extra>"),
         row=1, col=1,
     )
-    # Label the two lines directly at their right ends instead of via a legend
-    # (consistent with the other figures in this module). A text trace carries
-    # raw data values, so it lands correctly on the log y-axis -- unlike a layout
-    # annotation, which would need the log10 of the value.
-    x_end = summary.index[-1]
-    for label, col_name, color in (("Median", "Median", HERO), ("Mean", "Mean", SECONDARY)):
+    # Float each label above its own line at 80% of the horizon. Plotly has no
+    # automatic "avoid the curve" placement, so we lift the anchor by a fixed
+    # fraction of the visible decade-range -- a roughly constant pixel gap, so
+    # the line never cuts through the text whatever the y-range -- and let "top
+    # right" run the text up and to the right. A text trace uses raw data
+    # values, which sit correctly on the log axis.
+    i_label = int(round(0.8 * (len(summary) - 1)))
+    x_label = summary.index[i_label]
+    span = np.log10(summary["CI Upper"].max()) - np.log10(summary["CI Lower"].min())
+    lift = 10.0 ** (0.08 * span)
+    for label, col_name, color in (("empirical median", "Median", HERO),
+                                   ("empirical mean", "Mean", SECONDARY)):
         fig.add_trace(
-            go.Scatter(x=[x_end], y=[summary[col_name].iloc[-1]], mode="text",
-                       text=[label], textposition="middle right",
-                       textfont=dict(size=12, color=color),
+            go.Scatter(x=[x_label], y=[summary[col_name].iloc[i_label] * lift],
+                       mode="text", text=[f"<b>{label}</b>"], textposition="top right",
+                       textfont=dict(size=13, color=color),
                        cliponaxis=False, hoverinfo="skip", showlegend=False),
             row=1, col=1,
         )
+    # Dashed guide at break-even (wealth = 1), no label: the line plus the 10^0
+    # tick already say "break-even", so the text was redundant ink.
     fig.add_hline(y=1.0, line_width=1.2, line_dash="dash",
-                  line_color=with_alpha(INK, 0.55),
-                  annotation_text="break-even = 1",
-                  annotation_position="bottom right", annotation_yshift=-8,
-                  row=1, col=1)
+                  line_color=with_alpha(INK, 0.55), row=1, col=1)
 
     # ---- Bottom: fraction of paths above break-even ----
     _add_fraction_panel(fig, summary, 2, 1)
+    fig.update_yaxes(title_text="Fraction above break-even", row=2, col=1)
 
     # ---- Layout ----
     # exponentformat="power" + showexponent="all" force every tick into
     # scientific notation (10^n); the evenly-spaced powers of ten also make the
-    # log scaling self-evident. The "Wealth over time" subplot title labels the
-    # panel, so the y-axis carries no (redundant) title of its own; automargin
-    # keeps the wider 10^n tick labels from being clipped.
-    fig.update_yaxes(type="log", title_text="",
+    # log scaling self-evident. Each panel is named by its y-axis title rather
+    # than a subplot heading, so the figure reads under its own caption without
+    # repeating it; automargin keeps the wider 10^n tick labels from being
+    # clipped.
+    fig.update_yaxes(type="log", title_text="Wealth (multiple of starting wealth)",
                      exponentformat="power", showexponent="all", automargin=True,
                      hoverformat=".3e", row=1, col=1)
     fig.update_xaxes(title_text="Period", row=2, col=1)
     fig.update_layout(
         hovermode="x unified", hoverlabel=dict(namelength=-1),
         width=int(520 * GOLDEN_RATIO), height=560,
-        # No figure-level title (the subplot titles label each panel); the top
-        # margin just clears the top subplot title, and the right margin leaves
-        # room for the direct end-of-line labels.
-        margin=dict(t=54, r=74),
+        # No figure-level title; the top margin just clears an optional subplot
+        # heading. The series labels now sit inside the plot, so only a small
+        # right margin is needed for the last x-tick.
+        margin=dict(t=54, r=40),
         showlegend=False,
     )
     _apply_spikes(fig)
@@ -269,10 +280,10 @@ def create_empirical_growth_rates_plot(
     The empirical series and the asymptotic reference
     ``coin_flip_model.growth_rate(weights_vector) = E[log Y]`` are natural-log
     growth rates (nats/period) as supplied; both are converted to bits (log
-    base 2) for display, to match the rest of the post. The asymptote line is
-    drawn lime when positive and orange when negative, and its label and the
-    break-even label swap top/bottom with the sign so neither overlaps the
-    curves.
+    base 2) for display, to match the rest of the post. The asymptote is drawn
+    in periwinkle (the honest long-run rate the paths converge to); its label
+    sits above or below the line depending on the sign of the rate so it clears
+    the curves. A dashed neutral line marks break-even (growth = 0).
 
     Parameters
     ----------
@@ -291,9 +302,11 @@ def create_empirical_growth_rates_plot(
         under.
     coin_flip_model
         Model supplying ``growth_rate(weights_vector) = E[log Y]`` for the
-        asymptote (and its sign, which sets the colour and label placement).
+        asymptote (its sign sets whether the asymptote's label sits above or
+        below the line).
     title
-        Figure title; the total path count is appended automatically.
+        Text for the top subplot title (e.g. "Empirical growth rate"). No
+        separate figure-level title is drawn.
     max_paths, seed
         Forwarded to ``_add_spaghetti`` (see :func:`create_wealth_plot`).
 
@@ -311,42 +324,118 @@ def create_empirical_growth_rates_plot(
     summary = summary.copy()
     summary[["CI Lower", "CI Upper"]] /= _LN2
 
-    winning = asymptotic_avg > 0
-    rate_color = SECONDARY if winning else ACCENT
-    pos_rate = "top right" if winning else "bottom right"
-    pos_be = "bottom right" if winning else "top right"
+    # The sign only decides whether the asymptote's label sits above or below
+    # the line (so it clears the curves); the line colour is always periwinkle.
+    pos_rate = "top right" if asymptotic_avg > 0 else "bottom right"
 
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True, row_heights=[2, 1],
         vertical_spacing=0.09,
-        subplot_titles=("Empirical growth rate", "Fraction of paths above break-even"),
+        subplot_titles=(title, "Fraction of paths above break-even"),
     )
 
     # ---- Top: raw paths, percentile band, reference lines ----
-    n_total = simulations.shape[1]
     _add_spaghetti(fig, simulations, 1, 1, max_paths=max_paths, seed=seed)
     _add_percentile_band(fig, summary, 1, 1)
 
     fig.add_hline(y=asymptotic_avg, line_width=1.5, line_dash="dash",
-                  line_color=rate_color,
+                  line_color=HERO,
                   annotation_text=f"asymptotic growth = {asymptotic_avg:.3f} bits",
                   annotation_position=pos_rate, row=1, col=1)
+    # Dashed guide at break-even (growth = 0), no label (redundant with the axis).
     fig.add_hline(y=0.0, line_width=1.2, line_dash="dash",
-                  line_color=with_alpha(INK, 0.55),
-                  annotation_text="break-even = 0",
-                  annotation_position=pos_be, row=1, col=1)
+                  line_color=with_alpha(INK, 0.55), row=1, col=1)
 
     # ---- Bottom: fraction of paths above break-even (here, growth > 0) ----
     _add_fraction_panel(fig, summary, 2, 1)
 
     # ---- Layout ----
-    fig.update_yaxes(title_text="Empirical growth rate (bits / period)", hoverformat=".3f",
+    # The subplot title carries the name, so the y-axis keeps only the units.
+    fig.update_yaxes(title_text="bits / period", hoverformat=".3f",
                      row=1, col=1)
     fig.update_xaxes(title_text="Period", row=2, col=1)
     fig.update_layout(
-        title=dict(text=f"{title}  ({n_total:,} paths)", x=0.5, xanchor="center"),
         hovermode="x unified", hoverlabel=dict(namelength=-1),
         width=int(520 * GOLDEN_RATIO), height=560,
+        margin=dict(t=54),
+    )
+    _apply_spikes(fig)
+    return fig
+
+
+# --------------------------------------------------------------------------- #
+#  Probability of not losing money over time
+# --------------------------------------------------------------------------- #
+def create_no_loss_probability_plot(
+    df: pd.DataFrame,
+    title: str = "",
+) -> go.Figure:
+    """P(no loss) over time: the exact tail probability and its Chernoff bound.
+
+    A single log-y panel. The exact probability ``P(S_n >= 1)`` (periwinkle) is
+    the true quantity; the Chernoff large-deviation bound ``e^{-n D_KL}`` (lime)
+    is its upper bound, shown in contrast -- the same periwinkle/lime
+    "true vs. bound" pairing as the ceiling in the arithmetic-vs-geometric
+    figure, drawn solid there and here alike. Both decay exponentially, so the
+    y-axis is logarithmic; on it, exponential decay reads as a straight line.
+
+    Parameters
+    ----------
+    df
+        Indexed by period, with columns ``Exact`` and ``Chernoff bound`` (e.g.
+        the output of ``generate_no_loss_probability_data``).
+    title
+        Optional panel title; omitted when empty.
+
+    Returns
+    -------
+    go.Figure
+        The assembled single-panel figure.
+    """
+    fig = make_subplots(rows=1, cols=1,
+                        subplot_titles=(title,) if title else None)
+    n = df.index
+
+    fig.add_trace(
+        go.Scatter(x=n, y=df["Chernoff bound"], name="Chernoff bound",
+                   line=dict(color=SECONDARY, width=2), showlegend=False,
+                   hovertemplate="<b>Chernoff bound:</b> %{y:.3e}<extra></extra>"),
+    )
+    fig.add_trace(
+        go.Scatter(x=n, y=df["Exact"], name="exact probability",
+                   line=dict(color=HERO, width=2.5), showlegend=False,
+                   hovertemplate="<b>exact probability:</b> %{y:.3e}<extra></extra>"),
+    )
+
+    # Direct labels (bold), floated above each line at 80% of the horizon -- the
+    # same lifted text-trace approach as create_wealth_plot, so the line never
+    # cuts through the text on the log axis.
+    i_label = int(round(0.8 * (len(df) - 1)))
+    x_label = n[i_label]
+    span = np.log10(df["Chernoff bound"].max()) - np.log10(df["Exact"].min())
+    lift = 10.0 ** (0.08 * span)
+    for label, col_name, color in (("exact probability", "Exact", HERO),
+                                   ("Chernoff bound", "Chernoff bound", SECONDARY)):
+        fig.add_trace(
+            go.Scatter(x=[x_label], y=[df[col_name].iloc[i_label] * lift],
+                       mode="text", text=[f"<b>{label}</b>"], textposition="top right",
+                       textfont=dict(size=13, color=color),
+                       cliponaxis=False, hoverinfo="skip", showlegend=False),
+        )
+
+    # dtick=1 pins one label per decade. Left to itself, Plotly adds intermediate
+    # ticks at 2x10^n and 5x10^n on a short (~3-decade) log axis, and
+    # exponentformat="power" then prints those as a bare "2" and "5" alongside
+    # the 10^n decade labels -- unreadable without knowing the convention.
+    fig.update_yaxes(type="log", title_text="Probability of not losing money",
+                     exponentformat="power", showexponent="all", automargin=True,
+                     dtick=1, hoverformat=".3e")
+    fig.update_xaxes(title_text="Period")
+    fig.update_layout(
+        hovermode="x unified", hoverlabel=dict(namelength=-1),
+        width=int(520 * GOLDEN_RATIO), height=460,
+        margin=dict(t=54, r=40),
+        showlegend=False,
     )
     _apply_spikes(fig)
     return fig
