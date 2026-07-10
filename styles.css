@@ -9,3 +9,10 @@
 .quarto-grid-item img.thumbnail-image {
   object-fit: cover;
 }
+
+/* Center figure captions. Covers plain markdown images, code-cell output, and
+   crossref'd floats; table captions are left alone. */
+figure > figcaption,
+figcaption.figure-caption {
+  text-align: center;
+}
