@@ -16,7 +16,7 @@ format:
 
 
 ### Introduction
-If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio. It turns out that information theory provides a lovely explanation for why this is possible.
+If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio of such lemons. It turns out that information theory provides a lovely explanation for why this is possible.
 
 ![_Still Life with Lemons on a Plate_ -- Vincent van Gogh (1887)](still-life-with-lemons-on-a-plate-1887.jpg){#fig-van-gogh width="60%" fig-align="center" fig-alt="An impressionist painting by Vincent van Gogh depicting several bright yellow lemons piled on a simple ceramic plate against a textured, light-colored background."}
 
@@ -115,6 +115,9 @@ since $\alpha < 1$. Let $x$ be any number satisfying $\ln \sqrt{\alpha} < x < 0$
 
 ### The expected wealth is a mirage
 
+![_The Mirage_ -- Thomas Moran (1879)](the-mirage-1879.jpeg){#fig-moran width="60%" fig-align="center" fig-alt="A luminous painting of the American West by Thomas Moran. A small party of riders on horseback fords a broad, glassy expanse of shallow water that mirrors the red sandstone cliffs and buttes rising behind them, all beneath a wide, cloudless blue sky."}
+
+
 The _expected value_ path for the risky asset, however, tells a very different story. After 500 periods, the expected value path (not shown in @fig-risky-wealth) for the risky assets sits around $10^{40}$, which is dozens of orders of magnitude better than both the median and the (empirical) mean. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the independence of the coin flips, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
 $$
 \begin{align}
@@ -176,7 +179,7 @@ create_no_loss_probability_plot(no_loss_probability_df)
 
 ### How to salvage a portfolio of major lemons
 
-Earlier I invoked the strong law of large numbers to show that the risky asset is a major lemon since the expected growth rate, $W(w)$, is negative whenever $\alpha < 1$. Instead of letting our portfolio consist solely of the risky asset, however, we can instead choose $w$ to maximize $W(w) = \mathbb{E}[\ln Y(w)]$ -- we maximize the expected growth rate. Clearly $W$ is a concave function of $w$, so it has a unique maximum. If we think of $W(w)$ as a function of $f$, we can find the optimal fraction to allocate to the risky asset by taking the derivative and setting it equal to zero. Doing so, we find that the optimal fraction is given by
+Earlier I invoked the strong law of large numbers to show that the risky asset is a major lemon: because its expected growth rate, $W(w)$, is negative whenever $\alpha < 1$, it will almost surely tend towards a 100% loss in the long run, and as I just showed, the probability of not losing money decays exponentially fast. Instead of letting our portfolio consist solely of the risky asset, however, we can instead choose $w$ to maximize $W(w) = \mathbb{E}[\ln Y(w)]$. This maximum is unique because $W$ is a concave function of $w$. If we think of $W(w)$ as a function of $f$ (since $w = (1 - f, f)$), we can find the optimal fraction to allocate to the risky asset by taking the derivative with respect to $f$ and setting it equal to zero. Doing so, we find that the optimal fraction is given by
 $$
 \begin{align}
 f^* = r \frac{\mathbb{E}[\gamma] - r}{ab},
@@ -190,6 +193,9 @@ opt_result_for_CRP = coin_flip_model.solve_growth_rate_maximization_problem()
 f_star = opt_result_for_CRP.x
 weights_for_optimal_CRP = np.array([1 - f_star, f_star])
 ```
+
+
+
 
 ```{python}
 #| echo: false
