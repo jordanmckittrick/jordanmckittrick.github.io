@@ -239,7 +239,7 @@ def create_wealth_plot(
     # than a subplot heading, so the figure reads under its own caption without
     # repeating it; automargin keeps the wider 10^n tick labels from being
     # clipped.
-    fig.update_yaxes(type="log", title_text="Wealth (multiple of starting wealth)",
+    fig.update_yaxes(type="log", title_text="Wealth",
                      exponentformat="power", showexponent="all", automargin=True,
                      hoverformat=".3e", row=1, col=1)
     fig.update_xaxes(title_text="Period", row=2, col=1)
@@ -504,9 +504,9 @@ def create_arithmetic_vs_geometric_plot(
     Curves are labelled directly, riding on the lines themselves rather than via
     a legend: the bottom panel repeats the top panel's two colours (periwinkle =
     the quantity you keep, lime = its Jensen-overstating sibling), so a single
-    shared legend would show each colour twice and read as ambiguous. The panels
-    are named by their subplot headings, so the figure draws no title of its own
-    -- a rendered figure carries its caption instead.
+    shared legend would show each colour twice and read as ambiguous. The figure
+    draws neither a title nor subplot headings: each panel's y-axis names it, and
+    a rendered figure carries its caption instead.
     """
     f = df.index.to_numpy()
     f_star = float(opt_result_for_CRP.x)
@@ -527,9 +527,11 @@ def create_arithmetic_vs_geometric_plot(
     at_label = int(np.argmin(np.abs(f - 0.82)))
     label_x = f[at_label]
 
+    # No subplot titles: each panel's y-axis already names it ("Gross return per
+    # period", "Growth rate (bits / period)"), so headings would just repeat it.
+    # The "bottom is the log of the top" note lives in the figure caption instead.
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.10,
-        subplot_titles=("Gross return", "Growth rate \u2014 the log of the curves above"),
     )
 
     # ---- Top: gross returns (levels) ----
@@ -545,8 +547,10 @@ def create_arithmetic_vs_geometric_plot(
                    hovertemplate="<b>geometric mean:</b> %{y:.3f}<extra></extra>"),
         row=1, col=1,
     )
-    _direct_label(fig, label_x, arithmetic[at_label], "arithmetic mean", SECONDARY, 1, 1, above=True)
-    _direct_label(fig, label_x, geometric[at_label], "geometric mean", HERO, 1, 1, above=False)
+    # Both curves climb/fall left-to-right through their tags, closing on the
+    # trailing edge, so nudge each a character left to keep clear of the line.
+    _direct_label(fig, label_x, arithmetic[at_label], "arithmetic mean", SECONDARY, 1, 1, above=True, xshift=-7)
+    _direct_label(fig, label_x, geometric[at_label], "geometric mean", HERO, 1, 1, above=False, xshift=-7)
 
     fig.add_hline(y=1.0, line_width=1.5, line_dash="dash", line_color="black",
                   row=1, col=1)
