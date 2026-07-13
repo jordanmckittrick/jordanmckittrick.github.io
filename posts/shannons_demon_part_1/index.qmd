@@ -248,9 +248,9 @@ $$
 W(f^*) &= \mathbb{E}[\ln Y] \\
 &= p_h \ln \big((1 - f^*)r + f^*\gamma_h\big) + (1 - p_h) \ln \big((1 - f^*)r + f^*\gamma_t \big) \\
 &= p_h \ln \big(r + af^* \big) + (1 - p_h) \ln \big(r - bf^* \big) \\
-&= p_h \ln \left(1 + \frac{\Delta}{b} \right) + (1 - p_h) \ln \left(1 - \frac{\Delta}{a} \right) \\
-&= p_h \ln \left(\frac{p_h(a+b)}{b} \right) + (1 - p_h) \ln \left(\frac{(1-p_h)(a+b)}{a} \right) \\
-&= p_h \ln \left(\frac{p_h}{q_h} \right) + p_t \ln \left(\frac{p_t}{q_t} \right), \\
+&= \log r + p_h \ln \left(1 + \frac{\Delta}{b} \right) + (1 - p_h) \ln \left(1 - \frac{\Delta}{a} \right) \\
+&= \log r + p_h \ln \left(\frac{p_h(a+b)}{b} \right) + (1 - p_h) \ln \left(\frac{(1-p_h)(a+b)}{a} \right) \\
+&= \log r + p_h \ln \left(\frac{p_h}{q_h} \right) + p_t \ln \left(\frac{p_t}{q_t} \right), \\
 \end{align}
 $$
 where $q_h = b / (a + b)$ and $q_t = a / (a + b)$ are alternative probabilities of heads and tails, respectively, and where I've let $p_t = 1 - p_h$ for notational convenience. This is exactly the Kullback-Leibler divergence between the actual distribution of heads/tails $(p_h, p_t)$ and the distribution $(q_h, q_t)$ that would yield 
