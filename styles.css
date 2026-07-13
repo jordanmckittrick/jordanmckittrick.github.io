@@ -9,3 +9,23 @@
 .quarto-grid-item img.thumbnail-image {
   object-fit: cover;
 }
+
+/* Center figure captions. Covers plain markdown images, code-cell output, and
+   crossref'd floats; table captions are left alone. */
+figure > figcaption,
+figcaption.figure-caption {
+  text-align: center;
+}
+
+/* Plotly writes an explicit pixel width onto its own div (e.g. 841px), narrower
+   than the 920px body. Left to itself the <figure> still fills the body, so the
+   caption wraps at 920px and spills past the plot's right edge. A single-column
+   grid sized to min-content takes its width from the plot's fixed width -- the
+   caption's min-content is just its longest word -- so the caption now wraps at
+   exactly the plot's edge. Scoped to code-cell output: the paintings are plain
+   markdown images and already size correctly. */
+.cell-output-display > figure {
+  display: grid;
+  grid-template-columns: min-content;
+  justify-content: center;
+}
