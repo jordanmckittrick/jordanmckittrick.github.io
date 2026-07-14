@@ -21,10 +21,18 @@ If intuition is any guide, it shouldn't be possible for a long-only portfolio to
 ![_Still Life with Lemons on a Plate_ -- Vincent van Gogh (1887)](still-life-with-lemons-on-a-plate-1887.jpg){#fig-van-gogh width="60%" fig-align="center" fig-alt="An impressionist painting by Vincent van Gogh depicting several bright yellow lemons piled on a simple ceramic plate against a textured, light-colored background."}
 
 
+
+### Maxwell's demon and Shannon's demon
+Named after the legendary physicist James Clerk Maxwell, Maxwell's demon is a thought experiment in physics in which a hypothetical microscopic demon controls a microscopic door separating two chambers of gas. The demon selectively sorts fast and slow molecules in the gas to pass through the door so that the fast molecules go to one chamber and the slow molecules go to the other, thereby creating a temperature difference without expending any of the system's energy. This procedure would lead to an increase in the free energy of the system, which could then be used to do useful work, seemingly violating the second law of thermodynamics. Put differently, the demon extracts useful work from heat, which is the random energy of the molecules, all at no apparent "cost" to the system. This is magic for a physicist.
+
+In a nod to Maxwell's demon, Shannon's demon, which is named after the founder of information theory, Claude Shannon, is a somewhat analogous thought experiment in investing in which the random up-and-down noise of asset prices (loosely analogous to heat in physics) can seemingly "magically" create wealth by rebalancing one's portfolio in just the right way so as to maximize the long-run growth rate. It is as if Shannon's demon is able to sort profitable outcomes from unprofitable ones. Unlike Maxwell's demon, however, Shannon's demon "exists" in the sense that it is a real, mathematically rigorous strategy that does not violate any inviolable laws of physics or finance. 
+
+
+
 ### The setup
 In order to most clearly illustrate the concepts at play, I have necessarily chosen a very simple (and therefore unrealistic) example, in which there are only two assets to invest in: a "risk-free" asset with a negative interest rate and a risky asset modelled by a coin flip. The qualitative results, however, are robust to more realistic settings with many assets and more complex return distributions. 
 
-We will think of the riskless asset as reminiscent of a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a coin flip, will be highly volatile in its outcome, where heads comes with a very handsome (gross) return of $\gamma_h$ with probability $p_h$ and tails with a very steep loss $\gamma_t < r < \gamma_h$ (with probability $1 - p_h$). In addition, I'll set $\gamma_t = \alpha / \gamma_h$, for some $\alpha > 0$. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset; hence, $1 - f$ is the fraction that we allocate to the riskless asset. After every period, we rebalance our portfolio to maintain these fractions. Our goal is to choose $f$ intelligently so that we make as much money as possible in the long run (or lose the least possible). I'll let $S_0$ denote the initial wealth. (Obviously, $r$ must be between $\gamma_t$ and $\gamma_h$ for this game to be interesting.)  
+We will think of the riskless asset as reminiscent of a Swiss bank account: the account is so safe and so desirable that it pays a negative interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a coin flip, will be highly volatile in its outcome, where heads comes with a very handsome (gross) return of $\gamma_h$ with probability $p_h > 0$ and tails with a very steep loss $\gamma_t < r < \gamma_h$ (with probability $1 - p_h$). In addition, I'll set $\gamma_t = \alpha / \gamma_h$, for some $\alpha > 0$. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset; hence, $1 - f$ is the fraction that we allocate to the riskless asset. After every period, we rebalance our portfolio to maintain these fractions. Our goal is to choose $f$ intelligently so that we make as much money as possible in the long run (or lose the least possible). I'll let $S_0$ denote the initial wealth. (Obviously, $r$ must be between $\gamma_t$ and $\gamma_h$ for this game to be interesting.)  
 
 In what follows, let $w^T = (1 - f, f)$ denote the allocation vector and $X^T = (r, \gamma)$ the random gross returns vector, where $\gamma$ takes the value $\gamma_h$ with probability $p_h$ and $\gamma_t$ with probability $1 - p_h$. Note that $w = (1,0)$ corresponds to a portfolio consisting solely of the riskless asset, and $w = (0,1)$ corresponds to a portfolio consisting solely of the risky asset. The portfolio gross return for a particular period is then given by $$Y(w) = w^T X = (1 - f)r + f\gamma,$$ so the wealth after $n$ periods is $$S_n(w) = \prod_{i=1}^n Y_i(w),$$ where $Y_i(w)$ is the portfolio gross return in period $i$. This multiplicative branching of wealth, starting from the initial wealth $S_0$, is sketched in @fig-wealth-tree.
 
@@ -182,13 +190,26 @@ create_no_loss_probability_plot(no_loss_probability_df)
 
 ### How to salvage a portfolio of major lemons
 
-Earlier I invoked the strong law of large numbers to show that the risky asset is a major lemon: because its expected growth rate, $W(w),$ is negative whenever $\alpha < 1$, it will almost surely tend towards a 100% loss in the long run, and as I just showed, the probability of not losing money decays exponentially fast. Instead of letting our portfolio consist solely of the risky asset, however, we can instead choose $w$ to maximize $W(w) = \mathbb{E}[\ln Y(w)].$ This maximum is unique because $W$ is a concave function of $w$. If we think of $W(w)$ as a function of $f$ (since $w = (1 - f, f)$), we can find the optimal fraction to allocate to the risky asset by taking the derivative with respect to $f$ and setting it equal to zero. Doing so, we find that the optimal fraction is given by 
+Earlier I invoked the strong law of large numbers to show that the risky asset is a major lemon: because its expected growth rate, $W(w),$ is negative whenever $\alpha < 1$, it will almost surely tend towards a 100% loss in the long run, and as I just showed, the probability of not losing money decays exponentially fast. Instead of letting our portfolio consist solely of the risky asset, however, we can instead choose $w$ to maximize $W(w) = \mathbb{E} \left[ \ln Y(w) \right].$ This maximum is unique because $W$ is a concave function of $w$. If we think of $W(w)$ as a function of $f$ (since $w = (1 - f, f)$), we can find the optimal fraction to allocate to the risky asset by taking the derivative with respect to $f$ and setting it equal to zero. Doing so, we find that the optimal fraction is given by 
 $$
 \begin{align}
 f^* = r \frac{\Delta}{ab},
 \end{align}
 $$
-where I've defined $\Delta = \mathbb{E}[\gamma] - r$, $a = \gamma_h - r$ and $b = r - \gamma_t$. For our specific example, we have $f^* \approx 0.38$, as shown in @fig-arithmetic-vs-geometric. In general, however, we will need to solve problems of this type numerically.
+where I've defined $\Delta = \mathbb{E}[\gamma] - r$, $a = \gamma_h - r$ and $b = r - \gamma_t$.
+
+We see immediately that $f^*$ is positive (i.e. we invest at least some of our money into the risky asset) if and only if $\Delta > 0$. If $\Delta = 0$, then $f^* = 0$ and we invest all of our money into the riskless asset. If $\Delta < 0$, then $f^* < 0$ and we would need to short the risky asset in order to maximize our expected growth rate. In our case, we are restricting ourselves to long-only portfolios (i.e. $0 \leq f \leq 1$), so we would simply invest all of our money into the riskless asset. Since the growth rate diverges to negative infinity at $f = -r/a < 0$ and $f = r/b \geq 1$, we see that the optimal $f^*$ is always in the interval $(-r/a, r/b)$.
+
+Our formula for $f^*$ can also be written in a form that is perhaps more recognizable:
+$$
+\begin{align}
+f^* &= r \frac{p_ha - (1-p_h)b}{ab} \\
+&= r \left(\frac{p_h}{b} - \frac{1 - p_h}{a} \right),
+\end{align}
+$$
+which, when $r = 1$, reduces to the most general form of the Kelly criterion for a single, two-state risky asset. In that context, $\Delta$ is often referred to as the "edge". If we not only let $r = 1$ but also $\gamma_t = 0$ (implying $b=1$), then we recover the Kelly criterion for $a$-to-$1$ odds: $f^* = \frac{p_h a - (1 - p_h)}{a}$, or "edge over odds".
+
+For our specific example, we have $f^* \approx 0.38$, as shown in @fig-arithmetic-vs-geometric. In general, however, we will need to solve problems of this type numerically. At this expected-growth-rate-maximizing allocation, the growth rate is $W(f^*) \approx 0.018$ bits (or about $0.012$ nats). This means that, on average, we can expect to double our money every $1 / 0.018 \approx 55$ periods -- not bad for a portfolio of lemons.
 
 ```{python}
 ####### FIND THE OPTIMAL CRP STRATEGY #####
@@ -196,9 +217,8 @@ opt_result_for_CRP = coin_flip_model.solve_growth_rate_maximization_problem()
 f_star = opt_result_for_CRP.x
 weights_for_optimal_CRP = np.array([1 - f_star, f_star])
 ```
-At this expected-growth-rate-maximizing allocation, the expected growth rate is $W(f^*) \approx 0.018$ bits (or about $0.012$ nats). This means that, on average, we can expect to double our money every $1 / 0.018 \approx 55$ periods -- not bad for a portfolio of lemons.
 
-Let's now visualize the performance of a portfolio using this optimal weighting. Using the same random number generator as before, I have simulated the performance of a portfolio using the optimal CRP strategy, as seen below. A striking feature of this simulation is that after only roughly 100 periods two thirds of wealth paths are at or above break-even.
+Let's now simulate the performance of a portfolio using this optimal weighting to see whether my theoretical claims hold water. Using the same random number generator as before, I have simulated the performance of a portfolio using the optimal CRP strategy, as seen below. A striking feature of this simulation is that after only roughly 100 periods two thirds of wealth paths are at or above break-even.
 
 ```{python}
 #| echo: false
@@ -224,7 +244,7 @@ create_wealth_plot(
 )
 ```
 
-This may seem like magic or a sleight-of-hand, but it is not: the expected growth rate $W(w)$ governs the long-run behavior of wealth. Using the optimal allocation $f^*$, the expected growth rate is positive, and the strong law of large numbers implies that the empirical growth rate will converge to this expected growth rate almost surely. Hence, the wealth path will tend to infinity with probability one. To better understand why this is possible, consider the following plot.
+This may seem like magic or a sleight-of-hand, but it most certainly is not. Using the optimal allocation $f^*$, the expected growth rate is positive, and the strong law of large numbers implies that the empirical growth rate will converge to this expected growth rate almost surely; hence, the wealth path will tend to infinity with probability one. 
 
 ```{python}
 #| echo: false
@@ -235,7 +255,7 @@ from plotting_functions import create_arithmetic_vs_geometric_plot
 arith_geo_df = generate_arithmetic_vs_geometric_data(coin_flip_model)
 create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP)
 ```
-The key point of this plot is that it is the concavity of the growth rate function that allows us to almost surely make an exponential amount of money in the long run. Intuitively, we think that the performance of a constant rebalanced portfolio at some $f$ to be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected return is a linear function of $f$, the expected growth rate $W = W(f)$ -- which is the quantity that actually drives long-run performace -- is a concave function of $f$. 
+The key point of this plot is that it is the concavity of the growth rate function that allows us to almost surely make an exponential amount of money in the long run. Intuitively, we think that the performance of a constant rebalanced portfolio at some $f$ should be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W = W(f)$ -- which is the quantity that actually drives long-run performace -- is a concave function of $f$. If there is one take-home message from this post, this is it.
 
 
 
@@ -245,26 +265,55 @@ The key point of this plot is that it is the concavity of the growth rate functi
 Since $W$ drives long-run performance, let's take a closer look at it. We have
 $$
 \begin{align}
-W(f^*) &= \mathbb{E}[\ln Y] \\
+W(f^*) &= \mathbb{E}\left[\ln Y \right] \\
 &= p_h \ln \big((1 - f^*)r + f^*\gamma_h\big) + (1 - p_h) \ln \big((1 - f^*)r + f^*\gamma_t \big) \\
 &= p_h \ln \big(r + af^* \big) + (1 - p_h) \ln \big(r - bf^* \big) \\
 &= \log r + p_h \ln \left(1 + \frac{\Delta}{b} \right) + (1 - p_h) \ln \left(1 - \frac{\Delta}{a} \right) \\
 &= \log r + p_h \ln \left(\frac{p_h(a+b)}{b} \right) + (1 - p_h) \ln \left(\frac{(1-p_h)(a+b)}{a} \right) \\
-&= \log r + p_h \ln \left(\frac{p_h}{q_h} \right) + p_t \ln \left(\frac{p_t}{q_t} \right), \\
+&= \log r + p_h \ln \left(\frac{p_h}{q_h} \right) + p_t \ln \left(\frac{p_t}{q_t} \right) \\
+&= \log r + D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right), \\
 \end{align}
 $$
-where $q_h = b / (a + b)$ and $q_t = a / (a + b)$ are alternative probabilities of heads and tails, respectively, and where I've let $p_t = 1 - p_h$ for notational convenience. This is exactly the Kullback-Leibler divergence between the actual distribution of heads/tails $(p_h, p_t)$ and the distribution $(q_h, q_t)$ that would yield 
+where $q_h = b / (a + b)$ and $q_t = a / (a + b)$ are alternative probabilities of heads and tails, respectively, where I've let $p_t = 1 - p_h$ for notational convenience, and where $D_{\text{KL}}(\tilde{p} \| \tilde{q})$ is the Kullback-Leibler (KL) divergence from the model $\tilde{q} = (q_h, q_t)$ to the actual distribution $\tilde{p} = (p_h, p_t)$. Interestingly, $\tilde{q}$ turns out to be the risk-neutral probability distribution for this setup, i.e. the expected return of both assets under $\tilde{q}$ is exactly the riskless return $r$:
+$$
+\begin{align}
+\mathbb{E}_{\tilde{q}}[Y(f)] &= q_h Y_h(f) + q_t Y_t(f) = r,
+\end{align}
+$$
+which is independent of $f$, a property we will come back to in a moment. Since $D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right) \ge 0$ with equality if and only if $\tilde{p} = \tilde{q}$, we have an edge whenever the actual distribution of returns differs from the risk-neutral distribution. The portfolio's excess growth rate over the riskless asset is identically the excess number of bits needed to encode the actual distribution of returns $\tilde{p}$ using a code optimized for the risk-neutral distribution $\tilde{q}$. Importantly, this tells us that, with probability one, in the long-run, one will always be able to beat the risk-free asset by an exponential amount whenever the actual distribution of returns differs from the risk-neutral distribution. 
 
+We have discovered a formula for $W(f^*)$. Let's now try to find a formula for $W(f)$ more generally, i.e. where we no longer require $f = f^*$. To do this, notice that there is another probability distribution hiding in plain sight: since $\mathbb{E}_{\tilde{q}}[Y(f)] = r$ for all $f$, if we simply divide by $r$, we see that we have derived a new probability distribution $\tilde{m}_f = \left(m_h(f), m_t(f) \right)$ that depends on $f$:
+$$
+\begin{align}
+m_h(f) &= \frac{q_h Y_h(f)}{r}, \quad m_t(f) = \frac{q_t Y_t(f)}{r}.
+\end{align}
+$$
+Observe that $\tilde{m}_f$ is just a tilted version of the risk-neutral distribution $\tilde{q}$ by the discounted portfolio gross returns $Y(f)$, and that it is indeed a probability distribution since $m_h(f) + m_t(f) = 1$, and both terms are non-negative. 
 
-
-
-
-
-
+This implies that we can write $W(f)$ as
+$$
+\begin{align}
+W(f) &= p_h \log Y_h(f) + p_t \log Y_t(f) \\
+&= p_h \log \left(\frac{q_h Y_h(f)}{r} \frac{r}{q_h} \right) + p_t \log \left(\frac{q_t Y_t(f)}{r} \frac{r}{q_t} \right) \\
+&= \log r + p_h \log \left(\frac{m_h(f)}{q_h} \right) + p_t \log \left(\frac{m_t(f)}{q_t} \right) \\
+&= \log r + D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right) - D_{\text{KL}}\left(\tilde{p}\| \tilde{m}_f\right).
+\end{align}
+$$
+In other words, the excess growth rate, $W(f) - \log r$, is literally a measure of information. It is the difference between the KL divergence from the risk-neutral distribution $\tilde{q}$ to the actual distribution $\tilde{p}$ and the KL divergence from the tilted risk-neutral distribution $\tilde{m}_f$ to the actual distribution $\tilde{p}$. The first term is independent of $f$ and determines the maximum possible excess growth rate, while the second term is minimized by choosing $f$ so that $\tilde{m}_f = \tilde{p}$.
 
 Here is a citation! [@kelly1956]
 
 
+### Conclusion
+
+Unlike Maxwell's demon, Shannon's demon is, in some sense, real. More scientifically, the key takeaways from this post are:
+
+1. Long-run performance is determined by the expected growth rate, $W(f) = \mathbb{E}[\log Y(f)]$, _not_ the expected return, $\mathbb{E}[Y(f)]$.
+2. Unlike the expected return, which is a _linear_ function of $f$, the expected growth rate is a _concave_ function of $f$.
+3. Since typically we have $0 < f^* < 1$, diversification is required to maximize the long-run expected performance of a portfolio: diversification isn't simply a means of reducing risk.
+4. The excess growth rate is _literally_ measured in bits, as it is the difference between two Kullback Leibler divergences. 
+5. The excess growth rate is only ever positive when the actual distribution $\tilde{p}$ of returns differs from the risk-neutral distribution $\tilde{q}$.
+6. The optimal growth rate is achieved when the tilted risk-neutral distribution $\tilde{m}_f$ matches the actual distribution $\tilde{p}$.
 
 
 ### References
