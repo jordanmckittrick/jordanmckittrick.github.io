@@ -207,7 +207,7 @@ f^* &= r \frac{p_ha - (1-p_h)b}{ab} \\
 &= r \left(\frac{p_h}{b} - \frac{1 - p_h}{a} \right),
 \end{align}
 $$
-which, when $r = 1$, reduces to the most general form of the Kelly criterion for a single, two-state risky asset. In that context, $\Delta$ is often referred to as the "edge". If we not only let $r = 1$ but also $\gamma_t = 0$ (implying $b=1$), then we recover the Kelly criterion for $a$-to-$1$ odds: $f^* = \frac{p_h a - (1 - p_h)}{a}$, or "edge over odds".
+which, when $r = 1$, reduces to the most general form of the Kelly criterion for a single, two-state risky asset [@kelly1956]. In that context, $\Delta$ is often referred to as the "edge". If we not only let $r = 1$ but also $\gamma_t = 0$ (implying $b=1$), then we recover the Kelly criterion for $a$-to-$1$ odds: $f^* = \frac{p_h a - (1 - p_h)}{a}$, or "edge over odds".
 
 For our specific example, we have $f^* \approx 0.38$, as shown in @fig-arithmetic-vs-geometric. In general, however, we will need to solve problems of this type numerically. At this expected-growth-rate-maximizing allocation, the growth rate is $W(f^*) \approx 0.018$ bits (or about $0.012$ nats). This means that, on average, we can expect to double our money every $1 / 0.018 \approx 55$ periods -- not bad for a portfolio of lemons.
 
@@ -218,7 +218,7 @@ f_star = opt_result_for_CRP.x
 weights_for_optimal_CRP = np.array([1 - f_star, f_star])
 ```
 
-Let's now simulate the performance of a portfolio using this optimal weighting to see whether my theoretical claims hold water. Using the same random number generator as before, I have simulated the performance of a portfolio using the optimal CRP strategy, as seen below. A striking feature of this simulation is that after only roughly 100 periods two thirds of wealth paths are at or above break-even.
+Let's now simulate the performance of a portfolio using this optimal weighting to see whether my theoretical claims hold water. (For the reader more easily convinced by theory than by simulation, one of the canonical papers providing a theoretical justification for maximizing $W$ is [@breiman1961].) Using the same random number generator as before, I have simulated the performance of a portfolio using the optimal CRP strategy, as seen below. A striking feature of this simulation is that after only roughly 100 periods two thirds of wealth paths are at or above break-even.
 
 ```{python}
 #| echo: false
@@ -255,14 +255,11 @@ from plotting_functions import create_arithmetic_vs_geometric_plot
 arith_geo_df = generate_arithmetic_vs_geometric_data(coin_flip_model)
 create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP)
 ```
-The key point of this plot is that it is the concavity of the growth rate function that allows us to almost surely make an exponential amount of money in the long run. Intuitively, we think that the performance of a constant rebalanced portfolio at some $f$ should be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W = W(f)$ -- which is the quantity that actually drives long-run performace -- is a concave function of $f$. If there is one take-home message from this post, this is it.
-
-
-
+The key point of this plot is that it is the concavity of the growth rate function that allows us to almost surely make an exponential amount of money in the long run. We may intuitively think that the performance of a constant rebalanced portfolio at some $f$ should be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W = W(f)$ -- which is the quantity that actually drives long-run performace [@breiman1961] -- is a concave function of $f$. The values of $f$ that fall between the two black "X" marks in @fig-arithmetic-vs-geometric are those that yield a positive expected growth rate, and hence almost surely $S_n \rightarrow \infty$. [@breiman1961] defines gambles such as these as "favorable". 
 
 ### The connection to information theory
 
-Since $W$ drives long-run performance, let's take a closer look at it. We have
+Since $W(f^*)$ is an upper bound on long-run performance, let's take a closer look at it. We have
 $$
 \begin{align}
 W(f^*) &= \mathbb{E}\left[\ln Y \right] \\
@@ -280,7 +277,10 @@ $$
 \mathbb{E}_{\tilde{q}}[Y(f)] &= q_h Y_h(f) + q_t Y_t(f) = r,
 \end{align}
 $$
-which is independent of $f$, a property we will come back to in a moment. Since $D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right) \ge 0$ with equality if and only if $\tilde{p} = \tilde{q}$, we have an edge whenever the actual distribution of returns differs from the risk-neutral distribution. The portfolio's excess growth rate over the riskless asset is identically the excess number of bits needed to encode the actual distribution of returns $\tilde{p}$ using a code optimized for the risk-neutral distribution $\tilde{q}$. Importantly, this tells us that, with probability one, in the long-run, one will always be able to beat the risk-free asset by an exponential amount whenever the actual distribution of returns differs from the risk-neutral distribution. 
+which is independent of $f$, a property we will come back to in a moment. 
+
+
+Since $D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right) \ge 0$ with equality if and only if $\tilde{p} = \tilde{q}$, we see that we have an edge whenever the actual distribution of returns differs from the risk-neutral distribution. The portfolio's excess growth rate over the riskless asset is identically the excess number of bits needed to encode the actual distribution of returns $\tilde{p}$ using a code optimized for the risk-neutral distribution $\tilde{q}$. Importantly, this tells us that, with probability one, in the long-run, one will always be able to beat the risk-free asset by an exponential amount whenever the actual distribution of returns differs from the risk-neutral distribution. 
 
 We have discovered a formula for $W(f^*)$. Let's now try to find a formula for $W(f)$ more generally, i.e. where we no longer require $f = f^*$. To do this, notice that there is another probability distribution hiding in plain sight: since $\mathbb{E}_{\tilde{q}}[Y(f)] = r$ for all $f$, if we simply divide by $r$, we see that we have derived a new probability distribution $\tilde{m}_f = \left(m_h(f), m_t(f) \right)$ that depends on $f$:
 $$
@@ -290,7 +290,7 @@ m_h(f) &= \frac{q_h Y_h(f)}{r}, \quad m_t(f) = \frac{q_t Y_t(f)}{r}.
 $$
 Observe that $\tilde{m}_f$ is just a tilted version of the risk-neutral distribution $\tilde{q}$ by the discounted portfolio gross returns $Y(f)$, and that it is indeed a probability distribution since $m_h(f) + m_t(f) = 1$, and both terms are non-negative. 
 
-This implies that we can write $W(f)$ as
+We therefore derive the key result of this post:
 $$
 \begin{align}
 W(f) &= p_h \log Y_h(f) + p_t \log Y_t(f) \\
@@ -301,19 +301,19 @@ W(f) &= p_h \log Y_h(f) + p_t \log Y_t(f) \\
 $$
 In other words, the excess growth rate, $W(f) - \log r$, is literally a measure of information. It is the difference between the KL divergence from the risk-neutral distribution $\tilde{q}$ to the actual distribution $\tilde{p}$ and the KL divergence from the tilted risk-neutral distribution $\tilde{m}_f$ to the actual distribution $\tilde{p}$. The first term is independent of $f$ and determines the maximum possible excess growth rate, while the second term is minimized by choosing $f$ so that $\tilde{m}_f = \tilde{p}$.
 
-Here is a citation! [@kelly1956]
-
 
 ### Conclusion
 
-Unlike Maxwell's demon, Shannon's demon is, in some sense, real. More scientifically, the key takeaways from this post are:
+Unlike Maxwell's demon, Shannon's demon is, in the sense made clear in this post, real. More scientifically, the key takeaways from this post are:
 
 1. Long-run performance is determined by the expected growth rate, $W(f) = \mathbb{E}[\log Y(f)]$, _not_ the expected return, $\mathbb{E}[Y(f)]$.
 2. Unlike the expected return, which is a _linear_ function of $f$, the expected growth rate is a _concave_ function of $f$.
-3. Since typically we have $0 < f^* < 1$, diversification is required to maximize the long-run expected performance of a portfolio: diversification isn't simply a means of reducing risk.
-4. The excess growth rate is _literally_ measured in bits, as it is the difference between two Kullback Leibler divergences. 
+3. Since typically we have $0 < f^* < 1$, diversification is required to maximize the long-run expected performance of a portfolio. Diversification isn't simply a means of reducing risk.
+4. The excess growth rate is literally measured in bits, as it is the difference between two Kullback Leibler divergences. 
 5. The excess growth rate is only ever positive when the actual distribution $\tilde{p}$ of returns differs from the risk-neutral distribution $\tilde{q}$.
 6. The optimal growth rate is achieved when the tilted risk-neutral distribution $\tilde{m}_f$ matches the actual distribution $\tilde{p}$.
+
+I hope to continue exploring these and similar ideas in future posts.
 
 
 ### References
