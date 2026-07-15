@@ -97,7 +97,7 @@ create_wealth_plot(
 )
 ```
 
-Clearly the typical path through log-wealth space is downward sloping in the long run (top panel of @fig-risky-wealth). In addition, after only 100 coin flips, we see that fewer than 10% of the paths have made money, and after 250 flips, that fraction rapidly drops below 1%. After all 500 flips, it is essentially zero (bottom panel). Indeed, the wealth path tends to zero with probability one. 
+Clearly the typical path through log-wealth space is downward sloping in the long run (top panel of @fig-risky-wealth). In addition, after only 100 coin flips, we see that fewer than 10% of the paths have made money, and after 250 flips, that fraction rapidly drops below 1%. After all 500 flips, it is essentially zero (bottom panel). Indeed, the wealth path tends to zero with probability one.
 
 To see this, we begin with the observation that since the sequence of random variables is i.i.d., the strong law of large numbers implies that the empirical growth rate, $W_n$, converges almost surely to the expected growth rate $W(w)$ (or simply "growth rate"):
 $$
@@ -108,7 +108,7 @@ W_n(w) &:= \frac{1}{n} \ln \left(\frac{S_n(w)}{S_0}\right) \\
 &=: W(w),
 \end{align}
 $$
-which defines $W(w)$. For the risky asset, we have $w^T = (0,1)$; hence,
+which defines $W(w)$ (in nats). For the risky asset, we have $w^T = (0,1)$; hence,
 $$
 \begin{align}
 W_n(w) &\rightarrow p_h \ln \gamma_h + (1 - p_h) \ln \gamma_t \\
@@ -124,7 +124,7 @@ Note that this result implies that, regardless of the starting allocation, any b
 
 
 ### The expected wealth is a mirage
-The _expected value_ path for the risky asset, however, tells a very different story. After 500 periods, the expected value path (not shown in @fig-risky-wealth) for the risky assets sits around $4 \cdot 10^{39}$, which is dozens of orders of magnitude better than both the median and the (empirical) mean. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the independence of the coin flips, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
+The _expected value_ path for the risky asset, however, tells a very different story. After 500 periods, the expected value path (not shown in @fig-risky-wealth) for the risky asset sits around $4 \cdot 10^{39}$, which is many orders of magnitude better than both the sampled median and the sampled mean. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the independence of the coin flips, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
 $$
 \begin{align}
 \mathbb{E}[S_n] &= \mathbb{E}\left[\prod_{i=1}^n Y_i\right] \\
@@ -251,18 +251,18 @@ This may seem like magic or a sleight of hand, but it most certainly is not. Whe
 ```{python}
 #| echo: false
 #| label: fig-arithmetic-vs-geometric
-#| fig-cap: "Arithmetic and geometric returns as a function of the fraction $f$ allocated to the risky asset. Top: arithmetic and geometric gross returns. Bottom: the logarithm (base 2) of the curves above (the growth rate), where the shaded band is the compounding drag $\\ln \\mathbb{E}[Y] - \\mathbb{E}[\\ln Y]$ (quoted in bits). The growth-rate-maximizing allocation $f^*$ is marked."
+#| fig-cap: "Arithmetic and geometric returns as a function of the fraction $f$ allocated to the risky asset. Top: arithmetic and geometric gross returns. Bottom: the logarithm (base 2) of the curves above (the growth rate), where the shaded band is the compounding drag $\\log_2 \\mathbb{E}[Y] - \\mathbb{E}[\\log_2 Y]$. The growth-rate-maximizing allocation $f^*$ is marked."
 from plotting_data import generate_arithmetic_vs_geometric_data
 from plotting_functions import create_arithmetic_vs_geometric_plot
 arith_geo_df = generate_arithmetic_vs_geometric_data(coin_flip_model)
 create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP)
 ```
-The key point of this plot is that it is the concavity of the growth rate function that allows us to almost surely make an exponential amount of money in the long run. We may intuitively think that the performance of a constant rebalanced portfolio at some $f$ should be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W = W(f)$ -- which is the quantity that actually drives long-run performance [@breiman1961] -- is a concave function of $f$. The values of $f$ that fall between the two black "X" marks in @fig-arithmetic-vs-geometric are those that yield a positive expected growth rate, and hence almost surely $S_n \rightarrow \infty$. [@breiman1961] defines gambles such as these as "favorable". 
+The key point of this plot is that the concavity of the growth-rate function is what allows us to almost surely make an exponential amount of money in the long run. We may intuitively think that the performance of a constant rebalanced portfolio at some $f$ should be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W = W(f)$ -- which is the quantity that actually drives long-run performance [@breiman1961] -- is a concave function of $f$. The values of $f$ that fall between the two black "X" marks in @fig-arithmetic-vs-geometric are those that yield a positive expected growth rate, and hence almost surely $S_n \rightarrow \infty$. [@breiman1961] defines gambles such as these as "favorable". 
 
 
 
 ### The connection to information theory {#sec-the-connection-to-information-theory}
-Since $W(f^*)$ is an upper bound on long-run performance, let's take a closer look at it. We have
+Since $W(f^*)$ is the best achievable growth rate, let's take a closer look at it. We have
 $$
 \begin{align}
 W(f^*) &= \mathbb{E}\left[\ln Y \right] \\
@@ -298,11 +298,19 @@ $$
 \begin{align}
 W(f) &= p_h \ln Y_h(f) + p_t \ln Y_t(f) \\
 &= p_h \ln \left(\frac{q_h Y_h(f)}{r} \frac{r}{q_h} \right) + p_t \ln \left(\frac{q_t Y_t(f)}{r} \frac{r}{q_t} \right) \\
-&= \ln r + p_h \ln \left(\frac{m_h(f)}{q_h} \right) + p_t \ln \left(\frac{m_t(f)}{q_t} \right) \\
-&= \ln r + D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right) - D_{\text{KL}}\left(\tilde{p}\| \tilde{m}_f\right).
+&= \ln r + p_h \ln \left(\frac{m_h(f)}{q_h} \right) + p_t \ln \left(\frac{m_t(f)}{q_t} \right) \quad \text{nats}, \\
 \end{align}
 $$
-In other words, the excess growth rate, $W(f) - \ln r$, is literally a measure of information. It is the difference between the KL divergence from the risk-neutral distribution $\tilde{q}$ to the actual distribution $\tilde{p}$ and the KL divergence from the tilted risk-neutral distribution $\tilde{m}_f$ to the actual distribution $\tilde{p}$. The first term is independent of $f$ and determines the maximum possible excess growth rate, while the second term is minimized by choosing $f$ so that $\tilde{m}_f = \tilde{p}$.
+or
+$$
+\begin{align}
+W(f) &= \log_2(e) \Big( \ln r + D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right) - D_{\text{KL}}\left(\tilde{p}\| \tilde{m}_f\right) \Big) \quad \text{bits}. \\
+\end{align}
+$$
+
+
+
+In other words, the excess growth rate, $W(f) - \ln r$, is a measure of information. It is the difference between the KL divergence from the risk-neutral distribution $\tilde{q}$ to the actual distribution $\tilde{p}$ and the KL divergence from the tilted risk-neutral distribution $\tilde{m}_f$ to the actual distribution $\tilde{p}$. The first term is independent of $f$ and determines the maximum possible excess growth rate, while the second term is minimized by choosing $f$ so that $\tilde{m}_f = \tilde{p}$.
 
 
 
@@ -312,7 +320,7 @@ Unlike Maxwell's demon, Shannon's demon is, in the sense made clear in this post
 1. Long-run performance is determined by the expected growth rate, $W(f) = \mathbb{E}[\ln Y(f)]$, _not_ the expected return, $\mathbb{E}[Y(f)]$.
 2. Unlike the expected return, which is a _linear_ function of $f$, the expected growth rate is a _concave_ function of $f$.
 3. Since typically we have $0 < f^* < 1$, diversification is required to maximize the long-run expected performance of a portfolio. Diversification isn't simply a means of reducing risk.
-4. The excess growth rate is naturally measured in bits, as it is the difference between two Kullback-Leibler divergences. 
+4. The excess growth rate is a measure of information, as it is the difference between two Kullback-Leibler divergences. 
 5. The excess growth rate is only ever positive when the actual distribution $\tilde{p}$ of returns differs from the risk-neutral distribution $\tilde{q}$.
 6. The optimal growth rate is achieved when the tilted risk-neutral distribution $\tilde{m}_f$ matches the actual distribution $\tilde{p}$.
 
