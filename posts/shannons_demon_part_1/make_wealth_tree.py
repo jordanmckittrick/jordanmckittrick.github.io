@@ -34,7 +34,14 @@ def render_math(tex: str, fontsize: int = 24, color: str = INK):
     fig = plt.figure()
     fig.text(0.5, 0.5, tex, fontsize=fontsize, color=color, ha="center", va="center")
     buf = io.BytesIO()
-    fig.savefig(buf, format="svg", bbox_inches="tight", pad_inches=0.01, transparent=True)
+    # Date=None drops matplotlib's wall-clock stamp from the embedded SVG's Dublin
+    # Core metadata. Without it every label carries the moment it was rendered, so
+    # re-running this script rewrites all three <image> data-URIs even when the
+    # picture is identical -- and since wealth_tree.svg is committed, that turns
+    # any one-line change here into a diff nobody can read. Now the output only
+    # moves when the drawing does.
+    fig.savefig(buf, format="svg", bbox_inches="tight", pad_inches=0.01,
+                transparent=True, metadata={"Date": None})
     plt.close(fig)
     svg = buf.getvalue().decode("utf-8")
     head = svg[: svg.index(">", svg.index("<svg"))]
@@ -99,7 +106,7 @@ svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" font-fam
     <text x="110" y="340">0</text>
     <text x="380" y="340">1</text>
   </g>
-  <text x="245" y="362" fill="{GREY}" font-size="12" text-anchor="middle">period, n</text>
+  <text x="245" y="362" fill="{GREY}" font-size="12" text-anchor="middle">Period</text>
 </svg>
 """
 
