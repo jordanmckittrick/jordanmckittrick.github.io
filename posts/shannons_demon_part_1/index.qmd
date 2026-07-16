@@ -164,7 +164,7 @@ upper_tail_prob = ss.binom.sf(m - 1, n, p_u)
 
 where $c/n = \frac{-\ln \gamma_t}{\ln \gamma_h - \ln \gamma_t} \approx{}$ `{python} f'{cut_off_as_fraction:.3f}'` solves $\frac{c}{n} \ln \gamma_h + \frac{n-c}{n} \ln \gamma_t = 0$. For $n = `{python} num_periods`$, this implies $c \approx {}$ `{python} f'{cut_off_as_fraction*num_periods:.3f}'`, yielding $\mathbb{P}(S_n \geq 1) \approx {}$ `{python} f'{upper_tail_prob:.3e}'`, or about one in a thousand. On the other hand, for $n = 500$, we have $\mathbb{E}[S_n] = 1.2^{500} \approx 4 \cdot 10^{39}$. So much for the expected value path being representative of the typical outcome.
 
-To further underscore this point, we can compute an upper bound on this same tail probability by applying a Chernoff bound. The actual probability of heads $p_h = 0.5$, while the empirical probability of heads that would yield a non-negative growth rate is $\lceil c \rceil / n = 0.57 > 0.5$. Of all the empirical distributions of heads/tails that would achieve a non-negative growth rate, $(\lceil c \rceil / n, 1 - \lceil c \rceil / n)$ is the "closest" to the actual distribution $(0.5, 0.5)$ in the sense of minimizing Kullback-Leibler divergence. The Kullback-Leibler divergence is
+To further underscore this point, we can compute an upper bound on this same tail probability by applying a Chernoff bound. The actual probability of heads $p_h = 0.5$, while the empirical probability of heads that would yield a non-negative growth rate is $\lceil c \rceil / n = 0.57 > 0.5$. Of all the empirical distributions of heads/tails that would achieve a non-negative growth rate, $(\lceil c \rceil / n, 1 - \lceil c \rceil / n)$ is the "closest" to the actual distribution $(0.5, 0.5)$ in the sense of minimizing Kullback-Leibler divergence. The Kullback-Leibler divergence, $D_{\text{KL}}$, is given by
 $$
 \begin{align}
 D_{\text{KL}} &= \frac{\lceil c \rceil}{n} \ln \left(\frac{\lceil c \rceil / n}{p_h}\right) + \left(1 - \frac{\lceil c \rceil}{n}\right) \ln \left(\frac{1 - \lceil c \rceil / n}{1 - p_h}\right) \\
@@ -172,14 +172,14 @@ D_{\text{KL}} &= \frac{\lceil c \rceil}{n} \ln \left(\frac{\lceil c \rceil / n}{
 &\approx 0.0098
 \end{align}
 $$
-The Chernoff bound then implies that $\mathbb{P}(S_n \geq 1) \leq e^{-n D_{\text{KL}}}$, which decays exponentially in $n$. @fig-no-loss-probability plots the exact tail probability against this bound.[^1]
+The Chernoff bound then implies that $\mathbb{P}(S_n \geq 1) \leq e^{-n D_{\text{KL}}}$, which decays exponentially in $n$. @fig-no-loss-probability plots the exact tail probability against this bound.[^1] In what follows, I will drop the "KL" subscript from $D_{\text{KL}}$ and simply write $D$ for the Kullback-Leibler divergence.
 
-[^1]: Note that the KL divergence appearing here is not directly related to the KL divergence that appears in section @sec-the-connection-to-information-theory, though they are both measures of information.
+[^1]: Note that the KL divergence appearing here is not directly related to the KL divergences that appear in section @sec-the-connection-to-information-theory, though they are both measures of information.
 
 ```{python}
 #| echo: false
 #| label: fig-no-loss-probability
-#| fig-cap: "The probability of not having lost money after $n$ coin flips, $\\mathbb{P}(S_n \\geq 1)$, together with its Chernoff upper bound $e^{-n D_{\text{KL}}}$. This is the same quantity the bottom panel of @fig-risky-wealth estimates by simulation, resolved far into the tail."
+#| fig-cap: "The probability of not having lost money after $n$ coin flips, $\\mathbb{P}(S_n \\geq 1)$, together with its Chernoff upper bound $e^{-n D}$. This is the same quantity the bottom panel of @fig-risky-wealth estimates by simulation, resolved far into the tail."
 ##### PROBABILITY OF NOT LOSING MONEY (exact vs Chernoff bound) #####
 from plotting_data import generate_no_loss_probability_data
 from plotting_functions import create_no_loss_probability_plot
@@ -199,7 +199,7 @@ f^* = r \frac{\Delta}{ab},
 $$
 where I've defined $\Delta = \mathbb{E}[\gamma] - r$, $a = \gamma_h - r$ and $b = r - \gamma_t$.
 
-We see immediately that $f^*$ is positive (i.e. we invest at least some of our money into the risky asset) if and only if $\Delta > 0$. If $\Delta = 0$, then $f^* = 0$ and we invest all of our money in the risk-free asset. If $\Delta < 0$, then $f^* < 0$ and we would need to short the risky asset in order to maximize our expected growth rate. In our case, we are restricting ourselves to long-only portfolios (i.e. $0 \leq f \leq 1$), so we would simply invest all of our money in the risk-free asset. Since the growth rate diverges to negative infinity at $f = -r/a < 0$ and $f = r/b \geq 1$, we see that the optimal $f^*$ is always in the open interval $(-r/a, r/b)$.
+We see immediately that $f^*$ is positive (i.e. we invest at least some of our money in the risky asset) if and only if $\Delta > 0$. If $\Delta = 0$, then $f^* = 0$ and we invest all of our money in the risk-free asset. If $\Delta < 0$, then $f^* < 0$ and we would need to short the risky asset in order to maximize our expected growth rate. In our case, we are restricting ourselves to long-only portfolios (i.e. $0 \leq f \leq 1$), so we would simply invest all of our money in the risk-free asset. Since the growth rate diverges to negative infinity at $f = -r/a < 0$ and $f = r/b \geq 1$, we see that the optimal $f^*$ is always in the open interval $(-r/a, r/b)$.
 
 Our formula for $f^*$ can also be written in a form that is perhaps more recognizable:
 $$
@@ -210,7 +210,7 @@ f^* &= r \frac{p_ha - (1-p_h)b}{ab} \\
 $$
 which, when $r = 1$, reduces to the most general form of the Kelly criterion for a single, two-state risky asset [@kelly1956]. In that context, $\Delta$ is often referred to as the "edge". If we not only let $r = 1$ but also $\gamma_t = 0$ (implying $b=1$), then we recover the Kelly criterion for $a$-to-$1$ odds: $f^* = \frac{p_h a - (1 - p_h)}{a}$, or "edge over odds".
 
-For our specific example, we have $f^* \approx 0.38$, as shown in @fig-arithmetic-vs-geometric. In general, however, we will need to solve problems of this type numerically. At this expected-growth-rate-maximizing allocation, the growth rate is $W(f^*) \approx 0.018$ bits (or about $0.012$ nats). This means that, on average, we can expect to double our money every $1 / 0.018 \approx 55$ periods -- not bad for a portfolio of lemons.
+For our specific example, we have $f^* \approx 0.38$, as shown in @fig-arithmetic-vs-geometric. In general, however, we will need to solve problems of this type numerically. At this growth-optimal allocation, the growth rate is $W(f^*) \approx 0.018$ bits (or about $0.012$ nats). This means that, on average, we can expect to double our money every $1 / 0.018 \approx 55$ periods -- not bad for a portfolio of lemons.
 
 ```{python}
 ####### FIND THE OPTIMAL CRP STRATEGY #####
@@ -251,13 +251,13 @@ This may seem like magic or a sleight of hand, but it most certainly is not. Whe
 ```{python}
 #| echo: false
 #| label: fig-arithmetic-vs-geometric
-#| fig-cap: "Arithmetic and geometric returns as a function of the fraction $f$ allocated to the risky asset. Top: arithmetic and geometric gross returns. Bottom: the logarithm (base 2) of the curves above (the growth rate), where the shaded band is the compounding drag $\\log_2 \\mathbb{E}[Y] - \\mathbb{E}[\\log_2 Y]$. The growth-rate-maximizing allocation $f^*$ is marked."
+#| fig-cap: "Arithmetic and geometric returns as a function of the fraction $f$ allocated to the risky asset. Top: arithmetic and geometric gross returns. Bottom: the logarithm (base 2) of the curves above (the growth rate), where the shaded band is the compounding drag $\\log_2 \\mathbb{E}[Y] - \\mathbb{E}[\\log_2 Y]$. The growth-optimal allocation $f^*$ is marked."
 from plotting_data import generate_arithmetic_vs_geometric_data
 from plotting_functions import create_arithmetic_vs_geometric_plot
 arith_geo_df = generate_arithmetic_vs_geometric_data(coin_flip_model)
 create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP)
 ```
-The key point of this plot is that the concavity of the growth-rate function is what allows us to almost surely make an exponential amount of money in the long run. We may intuitively think that the performance of a constant rebalanced portfolio at some $f$ should be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W = W(f)$ -- which is the quantity that actually drives long-run performance [@breiman1961] -- is a concave function of $f$. The values of $f$ that fall between the two black "X" marks in @fig-arithmetic-vs-geometric are those that yield a positive expected growth rate, and hence almost surely $S_n \rightarrow \infty$. [@breiman1961] defines gambles such as these as "favorable". 
+The key point of this plot is that the concavity of the growth-rate function is what allows us to almost surely make an exponential amount of money in the long run. We may intuitively think that the performance of a constant rebalanced portfolio at some $f$ should be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W = W(f)$ -- which is the quantity that actually drives long-run performance [@breiman1961] -- is a concave function of $f$. The values of $f$ that fall between the two black "X" marks in @fig-arithmetic-vs-geometric are those that yield a positive expected growth rate, and hence almost surely $S_n \rightarrow \infty$. Breiman defines gambles such as these as "favorable" [@breiman1961]. 
 
 
 
@@ -271,46 +271,42 @@ W(f^*) &= \mathbb{E}\left[\ln Y \right] \\
 &= \ln r + p_h \ln \left(1 + \frac{\Delta}{b} \right) + (1 - p_h) \ln \left(1 - \frac{\Delta}{a} \right) \\
 &= \ln r + p_h \ln \left(\frac{p_h(a+b)}{b} \right) + (1 - p_h) \ln \left(\frac{(1-p_h)(a+b)}{a} \right) \\
 &= \ln r + p_h \ln \left(\frac{p_h}{q_h} \right) + p_t \ln \left(\frac{p_t}{q_t} \right) \\
-&= \ln r + D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right), \\
+&= \ln r + D\left(p \| q\right), \\
 \end{align}
 $$
-where $q_h = b / (a + b)$ and $q_t = a / (a + b)$ are alternative probabilities of heads and tails, respectively, where I've let $p_t = 1 - p_h$ for notational convenience, and where $D_{\text{KL}}(\tilde{p} \| \tilde{q})$ is the Kullback-Leibler (KL) divergence from the model $\tilde{q} = (q_h, q_t)$ to the actual distribution $\tilde{p} = (p_h, p_t)$. Interestingly, $\tilde{q}$ turns out to be the risk-neutral probability distribution for this setup, i.e. the expected return of both assets under $\tilde{q}$ is exactly the risk-free return $r$:
+where $q_h = b / (a + b)$ and $q_t = a / (a + b)$ are alternative probabilities of heads and tails, respectively, where I've let $p_t = 1 - p_h$ for notational convenience, and where $D(p \| q)$ is the Kullback-Leibler (KL) divergence from the model $q = (q_h, q_t)$ to the actual distribution $p = (p_h, p_t)$. Interestingly, $q$ turns out to be the risk-neutral probability distribution for this setup, i.e. the expected return of both assets under $q$ is exactly the risk-free return $r$:
 $$
 \begin{align}
-\mathbb{E}_{\tilde{q}}[Y(f)] &= q_h Y_h(f) + q_t Y_t(f) = r,
+\mathbb{E}_{q}[Y(f)] &= q_h Y_h(f) + q_t Y_t(f) = r,
 \end{align}
 $$
 which is independent of $f$, a property we will come back to in a moment. 
 
 
-Since $D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right) \ge 0$ with equality if and only if $\tilde{p} = \tilde{q}$, we see that we have an edge whenever the actual distribution of returns differs from the risk-neutral distribution. The portfolio's excess growth rate over the risk-free asset is equal to the excess number of bits needed to encode the actual distribution of returns $\tilde{p}$ using a code optimized for the risk-neutral distribution $\tilde{q}$. Importantly, this tells us that, with probability one, in the long run, one will always be able to beat the risk-free asset by an exponential amount whenever the actual distribution of returns differs from the risk-neutral distribution. 
+Since $D\left(p \| q\right) \ge 0$ with equality if and only if $p = q$, we see that we have an edge whenever the actual distribution of returns differs from the risk-neutral distribution. The portfolio's excess growth rate over the risk-free asset is equal to the excess number of bits needed to encode the actual distribution of returns $p$ using a code optimized for the risk-neutral distribution $q$. Importantly, this tells us that, with probability one, in the long run, one will always be able to beat the risk-free asset by an exponential amount whenever the actual distribution of returns differs from the risk-neutral distribution. 
 
-We have discovered a formula for $W(f^*)$. Let's now try to find a formula for $W(f)$ more generally, i.e. where we no longer require $f = f^*$. To do this, notice that there is another probability distribution hiding in plain sight: since $\mathbb{E}_{\tilde{q}}[Y(f)] = r$ for all $f$, if we simply divide by $r$, we see that we have derived a new probability distribution $\tilde{m}_f = \left(m_h(f), m_t(f) \right)$ that depends on $f$:
+We have discovered a formula for $W(f^*)$. Let's now try to find a formula for $W(f)$ more generally, i.e. where we no longer require $f = f^*$. To do this, notice that there is another probability distribution hiding in plain sight: since $\mathbb{E}_{q}[Y(f)] = r$ for all $f$, if we simply divide by $r$, we see that we have derived a new probability distribution $m_f = \left(m_h(f), m_t(f) \right)$ that depends on $f$:
 $$
 \begin{align}
 m_h(f) &= \frac{q_h Y_h(f)}{r}, \quad m_t(f) = \frac{q_t Y_t(f)}{r}.
 \end{align}
 $$
-Observe that $\tilde{m}_f$ is just a tilted version of the risk-neutral distribution $\tilde{q}$ by the discounted portfolio gross returns $Y(f)$, and that it is indeed a probability distribution since $m_h(f) + m_t(f) = 1$, and both terms are non-negative. 
+Observe that $m_f$ is just a tilted version of the risk-neutral distribution $q$ by the discounted portfolio gross returns $Y(f)$, and that it is indeed a probability distribution since $m_h(f) + m_t(f) = 1$, and both terms are non-negative. 
 
-We can now derive the key result of this post:
+We can now derive the key result of this post (in nats):
 $$
 \begin{align}
 W(f) &= p_h \ln Y_h(f) + p_t \ln Y_t(f) \\
 &= p_h \ln \left(\frac{q_h Y_h(f)}{r} \frac{r}{q_h} \right) + p_t \ln \left(\frac{q_t Y_t(f)}{r} \frac{r}{q_t} \right) \\
-&= \ln r + p_h \ln \left(\frac{m_h(f)}{q_h} \right) + p_t \ln \left(\frac{m_t(f)}{q_t} \right) \quad \text{nats}, \\
+&= \ln r + p_h \ln \left(\frac{m_h(f)}{q_h} \right) + p_t \ln \left(\frac{m_t(f)}{q_t} \right), \\
 \end{align}
 $$
 or
 $$
-\begin{align}
-W(f) &= \log_2(e) \Big( \ln r + D_{\text{KL}}\left(\tilde{p} \| \tilde{q}\right) - D_{\text{KL}}\left(\tilde{p}\| \tilde{m}_f\right) \Big) \quad \text{bits}. \\
-\end{align}
+\boxed{\,W(f) = \ln r + D\!\left(p \,\|\, q\right) - D\!\left(p \,\|\, m_f\right).  \,}
 $$
 
-
-
-In other words, the excess growth rate, $W(f) - \ln r$, is a measure of information. It is the difference between the KL divergence from the risk-neutral distribution $\tilde{q}$ to the actual distribution $\tilde{p}$ and the KL divergence from the tilted risk-neutral distribution $\tilde{m}_f$ to the actual distribution $\tilde{p}$. The first term is independent of $f$ and determines the maximum possible excess growth rate, while the second term is minimized by choosing $f$ so that $\tilde{m}_f = \tilde{p}$.
+We've worked in nats throughout; dividing the result by $\ln 2$ re-expresses this in bits. From this result, we see that the excess growth rate, $W(f) - \ln r$, is a measure of information. It is the difference between the KL divergence from the risk-neutral distribution $q$ to the actual distribution $p$ and the KL divergence from the tilted risk-neutral distribution $m_f$ to the actual distribution $p$. The first term is independent of $f$ and determines the maximum possible excess growth rate, while the second term is minimized by choosing $f$ so that $m_f = p$.
 
 
 
@@ -321,8 +317,8 @@ Unlike Maxwell's demon, Shannon's demon is, in the sense made clear in this post
 2. Unlike the expected return, which is a _linear_ function of $f$, the expected growth rate is a _concave_ function of $f$.
 3. Since typically we have $0 < f^* < 1$, diversification is required to maximize the long-run expected performance of a portfolio. Diversification isn't simply a means of reducing risk.
 4. The excess growth rate is a measure of information, as it is the difference between two Kullback-Leibler divergences. 
-5. The excess growth rate is only ever positive when the actual distribution $\tilde{p}$ of returns differs from the risk-neutral distribution $\tilde{q}$.
-6. The optimal growth rate is achieved when the tilted risk-neutral distribution $\tilde{m}_f$ matches the actual distribution $\tilde{p}$.
+5. The excess growth rate is only ever positive when the actual distribution $p$ of returns differs from the risk-neutral distribution $q$.
+6. The optimal growth rate is achieved when the tilted risk-neutral distribution $m_f$ matches the actual distribution $p$.
 
 I hope to continue exploring these and similar ideas in future posts.
 
