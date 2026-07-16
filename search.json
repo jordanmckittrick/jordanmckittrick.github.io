@@ -4,7 +4,7 @@
     "href": "blog.html",
     "title": "Blog",
     "section": "",
-    "text": "Shannon’s Demon, Made Exact (Part 1)\n\n\nHow to make an exponential amount of money from a portfolio of lemons without shorting anything\n\n\n\nquant finance\n\ninformation theory\n\nkelly criterion\n\nrisk-neutral measure\n\nKL divergence\n\n\n\n\n\n\n\n\n\nJul 15, 2026\n\n\nJordan McKittrick\n\n\n\n\n\nNo matching items"
+    "text": "No matching items"
   },
   {
     "objectID": "recommendations.html",
@@ -33,20 +33,6 @@
     "title": "Recommendations",
     "section": "Other",
     "text": "Other\n\n3Blue1Brown\nMarginal Revolution\nRoger Federer as Religious Experience"
-  },
-  {
-    "objectID": "posts/shannons_demon_part_1/index.html",
-    "href": "posts/shannons_demon_part_1/index.html",
-    "title": "Shannon’s Demon, Made Exact (Part 1)",
-    "section": "",
-    "text": "If intuition is any guide, it shouldn’t be possible for a long-only portfolio to be profitable when each of its component assets is a major lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I’ll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio of such lemons. It turns out that information theory provides a lovely explanation for why this is possible. The culmination of this post is a simple, closed-form formula for the excess expected growth rate of a portfolio, which is expressed as the difference between two Kullback-Leibler divergences – this is why it is natural to measure the growth rate in bits.\n\n\n\n\n\n\nFigure 1: Still Life with Lemons on a Plate – Vincent van Gogh (1887)"
-  },
-  {
-    "objectID": "posts/shannons_demon_part_1/index.html#footnotes",
-    "href": "posts/shannons_demon_part_1/index.html#footnotes",
-    "title": "Shannon’s Demon, Made Exact (Part 1)",
-    "section": "Footnotes",
-    "text": "Footnotes\n\n\nNote that the KL divergence appearing here is not directly related to the KL divergence that appears in section Section 0.7, though they are both measures of information.↩︎"
   },
   {
     "objectID": "index.html",
