@@ -12,11 +12,14 @@ format:
         code-summary: "Show code"
         code-tools: true
 
+draft: true
+
 ---
 
 
 
 ### Introduction
+HELLO. WHAT DOES THIS DO?????
 If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a major lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio of such lemons. It turns out that information theory provides a lovely explanation for why this is possible. The culmination of this post is a simple, closed-form formula for the excess expected growth rate of a portfolio, which is expressed as the difference between two Kullback-Leibler divergences -- this is why it is natural to measure the growth rate in _bits_. 
 
 ![_Still Life with Lemons on a Plate_ -- Vincent van Gogh (1887)](still-life-with-lemons-on-a-plate-1887.jpg){#fig-van-gogh width="60%" fig-align="center" fig-alt="An impressionist painting by Vincent van Gogh depicting several bright yellow lemons piled on a simple ceramic plate against a textured, light-colored background."}
@@ -257,6 +260,7 @@ from plotting_functions import create_arithmetic_vs_geometric_plot
 arith_geo_df = generate_arithmetic_vs_geometric_data(coin_flip_model)
 create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP)
 ```
+
 The key point of this plot is that the concavity of the growth-rate function is what allows us to almost surely make an exponential amount of money in the long run. We may intuitively think that the performance of a constant rebalanced portfolio at some $f$ should be somewhere in between the performance of the risk-free asset ($f = 0$) and the risky asset ($f = 1$). However, this is simply not the case. While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W = W(f)$ -- which is the quantity that actually drives long-run performance [@breiman1961] -- is a concave function of $f$. The values of $f$ that fall between the two black "X" marks in @fig-arithmetic-vs-geometric are those that yield a positive expected growth rate, and hence almost surely $S_n \rightarrow \infty$. Breiman defines gambles such as these as "favorable" [@breiman1961]. 
 
 
