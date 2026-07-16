@@ -49,6 +49,7 @@ def _add_spaghetti(
     max_paths: int = 300,
     seed: int = 0,
     identify: bool = False,
+    hovertemplate: str | None = None,
 ) -> int:
     """Draw the raw simulation paths as a faint cloud.
 
@@ -62,6 +63,12 @@ def _add_spaghetti(
     the label is a key that pairs a path across panels -- which is what lets the
     linked-hover script in the post light up both at once. Off by default: it
     only earns its keep where that pairing means something.
+
+    It also pins an explicit ``uid``. Plotly renders each trace into a ``<g>``
+    classed ``trace<uid>``, so pinning it here is what lets that script find a
+    path's SVG directly instead of assuming the DOM is in trace order.
+
+    ``hovertemplate`` overrides the readout, and is ignored unless ``identify``.
     """
     cols = list(paths.columns)
     if len(cols) > max_paths:
@@ -70,8 +77,8 @@ def _add_spaghetti(
     line = dict(color=with_alpha(color, alpha), width=0.6)
     for c in cols:
         hover = (
-            dict(meta=dict(path=int(c)),
-                 hovertemplate="period %{x}: <b>%{y:.3f} bits</b><extra></extra>")
+            dict(meta=dict(path=int(c)), uid=f"p{int(c)}r{row}",
+                 hovertemplate=hovertemplate or "%{y:.3f}<extra></extra>")
             if identify else dict(hoverinfo="skip")
         )
         fig.add_trace(
@@ -310,6 +317,7 @@ def _add_growth_convergence_panel(
     *,
     max_paths: int,
     seed: int,
+    hovertemplate: str,
 ) -> None:
     """One convergence panel: spaghetti, 95% band, asymptote, break-even.
 
@@ -321,7 +329,7 @@ def _add_growth_convergence_panel(
     only 0.018 bits).
     """
     _add_spaghetti(fig, simulations, row, col, max_paths=max_paths, seed=seed,
-                   identify=True)
+                   identify=True, hovertemplate=hovertemplate)
     _add_percentile_band(fig, summary, row, col)
     fig.add_hline(y=0.0, line_width=1.2, line_dash="dash",
                   line_color=with_alpha(INK, 0.55), row=row, col=col)
@@ -424,12 +432,22 @@ def create_growth_rate_convergence_plot(
 
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08)
 
-    _add_growth_convergence_panel(fig, simulations_risky, summary_risky,
-                                  asymptote_risky, 1, 1,
-                                  max_paths=max_paths, seed=seed)
-    _add_growth_convergence_panel(fig, simulations_optimal, summary_optimal,
-                                  asymptote_optimal, 2, 1,
-                                  max_paths=max_paths, seed=seed)
+    # The readouts carry only what the reader cannot already see. Which panel is
+    # which, the y-axis answers; what the units are, the title answers; and the
+    # two boxes always surface together at the same period, so the period is said
+    # once, in the upper one. What is left is a bare number. That also keeps the
+    # box narrow, which is not incidental -- it sits directly on the cloud it is
+    # reporting, so every word in it hides a path.
+    _add_growth_convergence_panel(
+        fig, simulations_risky, summary_risky, asymptote_risky, 1, 1,
+        max_paths=max_paths, seed=seed,
+        hovertemplate="Period: %{x}<br>%{y:.3f}<extra></extra>",
+    )
+    _add_growth_convergence_panel(
+        fig, simulations_optimal, summary_optimal, asymptote_optimal, 2, 1,
+        max_paths=max_paths, seed=seed,
+        hovertemplate="%{y:.3f}<extra></extra>",
+    )
 
     # Each asymptote is labelled on the side away from break-even, so the tag
     # never lands in the gap between the two lines -- a gap only 0.018 bits wide
@@ -439,7 +457,7 @@ def create_growth_rate_convergence_plot(
         fig.add_annotation(
             xref=f"x{row if row > 1 else ''} domain", x=0.99,
             yref=f"y{row if row > 1 else ''}", y=asymptote,
-            text=f"asymptotic growth = {asymptote:.3f} bits",
+            text=f"asymptotic growth = {asymptote:.3f} bits / period",
             xanchor="right", yanchor="top" if asymptote < 0 else "bottom",
             yshift=-4 if asymptote < 0 else 4,
             showarrow=False, font=dict(size=12, color=HERO),
@@ -477,7 +495,12 @@ def create_growth_rate_convergence_plot(
         margin=dict(t=70, r=40),
         showlegend=False,
     )
-    _apply_spikes(fig)
+    # No _apply_spikes here, unlike the other figures. Plotly's spikedistance
+    # defaults to no cutoff while hoverdistance stops at 20px, so on a cloud this
+    # sparse the spike spends most of its time drawn to a path the cursor is
+    # nowhere near -- appearing precisely when there is no readout to anchor it.
+    # It also does not survive the script's Fx.hover echo, so it goes missing in
+    # the one case it could have helped. Wrong in both directions; dropped.
     return fig
 
 
