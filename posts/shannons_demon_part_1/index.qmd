@@ -176,7 +176,7 @@ D_{\text{KL}} &= \frac{\lceil c \rceil}{n} \ln \left(\frac{\lceil c \rceil / n}{
 $$
 The Chernoff bound then implies that $\mathbb{P}(S_n \geq 1) \leq e^{-n D_{\text{KL}}}$, which decays exponentially in $n$. @fig-no-loss-probability plots the exact tail probability against this bound.[^1] In what follows, I will drop the "KL" subscript from $D_{\text{KL}}$ and simply write $D$ for the Kullback-Leibler divergence.
 
-[^1]: Note that the KL divergence appearing here is not directly related to the KL divergences that appear in section @the-connection-to-information-theory, though they are both measures of information.
+[^1]: Note that the KL divergence appearing here is not directly related to the KL divergences that appear in the section [The connection to information theory](#the-connection-to-information-theory), though they are both measures of information.
 
 ```{python}
 #| echo: false
