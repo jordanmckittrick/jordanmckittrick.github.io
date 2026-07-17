@@ -121,9 +121,50 @@ class CoinFlipWithRisklessAssetModel:
         '''Returns exp(E[log(Y)])'''
         return float(np.exp(self.growth_rate(CRP)))
 
+    @property
+    def growth_optimal_allocation(self) -> float:
+        '''
+        The growth-optimal fraction f* to hold in the risky asset, in closed form.
+
+        Maximizing the growth rate
+            W(f) = p*log(r + f*(gamma_heads - r)) + (1 - p)*log(r - f*(r - gamma_tails))
+        over f, its unique interior critical point is
+            f* = r*(E[gamma] - r) / ((gamma_heads - r)*(r - gamma_tails)),
+        where E[gamma] = p*gamma_heads + (1 - p)*gamma_tails is the risky asset's
+        expected gross return. W is strictly concave when gamma_tails < r < gamma_heads,
+        so this critical point is the unique unconstrained maximizer.
+
+        This is the UNCONSTRAINED optimum, so it may fall outside [0, 1] -- a levered
+        (f > 1) or short (f < 0) position. It equals
+        solve_growth_rate_maximization_problem().x exactly when it lies in [0, 1];
+        outside that interval, the bounded solver clips to the nearer endpoint while
+        this value does not.
+
+        Raises
+        ------
+        ValueError
+            If gamma_tails >= r or r >= gamma_heads, so the risky asset does not
+            straddle the risk-free return. W is then monotonic in f rather than
+            interior-peaked, its optimum sits at a boundary, and this interior
+            formula does not apply.
+        '''
+        risky_edge_on_heads = self.gamma_heads - self.r  # gamma_h - r
+        riskfree_edge_on_tails = self.r - self.gamma_tails  # r - gamma_t
+        if risky_edge_on_heads <= 0 or riskfree_edge_on_tails <= 0:
+            raise ValueError(
+                f"The closed-form growth-optimal allocation requires "
+                f"gamma_tails < r < gamma_heads (got gamma_tails={self.gamma_tails}, "
+                f"r={self.r}, gamma_heads={self.gamma_heads}); otherwise the growth "
+                f"rate is monotonic in f and its optimum is at a boundary."
+            )
+        numerator = self.r*(self.expected_gross_return_of_risky_asset - self.r)
+        return numerator/(risky_edge_on_heads*riskfree_edge_on_tails)
+
     def solve_growth_rate_maximization_problem(self) -> opt.OptimizeResult:
         # Bounds f to [0, 1]: the optimal Kelly fraction is sought with no
         # leverage (f <= 1) and no shorting of either asset (f >= 0).
+        # For the unconstrained closed form (equal to this when the optimum
+        # lies in [0, 1]), see the growth_optimal_allocation property above.
         return opt.minimize_scalar(
             lambda f: -self.growth_rate(np.array([1 - f, f])),
             bounds=(0.0, 1.0),
