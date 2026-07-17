@@ -236,12 +236,19 @@ def create_wealth_plot(
     # the line never cuts through the text whatever the y-range -- and let "top
     # right" run the text up and to the right. A text trace uses raw data
     # values, which sit correctly on the log axis.
+    #
+    # The mean gets more clearance than the median. Both are anchored at the same
+    # lift above their own curve, but "top right" runs the text rightward, and the
+    # mean is the steeper climb -- so by the end of the words its own line has
+    # risen to meet them, while the flatter median stays put. The extra 0.03 of
+    # the decade-range is worth about one letter-height at 13px on this panel.
     i_label = int(round(0.8 * (len(summary) - 1)))
     x_label = summary.index[i_label]
     span = np.log10(summary["CI Upper"].max()) - np.log10(summary["CI Lower"].min())
-    lift = 10.0 ** (0.08 * span)
-    for label, col_name, color in (("empirical median", "Median", HERO),
-                                   ("empirical mean", "Mean", SECONDARY)):
+    for label, col_name, color, clearance in (
+            ("empirical median", "Median", HERO, 0.08),
+            ("empirical mean", "Mean", SECONDARY, 0.11)):
+        lift = 10.0 ** (clearance * span)
         fig.add_trace(
             go.Scatter(x=[x_label], y=[summary[col_name].iloc[i_label] * lift],
                        mode="text", text=[f"<b>{label}</b>"], textposition="top right",
