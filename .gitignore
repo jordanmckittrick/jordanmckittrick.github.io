@@ -26,4 +26,5 @@ __pycache__/
 _environment
 _environment.local
 
-**/*.quarto_ipynb
+
+.claude/
