@@ -7,7 +7,7 @@ format:
 
 ## Introduction
 
-The word "recommendation" may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven't yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions, but rather as a recommendation to read it and form your own opinion. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone.
+The word "recommendation" may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven't yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone.
 
 ## Papers 
 
