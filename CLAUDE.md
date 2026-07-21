@@ -32,7 +32,7 @@ This is a [Quarto](https://quarto.org) website published to GitHub Pages. Conten
 - `_site/` is git-ignored (built output pushed separately to `gh-pages`).
 
 **Python dependencies** (managed by `uv`/`pyproject.toml`):
-- `finlib` — private package from `github.com/jordanmckittrick/finlib`
+- `finlib` — public package from `github.com/jordanmckittrick/finlib`
 - Standard scientific stack: numpy, scipy, pandas, matplotlib, plotly
 
 ## Adding a new post
@@ -50,7 +50,7 @@ categories: [tag1, tag2]
 ---
 ```
 
-For posts with heavy computation, put the math/simulation logic in a sibling `.py` file and import it in the notebook — see `posts/shannons_demon_part_1/` as the reference pattern (separate `coin_flip_with_riskless_asset_model.py` and `plotting_functions.py`).
+For posts with heavy computation, put the math/simulation logic in a sibling `.py` file and import it in the notebook — see `posts/shannons-demon/` as the reference pattern (separate `coin_flip_with_riskless_asset_model.py` and `plotting_functions.py`).
 
 ## Theming
 
