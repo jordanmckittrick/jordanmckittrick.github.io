@@ -2,7 +2,7 @@
 
 Run manually (needs a LaTeX install, for real Computer Modern math):
 
-    uv run python posts/shannons_demon_part_1/make_wealth_tree.py
+    uv run python posts/shannons-demon/make_wealth_tree.py
 
 The structure (branches, nodes, plain words, period axis) is hand-authored SVG
 in the brand serif and brand colours. The three *math* labels are rendered with

@@ -52,10 +52,11 @@ def generate_no_loss_probability_data(
     """P(no loss) = P(S_n >= 1) over n = 1..num_periods, exact and bounded.
 
     The path avoids a loss iff the number of heads k in n flips is at least
-    ``ceil(c)``, where ``c/n`` is the fraction of heads needed for a
-    non-negative growth rate. Two series, indexed by period n:
+    ``ceil(cut * n)``, where ``cut`` is the critical fraction of heads needed
+    for a non-negative growth rate (the post's ``c``). Two series, indexed by
+    period n:
 
-    Exact:           the exact tail probability P(k >= ceil(c)) via the
+    Exact:           the exact tail probability P(k >= ceil(cut * n)) via the
                      binomial survival function.
     Chernoff bound:  the large-deviation upper bound exp(-n * D_KL) -- the
                      dominant (exponential) factor of Sanov's bound, without
@@ -63,9 +64,11 @@ def generate_no_loss_probability_data(
                      for a binomial tail; it upper-bounds the exact probability
                      for every n while decaying at the same rate Sanov captures.
 
-    D_KL is the KL divergence of the break-even head-fraction from the true p,
-    evaluated at n = num_periods (matching the value quoted in the post), so the
-    bound is a straight line in log space.
+    D_KL is evaluated at the exact break-even fraction ``cut`` rather than at
+    the integer-corrected ``ceil(cut*n)/n``: the no-loss event is {k/n >= cut},
+    so exp(-n * D(cut || p)) is a valid bound at every n with a single rate --
+    a straight line in log space -- at the price of being very slightly weaker
+    than the per-n integer bound. Matches the value quoted in the post.
     """
     p = coin_flip_model.p
     cut = -np.log(coin_flip_model.gamma_tails) / (
@@ -75,8 +78,7 @@ def generate_no_loss_probability_data(
     heads_needed = np.ceil(cut * n)
     exact = ss.binom.sf(heads_needed - 1, n, p)   # P(k >= heads_needed)
 
-    p_star = np.ceil(cut * num_periods) / num_periods   # break-even head-fraction at n
-    D_KL = p_star * np.log(p_star / p) + (1 - p_star) * np.log((1 - p_star) / (1 - p))
+    D_KL = cut * np.log(cut / p) + (1 - cut) * np.log((1 - cut) / (1 - p))
     chernoff = np.exp(-n * D_KL)
 
     return pd.DataFrame(
