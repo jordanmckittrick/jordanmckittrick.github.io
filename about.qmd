@@ -21,11 +21,9 @@ about:
     #   href: https://scholar.google.com/citations?user=XXXXXXXX
 ---
 
-THIS SITE IS CURRENTLY UNDER CONSTRUCTION.
-
 I'm an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems.
 
-This blog is where I think out loud about those topics — aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please let me know if you find any mistakes.
+This blog is where I think out loud about those topics — aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please reach out to me on LinkedIn if you find any mistakes or think this site can be improved in any way.
 
 
 ## Education
