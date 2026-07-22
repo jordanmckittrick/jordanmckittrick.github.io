@@ -11,21 +11,21 @@
     "href": "recommendations.html",
     "title": "Recommendations",
     "section": "",
-    "text": "The word “recommendation” may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven’t yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone."
+    "text": "The word “recommendation” may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven’t yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. I recommend each for its interest, not necessarily its conclusions. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone."
   },
   {
     "objectID": "recommendations.html#introduction",
     "href": "recommendations.html#introduction",
     "title": "Recommendations",
     "section": "",
-    "text": "The word “recommendation” may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven’t yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone."
+    "text": "The word “recommendation” may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven’t yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. I recommend each for its interest, not necessarily its conclusions. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone."
   },
   {
     "objectID": "recommendations.html#papers",
     "href": "recommendations.html#papers",
     "title": "Recommendations",
     "section": "Papers",
-    "text": "Papers\n\n\nQuantitative Finance\n\n■A New Interpretation of Information Rate\n■Power Laws in Economics and Finance\n■■The Variation of Certain Speculative Prices\n▲The Pearson Diffusions: A Class of Statistically Tractable Diffusion Processes\n▲Martingales and Arbitrage in Multiperiod Securities Markets\n\n\n\nStatistics\n\n●Statistical Modeling: The Two Cultures\n●Why Most Published Research Findings Are False\n■■Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n■■On the Foundations of Statistical Inference\n■■On the Birnbaum Argument for the Strong Likelihood Principle\n\n\n\nInformation Theory\n\n▲Quantifying Causal Influences\n▲ Modeling by Shortest Data Description\n▲▲There Is No Universal Source Code for an Infinite Source Alphabet\n▲▲Entropy and the Central Limit Theorem\n\n\n\nPhysics\n\nMore Is Different\n■Irreversibility and Heat Generation in the Computing Process\n■Information Theory and Statistical Mechanics\n▲ Nonequilibrium Equality for Free Energy Differences\n▲ Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences"
+    "text": "Papers\n\n\nQuantitative Finance\n\n■A New Interpretation of Information Rate\n■Power Laws in Economics and Finance\n■■The Variation of Certain Speculative Prices\n▲The Pearson Diffusions: A Class of Statistically Tractable Diffusion Processes\n▲Martingales and Arbitrage in Multiperiod Securities Markets\n\n\n\nStatistics\n\n●Statistical Modeling: The Two Cultures\n●Why Most Published Research Findings Are False\n■■Testing a Point Null Hypothesis: The Irreconcilability of P Values and Evidence\n■■On the Foundations of Statistical Inference\n■■On the Birnbaum Argument for the Strong Likelihood Principle\n\n\n\nInformation Theory\n\n▲Quantifying Causal Influences\n▲Modeling by Shortest Data Description\n▲▲There Is No Universal Source Code for an Infinite Source Alphabet\n▲▲Entropy and the Central Limit Theorem\n\n\n\nPhysics\n\nMore Is Different\n■Irreversibility and Heat Generation in the Computing Process\n■Information Theory and Statistical Mechanics\n▲Nonequilibrium Equality for Free Energy Differences\n▲Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences"
   },
   {
     "objectID": "recommendations.html#other",
@@ -60,13 +60,20 @@
     "href": "about.html",
     "title": "Jordan McKittrick",
     "section": "",
-    "text": "I’m an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems.\nThis blog is where I think out loud about those topics — aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please reach out to me on LinkedIn if you find any mistakes or think this site can be improved in any way."
+    "text": "I’m an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems.\nThis blog is where I think out loud about those topics — aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please reach out to me on LinkedIn if you find any mistakes or think this site can be improved."
   },
   {
     "objectID": "about.html#education",
     "href": "about.html#education",
     "title": "Jordan McKittrick",
     "section": "Education",
-    "text": "Education\n\nPhD, Cambridge University — information theory (here’s my thesis)\nMPhil, Cambridge University — scientific computing\nMScRes, Oxford University — stochastic differential equations\nBA, Columbia University — biochemistry"
+    "text": "Education\n\nPhD, Cambridge University – information theory (here’s my thesis)\nMPhil, Cambridge University – statistical mechanics\nMScRes, Oxford University – stochastic differential equations\nBA, Columbia University – biochemistry"
+  },
+  {
+    "objectID": "about.html#experience",
+    "href": "about.html#experience",
+    "title": "Jordan McKittrick",
+    "section": "Experience",
+    "text": "Experience\n\nHead of Data, Prosperity Institute (2024–2026) – I led a small team in renovating the Legatum Prosperity Index; redesigned its methodology; and wrote the codebase from scratch."
   }
 ]
