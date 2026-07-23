@@ -15,23 +15,22 @@ about:
     # - icon: envelope
     #   text: Email
     #   href: mailto:you@yourfullname.dev
-    # --- Optional, only if you actually maintain one ---
-    # - icon: mortarboard
-    #   text: Scholar
-    #   href: https://scholar.google.com/citations?user=XXXXXXXX
 ---
 
 I'm an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems.
 
-This blog is where I think out loud about those topics — aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please reach out to me on LinkedIn if you find any mistakes or think this site can be improved in any way.
+This blog is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please reach out to me on LinkedIn if you find any mistakes or think this site can be improved.
 
 
 ## Education
 
-- **PhD**, Cambridge University — information theory (here's my [thesis](https://www.repository.cam.ac.uk/items/fa3aebe0-987d-44d2-a2c9-17b73cecb85a))
-- **MPhil**, Cambridge University — scientific computing
-- **MScRes**, Oxford University — stochastic differential equations
-- **BA**, Columbia University — biochemistry
+- **PhD**, Cambridge University -- information theory (here's my [thesis](https://www.repository.cam.ac.uk/items/fa3aebe0-987d-44d2-a2c9-17b73cecb85a))
+- **MPhil**, Cambridge University -- statistical mechanics
+- **MScRes**, Oxford University -- stochastic differential equations
+- **BA**, Columbia University -- biochemistry
 
 
+## Experience
+
+- **Head of Data**, Prosperity Institute (2024–2026) -- I led a small team in renovating the Legatum Prosperity Index; redesigned its statistical methodology; and wrote the codebase from scratch.
 

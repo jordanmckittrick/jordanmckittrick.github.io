@@ -7,7 +7,7 @@ format:
 
 ## Introduction
 
-The word "recommendation" may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven't yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. None of these recommendations should be considered as an endorsement of the paper or its conclusions. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone.
+The word "recommendation" may be a bit too strong, but for those interested in the topics below, here are some papers and other resources that I have found particularly interesting or which I haven't yet read but would like to. I have adopted the rating system used in skiing to indicate the level of approachability, with green circles being the most approachable, blue squares being more challenging, and black diamonds being the most advanced. If a resource does not have a rating, it is because it should be approachable to anyone. I recommend each for its interest, not necessarily its conclusions. Though the recommendations lean more technical, I have tried to include a mix of papers of varying technical sophistication, so there should be something for everyone.
 
 ## Papers 
 
@@ -30,21 +30,18 @@ The word "recommendation" may be a bit too strong, but for those interested in t
 
 
 #### Information Theory
-
 - [▲]{.ski .black title="advanced"}[Quantifying Causal Influences](https://projecteuclid.org/journals/annals-of-statistics/volume-41/issue-5/Quantifying-causal-influences/10.1214/13-AOS1145.pdf)
-- [▲]{.ski .black title="advanced"} [Modeling by Shortest Data Description](https://www.semanticscholar.org/paper/Modeling-By-Shortest-Data-Description*-Rissanen/d382b9c11e5c6a8e173fbeb442545e3be8d3e3a5)
+- [▲]{.ski .black title="advanced"}[Modeling by Shortest Data Description](https://www.semanticscholar.org/paper/Modeling-By-Shortest-Data-Description*-Rissanen/d382b9c11e5c6a8e173fbeb442545e3be8d3e3a5)
 - [▲▲]{.ski .black title="expert"}[There Is No Universal Source Code for an Infinite Source Alphabet](https://www.szit.bme.hu/~gyorfi/IT94.pdf)
 - [▲▲]{.ski .black title="expert"}[Entropy and the Central Limit Theorem](https://projecteuclid.org/journals/annals-of-probability/volume-14/issue-1/Entropy-and-the-Central-Limit-Theorem/10.1214/aop/1176992632.full)
 
 
 #### Physics
 - [More Is Different](https://www.rpgroup.caltech.edu/embl_pboc_2023/assets/pdfs/anderson1972.pdf)
-- [■]{.ski .blue title="challenging"}[Irreversibility and Heat Generation in the Computing Process
-](https://ieeexplore.ieee.org/document/5392446)
+- [■]{.ski .blue title="challenging"}[Irreversibility and Heat Generation in the Computing Process](https://ieeexplore.ieee.org/document/5392446)
 - [■]{.ski .blue title="challenging"}[Information Theory and Statistical Mechanics](https://journals.aps.org/pr/abstract/10.1103/PhysRev.106.620)
-- [▲]{.ski .black title="advanced"} [Nonequilibrium Equality for Free Energy Differences](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.2690)
-- [▲]{.ski .black title="advanced"} [Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences
-](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.60.2721)
+- [▲]{.ski .black title="advanced"}[Nonequilibrium Equality for Free Energy Differences](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.2690)
+- [▲]{.ski .black title="advanced"}[Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation for Free Energy Differences](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.60.2721)
 
 
 
