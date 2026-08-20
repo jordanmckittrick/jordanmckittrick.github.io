@@ -21,7 +21,7 @@ draft: false
 ### Introduction
 If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio of such lemons, at least under certain conditions that this post makes exact. It turns out that information theory provides a lovely explanation for why this is possible. The culmination of this post is a simple, closed-form formula for the excess expected growth rate of a portfolio over the risk-free rate, for a two-state, two-asset complete market. This formula is expressed as the difference between two Kullback-Leibler divergences. 
 
-![Vincent van Gogh, _Still Life with Lemons on a Plate_, 1887. Van Gogh Museum](still-life-with-lemons-on-a-plate-1887.jpg){#fig-van-gogh width="60%" fig-align="center" fig-alt="A post-impressionist painting by Vincent van Gogh depicting several bright yellow lemons piled on a simple ceramic plate against a textured, light-colored background."}
+![Vincent van Gogh, _Still Life with Lemons on a Plate_, 1887. Van Gogh Museum.](still-life-with-lemons-on-a-plate-1887.jpg){#fig-van-gogh width="60%" fig-align="center" fig-alt="A post-impressionist painting by Vincent van Gogh depicting several bright yellow lemons piled on a simple ceramic plate against a textured, light-colored background."}
 
 
 
@@ -143,7 +143,7 @@ $$
 
 Given that a wealth path tends to zero with probability one, the expected value path is a mirage, as the expected value is dominated by a small number of rare events, which are not representative of the typical outcome. 
 
-![Thomas Moran, _The Mirage_, 1879. Stark Museum of Art](the-mirage-1879.jpeg){#fig-moran width="80%" fig-align="center" fig-alt="A luminous painting of the American West by Thomas Moran. A small party of riders on horseback fords a broad, glassy expanse of shallow water that mirrors the red sandstone cliffs and buttes rising behind them, all beneath a wide, cloudless blue sky."}
+![Thomas Moran, _The Mirage_, 1879. Stark Museum of Art.](the-mirage-1879.jpeg){#fig-moran width="80%" fig-align="center" fig-alt="A luminous painting of the American West by Thomas Moran. A small party of riders on horseback fords a broad, glassy expanse of shallow water that mirrors the red sandstone cliffs and buttes rising behind them, all beneath a wide, cloudless blue sky."}
 
 Let's now consider the probability that the path after $n$ periods at least hasn't lost any money, i.e. that $S_n \geq S_0 = 1$. For this simple model, we can actually compute this probability exactly. Letting $k$ denote the number of heads in $n$ flips, we have
 $$
