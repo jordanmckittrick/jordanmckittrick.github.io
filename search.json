@@ -4,7 +4,7 @@
     "href": "blog.html",
     "title": "Blog",
     "section": "",
-    "text": "Shannon’s Demon, Made Exact\n\n\nHow to make an exponential amount of money from a portfolio of lemons without shorting anything\n\n\n\nquantitative finance\n\ninformation theory\n\nKelly criterion\n\nrisk-neutral measure\n\nlog-optimal investing\n\nvolatility harvesting\n\n\n\n\n\n\n\n\n\nAug 20, 2026\n\n\nJordan McKittrick\n\n\n\n\n\nNo matching items"
+    "text": "1: Shannon’s Demon, Made Exact\n\n\nHow to make an exponential amount of money from a portfolio of lemons without shorting anything\n\n\n\nquantitative finance\n\ninformation theory\n\nKelly criterion\n\nrisk-neutral measure\n\nlog-optimal investing\n\nvolatility harvesting\n\n\n\n\n\n\n\n\n\nAug 20, 2026\n\n\nJordan McKittrick\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "recommendations.html",
@@ -37,14 +37,14 @@
   {
     "objectID": "posts/shannons-demon/index.html",
     "href": "posts/shannons-demon/index.html",
-    "title": "Shannon’s Demon, Made Exact",
+    "title": "1: Shannon’s Demon, Made Exact",
     "section": "",
     "text": "If intuition is any guide, it shouldn’t be possible for a long-only portfolio to be profitable when each of its component assets is a lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I’ll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio of such lemons, at least under certain conditions that this post makes exact. It turns out that information theory provides a lovely explanation for why this is possible. The culmination of this post is a simple, closed-form formula for the excess expected growth rate of a portfolio over the risk-free rate, for a two-state, two-asset complete market. This formula is expressed as the difference between two Kullback-Leibler divergences.\n\n\n\n\n\n\nFigure 1: Vincent van Gogh, Still Life with Lemons on a Plate, 1887. Van Gogh Museum."
   },
   {
     "objectID": "posts/shannons-demon/index.html#footnotes",
     "href": "posts/shannons-demon/index.html#footnotes",
-    "title": "Shannon’s Demon, Made Exact",
+    "title": "1: Shannon’s Demon, Made Exact",
     "section": "Footnotes",
     "text": "Footnotes\n\n\nTo the economist, investing “intelligently” means maximizing an expected utility function. In this post, intelligent investing is taken to mean maximizing long-run wealth. For a spirited – and monosyllabic! – defense of the economist’s point of view, see Samuelson (1979). For a more technical argument, see Samuelson (1971).↩︎\nNote that the KL divergence appearing here is not directly related to the KL divergences that appear in the section The connection to information theory. The former is a large-deviations rate, while the latter concern the long-run growth rate of a portfolio.↩︎\nOf course, there are other justifications as well. I do not claim that the only justification offered for diversification is risk reduction, but it is certainly the most common one.↩︎\nIf the investor is not only long-only but also constrained to be unleveraged, then, due to the concavity of the growth rate function, choosing \\(f = 1\\) will suffice to have a positive excess growth rate whenever \\(f^* &gt; 1\\).↩︎"
   },
