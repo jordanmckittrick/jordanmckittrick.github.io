@@ -1,5 +1,5 @@
 ---
-title: "Shannon's Demon, Made Exact"
+title: "1: Shannon's Demon, Made Exact"
 subtitle: "How to make an exponential amount of money from a portfolio of lemons without shorting anything"
 date: 2026-08-20
 categories: [quantitative finance, information theory, Kelly criterion, risk-neutral measure, log-optimal investing, volatility harvesting]
