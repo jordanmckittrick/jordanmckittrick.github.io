@@ -1,0 +1,385 @@
+---
+title: "2: You Can't Bet on China"
+subtitle: "Quantifying market incompleteness with information theory"
+date: 2026-09-04
+categories: [quantitative finance, information theory, incomplete markets, risk-neutral measure, log-optimal investing]
+bibliography: references.bib
+
+format:
+    html:
+        code-fold: true
+        code-summary: "Show code"
+        code-tools: true
+
+draft: true
+
+---
+
+
+The Information-Theoretic Cost of Incompleteness in Markets
+# Introduction
+
+Consider two separate scenarios:
+1. You disagree vehemently with the market's implied probabilities for the future. Assuming you're right and the market's wrong, do you have an edge? If so, how much? (1.6)
+2. A new asset is introduced to the market. How much would you be willing to pay to have the privilege of trading it? If you believe the asset is going to the moon, would you be willing to pay quite a lot? Or is it really that simple? 
+At a surface level, these two scenarios and their associated questions bear no connection to each other; nonetheless, they are not only closely related, but also information theory provides their answer. The solution, it turns out, admits a tidy geometrical interpretation. This post is fundamentally about the financial cost of market incompleteness, which is the problem of not being able to bet on every possible future state of the world. This includes the rise of China.
+##### Art: *Adoration of the Magi*
+Leonardo da Vinci, *Adoration of the Magi*, 1482. Uffizi Gallery.
+
+# Incompleteness in financial markets
+
+##### The origins of hedge funds
+
+The idea of a hedge fund dates back to 1949 when Alfred Winslow Jones founded [INSERT NAME HERE], which sought to hedge market risk by shorting stocks and using leverage alongside his more traditional long positions. Jones sought "pure alpha" without any exposure to the broader market. By allowing short positions and leverage into his portfolio, Jones expanded the set of possible portfolio returns, and by choosing his leverage and long and short positions carefully, his portfolio reflected his outlook better than any long-only portfolio possibly could. By expanding his set of tools, Jones had reduced the problem of *incompleteness*, which is academic jargon that refers to the problem where not every contingency can be hedged and not every outlook can be reflected by a portfolio. Jones discovered that shorting allowed him to hedge the risk that he wanted, creating a novel payoff structure not available to long-only investors. 
+
+Jones made progress in reducing the problem of incompleteness, but he didn't eliminate it. For example, there is no portfolio that can accurately express the view "Climate change will benefit Eastern Europe but will harm Mediterranean Europe over the next thirty years" or the view "North Korea will become a thriving capitalist democracy in the next fifteen years". Instead, practitioners are left trying to cobble together portfolios that very imperfectly express their views. A portfolio manager with the latter view might, say, be bullish on South Korean companies, believing they will benefit from a thriving neighbor to the north, but this proxy portfolio is clearly imperfect. 
+
+"...financial practitioners are working in incomplete markets full of unhedgeable risk-factors." -- [Masaaki Fujii](https://arxiv.org/search/q-fin?searchtype=author&query=Fujii,+M), [Akihiko Takahashi](https://arxiv.org/search/q-fin?searchtype=author&query=Takahashi,+A) 
+
+FLESH THIS OUT SLIGHTLY MORE
+
+There are many examples of incomplete markets, e.g stagflation vs. soft landing (both could generate the same bond yield), the average short-term interest rate over the next thirty years,  
+
+##### Betting on China
+
+In fact, there is a very famous recent example of a view that couldn't be expressed well by the set of tradable assets. Betting on Chinese growth is not the same as investing in its stock market, which is a (relatively poor) proxy. There not only does not exist an asset that pays if and only if the Chinese economy continues to boom but also there doesn't even exist a decent proxy.
+
+##### Figure: Chinese stock market vs. S&P 500 since 1990 + GDP/capita growth
+
+I'll get Claude to make this, but I need to find the data.
+
+
+
+
+
+
+# Set up
+
+##### The gross returns matrix
+Let $G \in \mathbb{R}^{K \times M}$ denote a matrix of gross returns for $M$ assets over $K$ states, where $K > M$. For our running example, I'll choose $K = 3$ and $M = 2$. I'll assume that $G$ has full column rank, i.e. $\text{rank} G = M$. By a gross return, I mean that if one invests an amount of capital $S^j$ in the $j^{th}$ asset, then after one period one has capital $S^j G_{ij}$ remaining in the $j^{th}$ asset, assuming the $i^{th}$ state was realized. It is typically more convenient to work with gross returns than net returns, which are given by $G_{ij} - 1$. I'll assume the first asset is risk-free with gross return $r$, i.e. $G_{i1} = r$ for every $1 \leq i \leq K$. 
+
+##### The probability simplex
+I'll let $p = (p_1, ..., p_K)$ denote the probability vector, which describes the likelihood that each of  the $K$ contingent states will be realized on any given period. $p$ is stationary, i.e. it is independent of time/period. Without loss of generality, I'll assume  $p_i > 0$ for all $1 \leq i \leq K$, since if $p_i = 0$ for some state $i$, then we could just drop that state from consideration. This implies that $p$ resides within the interior of $\Delta^{K-1}$, the probability simplex of $K-1$ dimensions. We may think of $p$ as known (given to us by, say, an oracle) or, more realistically, estimated based on research. In any case, it represents our belief as to the likelihood of future events.
+
+##### The portfolio weights vector
+Let $w \in \mathbb{R}^M$ with the budget constraint $\sum_j w_j = 1$ denote our portfolio weights vector. I'll let $\mathcal{A}$ denote the set of all such vectors. Unless stated otherwise, I will not impose a long-only constraint on the portfolio weights vectors. Note that $\mathcal{A}$ is just the infinite plane containing the probability simplex on $M - 1$ dimensions. 
+
+The gross return of a portfolio in the $i^{th}$ state is $Y_i(w) = \sum_{j=1}^M w_j G_{ij}$. It is occasionally useful to adopt the notation $Y = Gw \in \mathbb{R}^K$. We require $Y > 0$, for if $Y_i = 0$ for any $1 \leq i \leq K$,  then we will eventually be ruined, as $p_i > 0$ for all $i$ by assumption.  
+
+##### An assumption about $G$: no arbitrage
+This is important: in what follows, I'll assume $G$ admits no *arbitrage*. By no arbitrage I mean that there does not exist any $w \in \mathbb{R}^M$ such that
+$$
+\begin{aligned}
+(1) \quad &\mathbb{1}^T w \leq 0, \\ (2) \quad &Gw \geq 0, \\ (3) \quad &Gw \neq 0.
+\end{aligned}
+$$
+The first condition says that we don't have to put any money down; the second that we don't lose money in any of the $K$ states; and together with the second, the third implies that there is at least one state in which we have a positive portfolio return. For example, the matrix
+$$
+G = \begin{pmatrix} 
+1 & 1 \\ 
+1 & 1.2 \\ 
+1 & 1.9 
+\end{pmatrix}
+$$
+admits an arbitrage opportunity using $w = (-1,1)$, which is easily verified. If all three of the above conditions do hold, we say there is an arbitrage opportunity, i.e. an opportunity for risk-free profit. Without the assumption of a risk-free profit, the problem of choosing an optimal portfolio is less interesting and also less realistic, as whenever true arbitrage opportunities exist, they are fleeting because traders pounce on them until markets equilibrate, eliminating the opportunity.
+
+##### Our goal: maximize the growth rate
+Our expected log return, i.e. the *growth rate*, is
+
+$$
+\begin{aligned}
+W(w) = \sum_{i=1}^K p_i \ln Y_i(w),
+\end{aligned} \tag{0.1}
+$$
+
+in nats. Our goal is to maximize the growth rate $W$ over $\mathcal{A}$. I let $w^*$ denote the optimum point in $\mathcal{A}.$ Such an optimum exists because ... The concavity of $W$ implies that .... This is our goal because:
+1. It is $W(w)$ that drives the long-run performance of a portfolio, as I showed in the first post.
+2. Maximizing $W(w)$ also maximizes expected performance relative to the performance of the optimal portfolio $\mathbb{E}_p[Y(w)/Y(w^*)]$ [CITATION NEEDED].
+3. Anything else, or is the above enough for now?  Markov consequence? Competitive optimality?
+
+
+# Deriving the growth rate formula
+
+##### The first order condition
+Our goal is to maximize $W(w)$ subject to the budget constraint $\sum_{j=1}^M w_j = 1$. To solve this problem, we introduce the Lagrangian with multiplier $\lambda$ given by
+$$
+\begin{aligned}
+L(w, \lambda) = \sum_{i=1}^K p_i \ln Y_i(w) - \lambda \left(\sum_{j=1}^M w_j - 1 \right).
+\end{aligned}
+$$
+Setting the gradient with respect to $w$ equal to zero yields a condition for the multiplier: $\sum_{i=1}^K p_i \frac{G_{ij}}{Y_i(w^*)} = \lambda$. Upon multiplying by $w_j^*$ and summing over all $M$ assets, we find that $\lambda = 1$; hence, we obtain the first-order condition (FOC):
+$$
+\begin{aligned}
+\boxed{\rule[-1ex]{0pt}{4ex} \sum_{i=1}^K p_i \frac{G_{ij}}{Y_i(w^*)} = 1}
+\end{aligned} \tag{1.1}
+$$
+which is to hold for every $1 \leq j \leq M$. 
+##### The equivalent risk neutral measure
+Upon multiplying both sides of (1.1) by $r$, we find: 
+
+$$
+\begin{aligned}
+\sum_{i=1}^K \left(p_i \frac{r}{Y_i(w^*)}\right) G_{ij} = r,
+\end{aligned} \tag{1.1.1}
+$$
+which also holds for every $j$. Notice, however, that since $G_{i1} = r$, we have by (1.1), $\sum_{i=1}^K p_i \frac{r}{Y_i(w^*)} = 1$. Hence, $q^* \in \mathbb{R}^K$ defined by
+
+$$
+\begin{aligned}
+q^*_i = p_i \frac{r}{Y_i(w^*)}
+\end{aligned} \tag{1.2}
+$$
+is a probability distribution. In addition, we see from (1.1.1) that it is a *risk-neutral* distribution, which is to say the expected gross return of every asset under $q^*$ is exactly equal to $r$. Notice as well that this definition renders $q^*$ and $p$ equivalent as probability measures (i.e. $q^*_i > 0 \iff p_i > 0$). 
+
+Interestingly, the risk-neutral probability measure $q^*$ has emerged very naturally -- almost inevitably -- by virtue of the FOC for the maximization of the growth rate. This is interesting because in traditional mathematical treatments of asset management, risk-neutral measures are nowhere to be seen. For example, risk-neutral measures do not make an appearance in either Markowitz's mean-variance theory, the Capital Asset Pricing Model, or the factor-based approach of Fama and French. [CITATION!] In traditional financial theory, it is said that it is the *physical* distribution $p$ that matters, and risk-neutral distributions are left to discussions about pricing derivatives, such as call options. I should note, however, that more theoretical and advanced treatments of asset pricing, e.g.  [JOHN COCHRANE'S TEXT], define prices in terms of a stochastic discount factor, from which risk-neutral measures emerge as a consequence; nonetheless, standard mathematical treatments rarely mention risk-neutral measures. By contrast, in our treatment, risk-neutral measures emerge from the mathematics almost inescapably.
+
+Solving (1.2) for $Y_i(w^*)$ and substituting into (0.1) we see that the optimum growth rate is, up to the constant $\ln r$, given by the information divergence from the model distribution $q^*$ to the true distribution $p$:
+
+$$
+\begin{aligned}
+W(w^*) &= \ln r + D(p||q^*)
+\end{aligned} \tag{1.3}
+$$
+
+##### An FOC equivalence theorem
+FOC has a solution with $Y(w^*) > 0$ <---> q exists <---> no arbitrage <---> the optimization problem has a unique solution...
+##### The tilted measure
+If $q$ is some other equivalent risk-neutral measure (not necessarily $q^*$), we can define a new probability distribution that is a tilted version of $q$:
+$$
+\begin{aligned}
+m_i(q, w) = q_i \frac{Y_i(w)}{r}.
+\end{aligned} \tag{1.4}
+$$
+$m$ is a bijective map from $(\mathcal{Q}, \mathcal{W})$ to the interior of the simplex. INSERT ARGUMENT AS TO WHY. THEREFORE "story + portfolio = coordinate system for beliefs"
+
+At this point, I may as well go ahead and define $\mathcal{M}_{w^*}$ as the image of the linear map $q \mapsto m(q, w^*)$, where $q \in \mathcal{Q}$ and where $\mathcal{Q}$ is the set of all risk-neutral probability measures (which may or may not be equivalent to $p$).  The linear map is defined by the $K$ by $K$ diagonal matrix whose $i^{th}$ diagonal entry is $Y_i(w^*) / r.$ Elsewhere it might be useful to refer to the map $w \mapsto m(q^*, w)$, where $w \in \mathcal{W}$. I'll let $\mathcal{M}_{q^*}$ refer to the image of this map.
+
+##### A formula for the growth rate
+Solving (1.4) for $Y_i(w)$ and substituting into (0.1) yields a formula for the growth rate $W(w)$:
+$$
+\begin{aligned}
+\boxed{\rule[-1ex]{0pt}{4ex} W(w) = \ln r + D(p || q) - D(p || m(q,w))}
+\end{aligned} \tag{1.5}
+$$
+which I note is independent of one's choice for $q$. We can now rewrite our expression for $W(w^*)$ as
+$$
+\begin{aligned}
+W(w^*) = \ln r + D(p || q) - D(p || m(q,w^*)).
+\end{aligned} \tag{1.5.1}
+$$
+The non-negativity of Kullback Leibler divergence implies that for every risk-neutral measure $q$ and every $w$,
+$$
+\begin{aligned}
+W(w) \leq \ln r + D(p || q);
+\end{aligned} \tag{1.5.2}
+$$
+hence, $W(w) \leq \ln r + \min_{q \in \mathcal{Q}} D(p || q)$, Note that we don't have to separately require that $\mathcal{Q}$ contain only distributions *equivalent* to $p$, as any $q$ such that $p_i > 0$ and $q_i = 0$ for some $i$ would render $D(p||q) = \infty$, so such a $q$ would be unhelpful anyway.
+
+##### The decomposition formula
+Applying equation (1.5.1) twice, once with $q^*$ and once with some arbitrary $q \in \mathcal{Q}$, we see that
+$$
+\begin{aligned}
+W(w^*) = \ln r + D(p || q) - D(p || m(q,w^*)) = \ln r + D(p || q^*) - D(p || m(q^*,w^*)),
+\end{aligned}
+$$
+but the last term $D(p || m(q^*,w^*))$ is identically zero, as it is readily seen that $m(q^*,w^*) = p$. This implies that we can decompose $D(p || q)$ as:
+$$
+\begin{aligned}
+\boxed{\rule[-1ex]{0pt}{4ex} D(p ||q) = D(p ||q^*) + D(p ||m(q, w^*))}
+\end{aligned} \tag{1.6}
+$$
+
+##### Art: *The Slave*
+Painting: Michelangelo, *Awakening Slave*, 1525-1530. Galleria dell'Accademia di Firenze.
+
+# The Q polytope
+
+##### $q^*$ is the reverse information projection
+In equation (1.6), the non-negativity of KL divergence implies that $D(p ||q^*) \leq D(p ||q)$ for every $q$; thus, we see that
+$$
+\begin{aligned}
+q^* = \arg \min_{q \in \mathcal{Q}} D(p || q),
+\end{aligned} \tag{2.0}
+$$
+where the reader will recall $\mathcal{Q}$ denotes the set of all risk-neutral probability measures. Put differently, $q^*$ is the reverse information projection of $p$ onto $\mathcal{Q}$. 
+##### The solution space of $G^T q = r\mathbb{1}$
+Recall that a risk-neutral measure $q \in \mathbb{R}^K$ is a probability measure ($q^T \mathbb{1} = 1$, $q_i \geq 0$ for all $1 \leq i \leq K$) satisfying
+$$
+\begin{aligned}
+G^T q = r\mathbb{1},
+\end{aligned} \tag{2.1}
+$$
+i.e. some probability measure $q$ is a risk-free probability measure if the expectation under $q$ of every asset is identically equal to the risk-free rate: $\sum_{i=1}^{K} q_i G_{ij} = r$ for all $1 \leq j \leq M$.  
+
+Since $K > M$, $q$ is not unique, and the various solutions to (2.1) form an affine subspace of $\mathbb{R}^K$, i.e. if $q_1$ and $q_2$ both solve (2.1) then for every $\alpha \in \mathbb{R}$, $\alpha q_1 + (1 - \alpha)q_2$ also solves (2.1):
+$$
+\begin{aligned}
+G^T (\alpha q_1 + (1 - \alpha)q_2) &= \alpha G^T q_1 + (1-\alpha)G^T q_2 \\
+&= \alpha r \mathbb{1} + (1 - \alpha) r \mathbb{1} \\
+&= (\alpha + (1 - \alpha)) r \mathbb{1} \\
+&= r \mathbb{1}.
+\end{aligned}
+$$
+In addition, the solution space for (2.1) is equal to $\tilde{q} + \operatorname{null} G^T$, for some arbitrary solution $\tilde{q}$. To see this, let $u \in \operatorname{null} G^T$, and we see that 
+$$
+\begin{aligned}
+G^T (\tilde{q} + u) &= G^T \tilde{q} + G^T u \\
+&= G^T \tilde{q} + 0 \\
+&= G^T \tilde{q};
+\end{aligned}
+$$
+hence,  the solution set to (2.1) contains every point in $\tilde{q} + \operatorname{null} G^T$. Conversely, if $\tilde{q}$ and $q$ both solve (2.1), then
+$$
+\begin{aligned}
+G^T (\tilde{q} - q) &= G^T \tilde{q} - G^T q \\
+&= r \mathbb{1} - r \mathbb{1} \\
+&= 0,
+\end{aligned}
+$$
+so $\tilde{q} - q \in \operatorname{null} G^T$ and $q = \tilde{q} + u$ where $u \in \operatorname{null}G^T$; hence, every solution to (2.1) is contained in by $\tilde{q} + \operatorname{null}G^T$. We have therefore shown that the solution space is identically equal to $\tilde{q} + \operatorname{null}G^T$ for any arbitrary solution $\tilde{q}$. 
+
+The solution space therefore has dimension equal to $\dim \operatorname{null} G^T$, which, by the rank-nullity theorem is $\dim \operatorname{null}G^T = K - M$:
+$$
+\begin{aligned}
+\dim \operatorname{null} G^T &= \dim \mathbb{R}^K - \dim \text{range}G^T \\
+&= K - \dim \text{range}G^T \\
+&= K - \text{rank} G^T \\
+&= K - \text{rank} G \\
+&= K - M.
+\end{aligned} \tag{2.2}
+$$
+In summary, the solution space to (2.1) is an affine subspace of $\mathbb{R}^K$ with exactly $K-M$ dimensions that is given by $\tilde{q} + \operatorname{null}G^T$ for some solution $\tilde{q}$. 
+INSERT A SENTENCE OR TWO ABOUT HOW $\operatorname{null} G^T = (\text{col}G)^{\perp}$, which is another way of seeing that the more of the $K$-dimensional space that $G$ spans (e.g. by adding assets as columns), the more constraints are placed on $\operatorname{null} G^T$.
+##### The geometry of $\mathcal{Q}$
+Note that since the first column of $G$ is $r \mathbb{1}$, (2.1) automatically imposes $\sum_{i=1}^K q_i = 1$. It remains to be shown, however, that there exists a member of $\mathcal{Q}$ also satisfying $q_i > 0$ for all $i$, which would not only imply $\mathcal{Q} \cap \Delta^{K-1}$ is non-empty but also has a non-empty interior, where $\Delta^{K-1}$ is the $K-1$-dimensional probability simplex. The first part of the Fundamental Theorem of Asset Pricing (FTAP) provides exactly what we need: such a measure exists if and only if there is no arbitrage.
+
+Since we are assuming there is no arbitrage, by the FTAP, there exists some equivalent risk-neutral probability measure, which we can call $\tilde{q}$, and by our work in the previous subsection we see that there are infinitely many such risk-neutral measures, which together form the affine subspace of $\mathbb{R}^K$ given by $\tilde{q} + \operatorname{null} G^T$. In our running example, $K=3$ and $M=2,$ so $\mathcal{Q}$ is the intersection of $\Delta^2$ and the line given by $\tilde{q} + \operatorname{null} G^T$. $q^*$ is the member of $\tilde{q} + \operatorname{null} G^T$ that is, in an information-theoretic sense, closest to $p$. More specifically, $q^* = \arg \min_{q \in \mathcal{Q}} D(p || q)$.
+
+##### Figure: the simplex showing geometry for unconstrained $w$
+
+The figure will be of a 2D probability simplex. The physical distribution $p$ will be in the interior somewhere. For a given 3 by 2 submatrix $G$, which has one risk-free asset and one risky asset, I will show $\mathcal{M}_{w^*}$ (a line segment), $\mathcal{M}_{q^*}$, the $\mathcal{Q}$ polytope (a line segment), $q^*$, and $\tilde{q}$. Both the polytope and $\mathcal{M}_{w^*}$ will be periwinkle with the shade varying according to $D(p||q)$ and $D(p || m(q, w^*))$, though it's important that neither become too light, or else it will be too difficult to see. When the user hovers over a risk-neutral measure $q \in \mathcal{Q}$, the corresponding point $m(q, w^*)$ will be highlighted and a little box will appear that shows the value of these two Kullback Leibler divergences. This is meant to illustrate the growth-rate formula (1.5.1). I should probably also show a point on $\mathcal{M}_{q^*}$. If the user hovers over any of the line segments, the relevant points should be highlighted and the box should indicate the KL divergences and the value of the growth rate, no?
+
+##### If you want an edge, disagreeing with the market ain't enough
+
+In equation (1.3) we showed that the excess growth rate, $W(w) - \ln r$, is given by 
+$$
+\begin{aligned}
+D(p || q^*) = \min_{q \in \mathcal{Q}} D(p || q)
+\end{aligned} \tag{2.3}
+$$
+If this figure is positive, then we might claim to have an "edge". The left-hand side makes it clear that we have an edge if and only if $p \neq q^*$, while the right-hand makes plain that we have an edge if and only if $p \not \in \mathcal{Q}$. 
+
+We are now in a position to shed more insight into when there is or is not an edge. Since we know there's an edge if and only if $p \not \in \mathcal{Q}$, we can simply check if $p \not \in q + \operatorname{null} G^T$ for some $q \in \mathcal{Q}$, where $q$ might be the risk-neutral measure given by the market. We can think of $p - q$ as the "disagreement" between $p$ and $q$. Let
+$$
+\begin{aligned}
+p - q = u + v,
+\end{aligned}
+$$
+where $u \in \operatorname{col} G$ and $v \in \operatorname{null} G^T$. This decomposition is allowed because the direct sum $\operatorname{col} G \oplus \operatorname{null} G^T$ spans $\mathbb{R}^K$. We therefore see that $p \not \in \mathcal{Q}$ if and only if $u \neq 0$; thus, disagreeing with the market's risk-neutral measure is not enough: there's an edge if and only if there is a component of the disagreement contained within $\operatorname{col} G$. Put differently, *it is not enough to simply disagree with the market: we have an edge if and only if our disagreement is tradable.* 
+
+
+##### The effect of constraints on shorting and leverage
+ADD A SENTENCE OR TWO ABOUT HOW CONSTRAINING THE FEASIBLE SET FOR $w$ gives $\mathcal{Q}$ some width, thus expanding $\mathcal{Q}$ into a $K - 1$-dimensional region defined by inequalities. I'll need to talk about $\mathcal{Q}_c$, which is the $w$-constrained version of $\mathcal{Q}$. Should I talk about how $\mathcal{M}_{w^*}$ and $\mathcal{M}_{q^*}$ will be different now?
+
+##### Figure: the simplex showing geometry for constrained $w$
+
+The figure will be the same as above except $\mathcal{Q}$ will be replaced with some $\mathcal{Q}_c$, a $K-1$-dimensional region. I suppose $\mathcal{M}_{w^*}$ and $\mathcal{M}_{q^*}$ will be different now (they'll be regions, no?), so what should I do about them? I suppose I should show $q_c^*$, which is the same idea as $q^*$ except it's for $\mathcal{Q}_c$. I should probably also $q^*$ and how that's farther from $p$ than is $q_c^*$.
+
+
+
+
+
+
+# Market incompleteness
+
+##### What is incompleteness?
+Recall that $Y = Gw \in \mathbb{R}^K$ is the portfolio gross returns vector. Because we have assumed that $K > M$ and that $G$ has full column rank, the image of $G$ is an $M$-dimensional subspace of $\mathbb{R}^K$. This implies that $G$ does not span $\mathbb{R}^K$, meaning not every vector in $\mathbb{R}^K$ can be achieved. We say such markets are *incomplete*. A crucial feature of incomplete markets is that, if there exists a risk-neutral measure, it isn't unique. This follows from the fact that $\dim \operatorname{null} G^T > 0$. In our running example, $\dim \operatorname{null} G^T = 3 - 2 = 1$ (by equation (2.2)), so $\mathcal{Q}$ is a line segment within the 2-simplex: it isn't a unique point.
+
+##### The cost of incompleteness
+For incomplete markets, when we solve the convex optimization problem for $w^*$, which in general must be accomplished numerically, we are missing out on superior performance that we are unable to capture. From equations (1.3) and (2.0) we have shown the following optimization duality:
+$$
+\begin{aligned}
+\max_{w \in \mathcal{A}} W(w) = \min_{q \in \mathcal{Q}} \big(\ln r + D(p || q) \big).
+\end{aligned} \tag{3.1}
+$$
+This implies that the maximization of $W$ depends crucially on $\mathcal{Q}$. In particular, the minimum achieved on the right-hand side of (3.1) decreases monotonically as the set $\mathcal{Q}$ expands (obviously). By decreasing the number of assets that can be traded, we are in effect eliminating columns from $G$, which in turn expands $\operatorname{null} G^T$, and since $\mathcal{Q}$ is a translate of $\operatorname{null} G^T$ that intersects the probability simplex, this tends to decrease the right-hand side of (3.1). We have, in effect, a see-saw.
+
+Let $\tilde{G} \in \mathbb{R}^{K \times K}$ be a gross returns matrix of full rank without any arbitrage. Because $\tilde{G}$ is of full rank, its span equals all of $\mathbb{R}^K$ so the market consisting of its $K$ assets is complete. I'll let $\tilde{\mathcal{A}}$ denote the set of all $w \in \mathbb{R}^K$ such that $\mathbb{1}^T w = 1$. In addition, let $\tilde{\mathcal{Q}} = \lbrace \tilde{q} \rbrace$, where $\tilde{q}$ is the unique probability measure solving to ${\tilde{G}}^T \tilde{q} = r \mathbb{1} \in \mathbb{R}^K$. Because of the First FTAP, no arbitrage implies the risk-neutral equivalent measure $\tilde{q}$ exists, and because of the Second FTAP, completeness implies that $\tilde{q}$ is unique.
+
+Now, suppose $G$ is a submatrix of $\tilde{G}$ found by selecting only $M < K$ columns from $\tilde{G}$, discarding the rest. Because $K > M$, $\operatorname{null} G^T \neq \emptyset$, so the polytope $\mathcal{Q} = \mathcal{Q} (G)$ contains not only $\tilde{q}$ but also infinitely many other risk-neutral measures. By the monotonicity of the maximization problem as a function of the feasible set, $\max_{w \in \tilde{\mathcal{A}}} W(w) \geq \max_{w \in \mathcal{A}} W(w)$ since $\tilde{\mathcal{A}} \supset \mathcal{A}$. This is obvious and important, but not particularly enlightening. 
+
+In addition, by a similar monotonicity argument, 
+$$
+\begin{aligned}
+D(p || q^*) = \min_{q \in \mathcal{Q}(G)} D(p || q) &\leq \min_{q \in \tilde{\mathcal{Q}}} D(p || q) = D(p || \tilde{q}),
+\end{aligned}
+$$
+so we can express the decline in the maximum growth rate, which can be thought of as growth that is inaccessible, forgone or *stranded*. Define the stranded growth $\sigma$, which is a function of $\tilde{G}$ and a submatrix $G$, as 
+$$
+\begin{aligned}
+\sigma &= \min_{q \in \mathcal{Q}(\tilde{G})} D(p || q) - \min_{q \in \mathcal{Q}(G)} D(p || q) \\
+&= D(p || \tilde{q}) - D(p || q^*).
+\end{aligned} \tag{3.2}
+$$
+Note that, because of duality, $\sigma = \max_{w \in \tilde{\mathcal{A}}} W(w) - \max_{w \in \mathcal{A}} W(w)$, hence the name *stranded growth*. Finally, by applying (1.6) with $q = \tilde{q}$ we arrive at a simple formula for the stranded growth due to market incompleteness:
+$$
+\boxed{\rule[-1ex]{0pt}{4ex} 
+\begin{aligned}
+\sigma &= D(p ||m(\tilde{q}, w^*)),
+\end{aligned} \tag{3.3}
+}
+$$where $w^* \in \mathcal{A}$ is the optimum portfolio vector using the submatrix $G$ corresponding to the incomplete market. In words, the decline in the maximum achievable growth rate is the disagreement, as an information divergence, between one's belief $p$ and the tilted risk-neutral measure $m$, which has been constructed using the unique risk-neutral measure $\tilde{q}$ from the complete market together with the portfolio $w^*$ optimized for the incomplete one.
+
+##### Diversification
+
+Traditional finance theory describes diversification as a practical manifestation of the maxim not to put all of one's eggs in one basket. It is fundamentally a call for prudence. In this context, diversification means spreading one's investments over a sufficiently large menu of assets and asset classes, e.g. domestic bonds, large-cap value stocks, commodities, equities in developing markets, etc. 
+
+Mathematically, the goal of diversification is to reduce the variance of one's portfolio without having to sacrifice very much expected return by choosing investments whose correlation with each other is relatively low or whose individual variance is relatively small. For the Capital Asset Pricing Model, the Sharpe ratio quantifies the tradeoff between the expected return and the portfolio variance (or the standard deviation to be precise). The goal, therefore, is to construct a portfolio that maximizes this ratio:
+$$
+\begin{aligned}
+SR(w) = \frac{w^T \mu}{\sqrt{w^T \Sigma w}},
+\end{aligned}
+$$
+where $\mu$ is the mean vector of *net* returns and $\Sigma$ the corresponding covariance matrix.
+
+The log-optimal approach to investing, by contrast, maximizes the growth rate $W(w)$. We have seen that by reducing the number of assets that can be traded, the maximum attainable growth rate, $W(w^*)$, in general declines. Conversely, when the number of assets traded increases, $W(w^*)$ increases concurrently, so long as each of the gross returns vectors, $\gamma$, of the additional assets don't already satisfy $\mathbb{E}_{\mathcal{Q}}[\gamma] = r$.  For the traditional investor, diversification is a variance-reduction technique; whereas, for the log-optimal investor, it is a growth-maximization technique. In future posts, I plan to investigate the consequences of these different approaches in greater detail.
+
+##### Art: Broken Eggs
+Jean-Baptiste Greuze, *Broken Eggs*, 1756. The Metropolitan Museum of Art.
+
+
+##### The information-theoretic value of adding an asset to a portfolio
+
+We have established that, in a certain sense, if we restrict ourselves to trading only $M < K$ assets, then we're leaving money on the table. But, how much? Of course this will depend on which $M$ of the $K$ assets we trade, there being $\binom{K}{M}$ possibilities. Figuring out which $M$ to choose is a difficult question and is likely an $NP$-hard problem. Nonetheless, we can make some empirical observations as to the statistical properties of the leftover $M$ assets that we choose to keep in our portfolio.
+
+##### Figure 2: the value of adding assets to a portfolio
+
+The horizontal axis is to be the number of risky assets held, starting at zero where only the risk-free asset it held, and ending at $K$ assets held. For every $0 < M < K-1$, I can show the growth rate of every portfolio with that many assets held, of which there are K choose M. There are $(K-1)!$ paths through this figure, one for each ordering of  which collectively trace out a "bridge" from $(0, \ln r)$ to $(K-1, W(\tilde{w}))$, where $\tilde{w}$ denotes the optimal choice when every asset is available to be traded. The paths will be in periwinkle. I should highlight the "greedy" path somehow, perhaps in a different color, shade, or texture.
+
+##### How to minimize the effect of incompleteness by trading options
+
+Let $x \in \mathbb{R}^K$ denote an arbitrary vector of returns measured in, say, dollars. $x_i$ represents the dollar payoff if state $i$ is realized. Let $\psi \in \mathbb{R}^K$ be a pricing vector, where $\psi_i$ represents the value of a dollar if state $i$ were to occur. The total value (or cost) of $x$ is then $\pi(x) = \psi^T x$. 
+
+Letting $q = \tilde{q}$ in equation (1.6) we see that
+$$
+\begin{aligned}
+\boxed{\rule[-1ex]{0pt}{4ex} D(p ||\tilde{q}) = D(p ||q^*) + D(p ||m(\tilde{q}, w^*))}
+\end{aligned}
+$$
+which we can think of as $\text{edge} + \text{stranded} = \text{constant}$: a conservation law. 
+
+FINISH THIS SECTION!
+
+
+
+
+
+# Other things to potentially say, add, note, or emphasize
+
+1. When it comes to determining whether there's a potential trading opportunity/edge, It's not the market's actual risk-neutral measure $\tilde{q}$ that matters; it's the risk-neutral measure $q^*$ that is closest to one's belief $p$ where $q^*$ is constrained to come from $\mathcal{Q}$.
+2. Add a provenance note. See Claude's suggestion under "Canonical sources — and a provenance finding you need to know about". It wants you to mention "SDF entropy" and it says "Your defensible contributions are the incompleteness framing (Q\mathcal{Q} Q as a polytope, edge as a projection), the exact decomposition (1.6), the completion accounting, and the exposition. Say so in a provenance note; it costs a paragraph and buys credibility."
+3. Claude says "References to check: **Backus, Chernov & Zin (2014, _Journal of Finance_), "Sources of Entropy in Representative Agent Models"**; **Bansal & Lehmann (1997), "Growth-Optimal Portfolio Restrictions on Asset Pricing Models"**; **Alvarez & Jermann (2005, _Econometrica_)**; **Stutzer (1996)**" referencing (1.5.2). See Claude's section "Canonical sources — and a provenance finding you need to know about"
+4. Edge = $D(p ||q^*)$.
+5. $(q,w)$ can be thought of as $\text{story} \times \text{portfolio}$.
+6. The post is fundamentally about information you cannot trade on: "Your edge is not how much you disagree with the market — it's how much of your disagreement lands on something you can buy. Information theory prices the difference exactly."
+
