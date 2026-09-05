@@ -1,5 +1,6 @@
 ---
-title: "About"
+title: ""
+pagetitle: "About"
 about:
   template: trestles
   image: images/profile.jpeg
