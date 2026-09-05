@@ -1,8 +1,10 @@
 ---
-title: "3: Money for Nothing"
+title: "3: Money for Nothing, Chicks _Not_ for Free"
+subtitle: 
 date: 2026-10-20
 categories: []
 bibliography: references.bib
+image: parable-of-the-hidden-treasure-by-rembrandt.jpg
 
 format:
     html:
@@ -17,4 +19,4 @@ draft: true
 
 ### Introduction
 
-<!-- Paste draft here. -->
+![Rembrandt and workshop, _Parable of the Hidden Treasure_, ca. 1635. Museum of Fine Arts, Budapest.](parable-of-the-hidden-treasure-by-rembrandt.jpg)
