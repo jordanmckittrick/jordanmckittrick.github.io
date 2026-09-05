@@ -1,0 +1,20 @@
+---
+title: "3: Money for Nothing"
+date: 2026-10-20
+categories: []
+bibliography: references.bib
+
+format:
+    html:
+        code-fold: true
+        code-summary: "Show code"
+        code-tools: true
+
+draft: true
+
+---
+
+
+### Introduction
+
+<!-- Paste draft here. -->
