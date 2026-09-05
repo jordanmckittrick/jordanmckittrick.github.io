@@ -58,21 +58,21 @@
   {
     "objectID": "about.html",
     "href": "about.html",
-    "title": "Jordan McKittrick",
+    "title": "About",
     "section": "",
     "text": "I’m an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems.\nThis blog is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please reach out to me on LinkedIn if you find any mistakes or think this site can be improved."
   },
   {
     "objectID": "about.html#education",
     "href": "about.html#education",
-    "title": "Jordan McKittrick",
+    "title": "About",
     "section": "Education",
     "text": "Education\n\nPhD, Cambridge University – information theory (here’s my thesis)\nMPhil, Cambridge University – statistical mechanics\nMScRes, Oxford University – stochastic differential equations\nBA, Columbia University – biochemistry"
   },
   {
     "objectID": "about.html#experience",
     "href": "about.html#experience",
-    "title": "Jordan McKittrick",
+    "title": "About",
     "section": "Experience",
     "text": "Experience\n\nHead of Data, Prosperity Institute (2024–2026) – I led a small team in renovating the Legatum Prosperity Index; redesigned its statistical methodology; and wrote the codebase from scratch."
   }
