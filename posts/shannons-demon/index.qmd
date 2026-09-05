@@ -30,6 +30,7 @@ Named after the legendary physicist James Clerk Maxwell, Maxwell's demon is a th
 
 In a nod to Maxwell's demon, Shannon's demon, which is named after the founder of information theory, Claude Shannon, is a somewhat analogous thought experiment in investing in which the random up-and-down noise of asset prices (loosely analogous to heat in physics) can seemingly "magically" create wealth by rebalancing one's portfolio in just the right way so as to maximize the long-run growth rate [@shannon_and_investment]. It is as if Shannon's demon is able to sort profitable outcomes from unprofitable ones. Unlike Maxwell's demon, however, Shannon's demon exists in the sense that it is a real, mathematically rigorous strategy that does not violate any laws of physics or finance. The connection to thermodynamics is purely one of loose analogy; the actual concepts are information-theoretic.
 
+![Alexandre Cabanel, _Fallen Angel_, 1847. Musée Fabre.](fallen-angel.jpg)
 
 
 ### The setup
