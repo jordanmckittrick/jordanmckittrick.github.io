@@ -1,6 +1,6 @@
 ---
 title: "2: You Can't Bet on China"
-subtitle: "Quantifying market incompleteness with information theory"
+subtitle: "The Information-Theoretic Cost of Incompleteness in Markets"
 date: 2026-09-04
 categories: [quantitative finance, information theory, incomplete markets, risk-neutral measure, log-optimal investing]
 bibliography: references.bib
@@ -16,15 +16,29 @@ draft: true
 ---
 
 
-The Information-Theoretic Cost of Incompleteness in Markets
+
 # Introduction
 
 Consider two separate scenarios:
 1. You disagree vehemently with the market's implied probabilities for the future. Assuming you're right and the market's wrong, do you have an edge? If so, how much? (1.6)
 2. A new asset is introduced to the market. How much would you be willing to pay to have the privilege of trading it? If you believe the asset is going to the moon, would you be willing to pay quite a lot? Or is it really that simple? 
 At a surface level, these two scenarios and their associated questions bear no connection to each other; nonetheless, they are not only closely related, but also information theory provides their answer. The solution, it turns out, admits a tidy geometrical interpretation. This post is fundamentally about the financial cost of market incompleteness, which is the problem of not being able to bet on every possible future state of the world. This includes the rise of China.
+
+##### Art: *Salvator Mundi*
+Albrecht Dürer, *Salvator Mundi*, ca. 1505. The Metropolitan Museum of Art.
+
+![Albrecht Dürer, _Salvator Mundi_, ca. 1505. The Metropolitan Museum of Art.](salvator-mundi.jpg)
+
+##### Art: *The Funeral*
+Eduard Manet, *The Funeral*, ca. 1867. The Metropolitan Museum of Art.
+
 ##### Art: *Adoration of the Magi*
 Leonardo da Vinci, *Adoration of the Magi*, 1482. Uffizi Gallery.
+
+
+
+
+
 
 # Incompleteness in financial markets
 
@@ -96,6 +110,10 @@ in nats. Our goal is to maximize the growth rate $W$ over $\mathcal{A}$. I let $
 1. It is $W(w)$ that drives the long-run performance of a portfolio, as I showed in the first post.
 2. Maximizing $W(w)$ also maximizes expected performance relative to the performance of the optimal portfolio $\mathbb{E}_p[Y(w)/Y(w^*)]$ [CITATION NEEDED].
 3. Anything else, or is the above enough for now?  Markov consequence? Competitive optimality?
+
+
+
+
 
 
 # Deriving the growth rate formula
@@ -190,7 +208,12 @@ $$
 $$
 
 ##### Art: *The Slave*
-Painting: Michelangelo, *Awakening Slave*, 1525-1530. Galleria dell'Accademia di Firenze.
+Michelangelo, *Awakening Slave*, 1525-1530. Galleria dell'Accademia di Firenze.
+
+
+
+
+
 
 # The Q polytope
 
@@ -369,6 +392,7 @@ $$
 which we can think of as $\text{edge} + \text{stranded} = \text{constant}$: a conservation law. 
 
 FINISH THIS SECTION!
+
 
 
 
