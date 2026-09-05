@@ -1,7 +1,7 @@
 
 
 ---
-pagetitle: "My Name"
+pagetitle: "Home"
 page-layout: full
 code-tools: false
 ---
