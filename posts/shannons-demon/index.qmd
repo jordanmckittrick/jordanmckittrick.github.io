@@ -4,7 +4,7 @@ subtitle: "How to make an exponential amount of money from a portfolio of lemons
 date: 2026-08-20
 categories: [quantitative finance, information theory, Kelly criterion, risk-neutral measure, log-optimal investing, volatility harvesting]
 bibliography: references.bib
-image: shannons_demon_fiend.svg
+image: fallen-angel.jpg # shannons_demon_fiend.svg
 
 format: 
     html:
