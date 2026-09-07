@@ -1,5 +1,5 @@
 ---
-title: ""
+title: "Jordan McKittrick"
 pagetitle: "About"
 about:
   template: trestles

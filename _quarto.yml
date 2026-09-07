@@ -6,6 +6,8 @@
 project:
   type: website
   output-dir: _site          # build output (git-ignored; gets pushed to gh-pages)
+  resources: 
+    - CNAME
 
 website:
   title: "Jordan McKittrick"
