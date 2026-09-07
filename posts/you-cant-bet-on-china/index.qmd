@@ -1,9 +1,10 @@
 ---
 title: "2: You Can't Bet on China"
-subtitle: "The Information-Theoretic Cost of Incompleteness in Markets"
-date: 2026-09-04
+subtitle: "The information-theoretic cost of incompleteness in markets"
+date: 2026-09-20
 categories: [quantitative finance, information theory, incomplete markets, risk-neutral measure, log-optimal investing]
 bibliography: references.bib
+image: a-thousand-li-of-rivers-and-mountains(section).jpg # shannons_demon_fiend.svg
 
 format:
     html:
@@ -14,27 +15,19 @@ format:
 draft: true
 
 ---
-
+ 
 
 
 # Introduction
 
-Consider two separate scenarios:
+Consider two separate scenarios:  
+
 1. You disagree vehemently with the market's implied probabilities for the future. Assuming you're right and the market's wrong, do you have an edge? If so, how much? (1.6)
-2. A new asset is introduced to the market. How much would you be willing to pay to have the privilege of trading it? If you believe the asset is going to the moon, would you be willing to pay quite a lot? Or is it really that simple? 
-At a surface level, these two scenarios and their associated questions bear no connection to each other; nonetheless, they are not only closely related, but also information theory provides their answer. The solution, it turns out, admits a tidy geometrical interpretation. This post is fundamentally about the financial cost of market incompleteness, which is the problem of not being able to bet on every possible future state of the world. This includes the rise of China.
+1. A new asset is introduced to the market. How much would you be willing to pay to have the privilege of trading it? If you believe the asset is going to the moon, would you be willing to pay quite a lot? Or is it really that simple? 
 
-##### Art: *Salvator Mundi*
-Albrecht Dürer, *Salvator Mundi*, ca. 1505. The Metropolitan Museum of Art.
+At a surface level, these two scenarios and their associated questions bear no connection to each other; nonetheless, they are not only closely related, but also their answer falls out of the same information-theoretic framework, which admits a tidy geometrical interpretation and concise formulas. This post is fundamentally about the financial cost of market incompleteness, which is the problem of not being able to bet on every possible future event. This includes the one of the most momentous economic events of the last half century: the rise of China.
 
-![Albrecht Dürer, _Salvator Mundi_, ca. 1505. The Metropolitan Museum of Art.](salvator-mundi.jpg)
-
-##### Art: *The Funeral*
-Eduard Manet, *The Funeral*, ca. 1867. The Metropolitan Museum of Art.
-
-##### Art: *Adoration of the Magi*
-Leonardo da Vinci, *Adoration of the Magi*, 1482. Uffizi Gallery.
-
+![Wang Ximeng, _A Thousand Li of Rivers and Mountains_ (small section), 1113. The Palace Museum, Beijing.](a-thousand-li-of-rivers-and-mountains(section).jpg)
 
 
 
@@ -44,9 +37,24 @@ Leonardo da Vinci, *Adoration of the Magi*, 1482. Uffizi Gallery.
 
 ##### The origins of hedge funds
 
-The idea of a hedge fund dates back to 1949 when Alfred Winslow Jones founded [INSERT NAME HERE], which sought to hedge market risk by shorting stocks and using leverage alongside his more traditional long positions. Jones sought "pure alpha" without any exposure to the broader market. By allowing short positions and leverage into his portfolio, Jones expanded the set of possible portfolio returns, and by choosing his leverage and long and short positions carefully, his portfolio reflected his outlook better than any long-only portfolio possibly could. By expanding his set of tools, Jones had reduced the problem of *incompleteness*, which is academic jargon that refers to the problem where not every contingency can be hedged and not every outlook can be reflected by a portfolio. Jones discovered that shorting allowed him to hedge the risk that he wanted, creating a novel payoff structure not available to long-only investors. 
+The idea of a hedge fund dates back to 1949 when the American sociologist Alfred Winslow Jones established a small investment partnership that sought to hedge market risk by shorting stocks and using leverage alongside his more traditional long positions. Jones sought "pure alpha" without any exposure to the broader market. By allowing short positions and leverage into his portfolio, Jones expanded the set of possible portfolio returns, and by choosing his leverage and long and short positions carefully, his portfolio reflected his outlook better than any long-only portfolio possibly could. By expanding his set of tools, Jones had reduced the problem of *incompleteness*, which is academic jargon that refers to the problem where not every contingency can be hedged and not every outlook can be reflected by a portfolio. Jones discovered that shorting allowed him to hedge the risk that he wanted, creating a novel payoff structure not available to long-only investors. 
 
-Jones made progress in reducing the problem of incompleteness, but he didn't eliminate it. For example, there is no portfolio that can accurately express the view "Climate change will benefit Eastern Europe but will harm Mediterranean Europe over the next thirty years" or the view "North Korea will become a thriving capitalist democracy in the next fifteen years". Instead, practitioners are left trying to cobble together portfolios that very imperfectly express their views. A portfolio manager with the latter view might, say, be bullish on South Korean companies, believing they will benefit from a thriving neighbor to the north, but this proxy portfolio is clearly imperfect. 
+Jones made progress in reducing the problem of incompleteness, but he didn't eliminate it. For example, there is no portfolio that can accurately express the view "On net, climate change will benefit Canada and Russia but will harm Mediterranean Europe over the next thirty years" or the view "North Korea will become a thriving capitalist democracy in the next fifteen years". Instead, practitioners are left trying to cobble together portfolios that very imperfectly express their views. A portfolio manager with the latter view might, for example, be bullish on South Korean companies, believing they will benefit from a thriving neighbor to the north, but this proxy portfolio is clearly imperfect. Clearly, no amount of shorting, leverage, clever stock picking, or shrewd derivatives trading can construct a payoff structure in which the portfolio generates a handsome return if the thesis turns out to be true and a dire loss if not. In other words, there's no clean way to bet on this thesis.
+
+One of the most consequential economic changes over the last half century has been the rise of China from a deeply impoverished nation of hundreds of millions of peasants to an economic juggernaut capable of rivaling the United States. 
+
+Milton Friedman quotes from https://miltonfriedman.hoover.org/internal/media/dispatcher/271059/full?utm_source=chatgpt.com
+
+1. "one of the great economic experiments of our time is under way in China"
+1. "“The reforms – the attempt to introduce market elements, the opening up of contacts with the
+West, the encouragement of foreign investment, and so on – are in a desirable direction. But the
+test of whether they will be carried out and what their effects will be is still for the future.
+1. “The potential is enormous. The present level is extremely low.…
+1. “My own conjecture is that there will be considerable progress in the next few years as some
+of the newly announced policies work themselves through the system."
+
+
+
 
 "...financial practitioners are working in incomplete markets full of unhedgeable risk-factors." -- [Masaaki Fujii](https://arxiv.org/search/q-fin?searchtype=author&query=Fujii,+M), [Akihiko Takahashi](https://arxiv.org/search/q-fin?searchtype=author&query=Takahashi,+A) 
 
@@ -309,6 +317,16 @@ ADD A SENTENCE OR TWO ABOUT HOW CONSTRAINING THE FEASIBLE SET FOR $w$ gives $\ma
 The figure will be the same as above except $\mathcal{Q}$ will be replaced with some $\mathcal{Q}_c$, a $K-1$-dimensional region. I suppose $\mathcal{M}_{w^*}$ and $\mathcal{M}_{q^*}$ will be different now (they'll be regions, no?), so what should I do about them? I suppose I should show $q_c^*$, which is the same idea as $q^*$ except it's for $\mathcal{Q}_c$. I should probably also $q^*$ and how that's farther from $p$ than is $q_c^*$.
 
 
+![Albrecht Dürer, _Salvator Mundi_, ca. 1505. The Metropolitan Museum of Art.](salvator-mundi.jpg)
+
+
+![Eduard Manet, _The Funeral_, ca. 1867. The Metropolitan Museum of Art.](the-funeral.jpg)
+
+
+![Leonardo da Vinci, _Adoration of the Magi_, 1482. Uffizi Gallery.](adoration-of-the-magi.jpg)
+
+
+![Michelangelo, _Awakening Slave_, 1482. The Gallery of the Academy of Florence.](awakening-slave.jpg)
 
 
 
@@ -367,8 +385,9 @@ where $\mu$ is the mean vector of *net* returns and $\Sigma$ the corresponding c
 
 The log-optimal approach to investing, by contrast, maximizes the growth rate $W(w)$. We have seen that by reducing the number of assets that can be traded, the maximum attainable growth rate, $W(w^*)$, in general declines. Conversely, when the number of assets traded increases, $W(w^*)$ increases concurrently, so long as each of the gross returns vectors, $\gamma$, of the additional assets don't already satisfy $\mathbb{E}_{\mathcal{Q}}[\gamma] = r$.  For the traditional investor, diversification is a variance-reduction technique; whereas, for the log-optimal investor, it is a growth-maximization technique. In future posts, I plan to investigate the consequences of these different approaches in greater detail.
 
-##### Art: Broken Eggs
-Jean-Baptiste Greuze, *Broken Eggs*, 1756. The Metropolitan Museum of Art.
+
+![Jean-Baptiste Greuze, _Broken Eggs_, 1756. The Metropolitan Museum of Art.](broken-eggs.jpg)
+
 
 
 ##### The information-theoretic value of adding an asset to a portfolio
