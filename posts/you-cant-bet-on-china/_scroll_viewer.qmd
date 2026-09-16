@@ -182,7 +182,7 @@
   <div class="scroll-viewer__slit">
     <img class="scroll-viewer__poster"
          src="a-thousand-li-of-rivers-and-mountains(section).jpg"
-         alt="Wang Ximeng, A Thousand Li of Rivers and Mountains (small section)">
+         alt="Wang Ximeng, A Thousand Li of Rivers and Mountains">
     <div class="scroll-viewer__controls">
       <button class="scroll-viewer__toggle"
               type="button"
@@ -201,7 +201,7 @@
     </div>
   </div>
   <figcaption>
-    Wang Ximeng, <em>A Thousand Li of Rivers and Mountains</em> (small section), 1113. The Palace Museum, Beijing. At nearly forty feet long, this priceless work of art is a hand scroll painted on silk using azurite (blue) and malachite (green) that was designed to be unfurled slowly, revealing the vast Chinese landscape and scenes from the daily lives of ordinary people living during the Northern Song Dynasty, a period of immense wealth and sophistication. <a href="a-thousand-li-of-rivers-and-mountains(complete).jpg" target="_blank" rel="noopener">View full resolution&nbsp;↗</a>
+    Wang Ximeng, <em>A Thousand Li of Rivers and Mountains</em>, 1113. The Palace Museum, Beijing. At nearly forty feet long, this priceless work of art is a hand scroll painted on silk using azurite (blue) and malachite (green) that was designed to be unfurled slowly, revealing the vast Chinese landscape and scenes from the daily lives of ordinary people living during the Northern Song Dynasty, a period of immense wealth and sophistication. <a href="a-thousand-li-of-rivers-and-mountains(complete).jpg" target="_blank" rel="noopener">View full resolution&nbsp;↗</a>
   </figcaption>
 </figure>
 
