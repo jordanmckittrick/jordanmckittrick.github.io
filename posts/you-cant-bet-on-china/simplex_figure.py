@@ -2,12 +2,12 @@
 
 One interactive figure that makes the growth-rate decomposition (1.6) visible:
 for three states and two tradable assets (one risk-free at gross return ``r``,
-one risky at gross returns ``gamma``), it draws the risk-neutral segment
-``Q`` and its two companion segments inside the 2-simplex, and lets a slider
-walk a point ``q`` along ``Q`` while a stacked bar splits its divergence from
-the belief ``p`` into the part every portfolio pays (the "edge",
-``D(p||q*)``) and the part geometry wastes (the "unspanned" remainder,
-``D(p||m(q,w*))``).
+one risky at gross returns ``gamma``), it draws the risk-neutral segment ``Q``
+and its image ``M_wstar`` inside the 2-simplex, over a family of KL contours,
+and lets a slider walk a point ``q`` along ``Q`` while a slim horizontal bar
+splits its divergence from the belief ``p`` into the part every portfolio pays
+(the "edge", ``D(p||q*)``) and the part geometry wastes (the "unspanned"
+remainder, ``D(p||m(q,w*))``).
 
 The geometry, stated once and used everywhere below:
 
@@ -18,13 +18,13 @@ The geometry, stated once and used everywhere below:
 * ``Q      = { q in the simplex : q . gamma = r }``     a line segment A--B
 * ``m(q,f) = q Y(f) / r``                     the tilted measure
 * ``M_wstar = { m(q, f*) : q in Q }``         a line segment
-* ``M_qstar = { m(q*, f) : f admissible }``   a line segment
 
 Everything the figure needs is derived from ``(r, gamma, p)``; nothing about
 the running example is baked in. Colour comes from the brand module
-(``blogkit.brand_plotly``), which also registers the default Plotly template,
-so no hex value is hard-coded here beyond the periwinkle *ramp* built from the
-house hue ``HERO``.
+(``blogkit.brand_plotly``) and is assigned three semantic roles: burnt orange
+for the fixed anchors ``p`` and ``q*``, lime for the moving pair ``q`` and
+``m`` (and the pointers to them), periwinkle for the KL contour family and the
+edge, and a neutral dark grey for ``Q``, ``M_wstar`` and the triangle outline.
 """
 
 from __future__ import annotations
@@ -36,8 +36,8 @@ import scipy.optimize as opt
 
 # Importing the brand module registers "plotly_white+blog" as the default
 # template (font, ink, paper, gridless neutrals) and gives us the semantic
-# palette. HERO is the house periwinkle.
-from blogkit.brand_plotly import HERO, ACCENT, INK, LABEL, PAPER, with_alpha
+# palette. HERO is the house periwinkle, SECONDARY the lime, ACCENT the orange.
+from blogkit.brand_plotly import HERO, SECONDARY, ACCENT, INK, LABEL, PAPER, with_alpha
 
 _LN2 = np.log(2.0)
 
@@ -235,8 +235,49 @@ def optimal_slider_interval(
     return s_lo, s_hi, s_star
 
 
+# An orthonormal basis for the sum-zero plane (the plane the simplex lives in),
+# used to sweep ray directions when tracing KL level curves.
+_SUMZERO_B1 = np.array([1.0, -1.0, 0.0]) / np.sqrt(2.0)
+_SUMZERO_B2 = np.array([1.0, 1.0, -2.0]) / np.sqrt(6.0)
+
+
+def _kl_level_curve(p: np.ndarray, level: float, n_theta: int = 360) -> np.ndarray:
+    """The closed curve ``{ q in the simplex : D(p||q) = level }``, barycentric.
+
+    ``D(p||.)`` is strictly convex, zero at ``p``, and diverges at the boundary,
+    so along every ray from ``p`` it increases from 0 to ``+inf`` and attains
+    ``level`` exactly once. We sweep the ray direction over ``n_theta`` angles
+    in the sum-zero plane, bisect for the crossing on each ray, then take a few
+    Newton steps so the returned point sits on the level to machine precision,
+    and close the loop. Returns an ``(n_theta + 1, 3)`` array of probability
+    vectors, computed exactly -- no grid, no marching squares.
+    """
+    p = np.asarray(p, dtype=float)
+    thetas = np.linspace(0.0, 2.0 * np.pi, n_theta, endpoint=False)
+    pts = np.empty((n_theta, 3))
+    for k, th in enumerate(thetas):
+        u = np.cos(th) * _SUMZERO_B1 + np.sin(th) * _SUMZERO_B2
+        neg = u < 0.0
+        t_max = float(np.min(-p[neg] / u[neg])) if np.any(neg) else np.inf
+        t = opt.brentq(lambda t: kl_divergence(p, p + t * u) - level,
+                       0.0, t_max * (1.0 - 1e-12), xtol=1e-15, rtol=1e-15)
+        # Newton polish on g(t) = D(t) - level, with g'(t) = -sum p_i u_i / q_i.
+        for _ in range(4):
+            q = p + t * u
+            resid = kl_divergence(p, q) - level
+            deriv = -float(np.sum(p * u / q))
+            if deriv <= 0.0:
+                break
+            t_new = min(max(t - resid / deriv, 0.0), t_max * (1.0 - 1e-15))
+            if t_new == t:
+                break
+            t = t_new
+        pts[k] = p + t * u
+    return np.vstack([pts, pts[0]])
+
+
 # --------------------------------------------------------------------------- #
-#  Figure styling helpers
+#  Figure styling
 # --------------------------------------------------------------------------- #
 def _mix(hex_a: str, hex_b: str, t: float) -> str:
     """Blend two ``#rrggbb`` colours, ``t`` of the way from ``a`` to ``b``."""
@@ -246,22 +287,23 @@ def _mix(hex_a: str, hex_b: str, t: float) -> str:
     return "#{:02x}{:02x}{:02x}".format(*c)
 
 
-# A sequential periwinkle ramp built from the house hue. Clipped at both ends:
-# the light end stays a visible periwinkle (never white-out), the dark end a
-# deep periwinkle rather than black, so a value never vanishes into the paper.
-_RAMP_LIGHT = _mix(HERO, "#ffffff", 0.55)
-_RAMP_DARK = _mix(HERO, INK, 0.50)
-_PERIWINKLE_RAMP = [[0.0, _RAMP_LIGHT], [0.5, HERO], [1.0, _RAMP_DARK]]
+# Three semantic roles (hue = meaning):
+_ANCHOR = ACCENT                       # burnt orange: the fixed spine p, q*
+_MOVING = SECONDARY                    # lime: the moving pair q, m and its pointers
+_CONTOUR = HERO                        # periwinkle: the KL contour family and the edge
+_LINE_GREY = _mix(INK, LABEL, 0.55)    # neutral dark grey: Q, M_wstar
+_OUTLINE = with_alpha(LABEL, 0.5)      # a lighter grey for the triangle frame
 
-# Neutral for the KL contours: reference geometry with no semantic hue, so it
-# recedes as grey texture and never competes with the periwinkle segments.
-_CONTOUR_FAINT = with_alpha(LABEL, 0.28)
-_CONTOUR_TANGENT = with_alpha(LABEL, 0.55)
+_CONTOUR_FAINT = with_alpha(_CONTOUR, 0.34)
+_CONTOUR_TANGENT = with_alpha(_CONTOUR, 0.75)
+_CONTOUR_LABEL = with_alpha(_mix(_CONTOUR, INK, 0.25), 0.8)
+_CONTOUR_LABEL_TANGENT = _mix(_CONTOUR, INK, 0.35)
 
-_SCRIM = "rgba(255, 255, 255, 0.82)"          # lifts the readout off the lines
-_EDGE_COLOR = HERO                            # the edge you keep: periwinkle
-_UNSPANNED_COLOR = with_alpha(LABEL, 0.55)    # the part geometry wastes: grey
-_MOVING = INK                                 # the cursor pair q and m
+_EDGE_COLOR = HERO                     # the edge you keep: periwinkle
+_UNSPANNED_COLOR = with_alpha(LABEL, 0.55)   # the part geometry wastes: grey
+
+_POINT_FONT = 13                       # one convention for point labels p, q*, q, m
+_LINE_FONT = 12.5                      # a second for the line labels Q, M_wstar
 
 
 def _fmt_gamma(x: float) -> str:
@@ -270,15 +312,21 @@ def _fmt_gamma(x: float) -> str:
     return s if "." in s else s + ".0"
 
 
-def _bary_hovertemplate(name: str, div_label: str | None) -> str:
-    """Hover text: a name, three barycentric coordinates, an optional divergence."""
+def _point_hovertemplate(symbol: str, div_label: str | None) -> str:
+    """Hover for a labelled point: its own symbol, coordinates, an optional div."""
     lines = [
-        f"<b>{name}</b>",
-        "q = (%{customdata[0]:.3f}, %{customdata[1]:.3f}, %{customdata[2]:.3f})",
+        f"<b>{symbol}</b>",
+        f"{symbol} = (%{{customdata[0]:.3f}}, %{{customdata[1]:.3f}}, %{{customdata[2]:.3f}})",
     ]
     if div_label is not None:
         lines.append(f"{div_label} = %{{customdata[3]:.4f}} nats")
     return "<br>".join(lines) + "<extra></extra>"
+
+
+def _furthest_index(cand_xy: np.ndarray, avoid_xy: np.ndarray) -> int:
+    """Index of the candidate point furthest (max-min distance) from an avoid set."""
+    d2 = ((cand_xy[:, None, :] - avoid_xy[None, :, :]) ** 2).sum(axis=-1)
+    return int(np.argmax(d2.min(axis=1)))
 
 
 # --------------------------------------------------------------------------- #
@@ -291,15 +339,16 @@ def build_simplex_figure(
     n_frames: int = 60,
     kl_window: float = 4.0,
 ) -> go.Figure:
-    """Assemble the two-panel simplex figure for the belief ``p``.
+    """Assemble the simplex figure for the belief ``p``.
 
-    Left: the 2-simplex with the KL contours of ``q -> D(p||q)``, the three
-    segments ``M_qstar`` (dotted), ``Q`` (solid) and ``M_wstar`` (dashed) --
-    the last two coloured by their own divergence from ``p`` on one periwinkle
-    ramp -- the static landmarks ``p`` and ``q*``, and a slider-driven point
-    ``q`` on ``Q`` with its partner ``m(q, w*)`` on ``M_wstar``. Right: a
-    stacked bar splitting ``D(p||q)`` into the fixed "edge" ``D(p||q*)`` and
-    the growing "unspanned" remainder ``D(p||m(q, w*))``.
+    A large triangle over a slim horizontal decomposition bar. The triangle
+    carries the KL contour family of ``q -> D(p||q)`` (periwinkle, with the
+    level equal to the edge drawn stronger because it is tangent to ``Q`` at
+    ``q*``), the segments ``Q`` (solid grey) and ``M_wstar`` (dashed grey), the
+    fixed anchors ``p`` and ``q*`` (orange), and a slider-driven moving pair
+    ``q`` on ``Q`` and ``m(q, w*)`` on ``M_wstar`` (lime) joined to ``p`` by
+    thin pointers. The bar splits ``D(p||q)`` into the fixed "edge"
+    ``D(p||q*)`` and the growing "unspanned" remainder ``D(p||m(q, w*))``.
 
     Parameters
     ----------
@@ -312,13 +361,13 @@ def build_simplex_figure(
     n_frames
         Number of animation frames across the slider interval.
     kl_window
-        The slider spans ``{ s : D(p||q(s)) <= kl_window * D(p||q*) }`` and the
-        colour ramp and bar axis share the same ``kl_window * D(p||q*)`` cap.
+        The slider spans ``{ s : D(p||q(s)) <= kl_window * D(p||q*) }``; the
+        contour levels and the bar axis share the same window.
 
     Returns
     -------
     go.Figure
-        A single responsive figure, roughly 520 px tall, no title (the caption
+        A single responsive figure, roughly 560 px tall, no title (the caption
         lives in the ``.qmd``).
     """
     gamma = np.asarray(gamma, dtype=float)
@@ -330,10 +379,8 @@ def build_simplex_figure(
     d_star = kl_divergence(p, q_star)               # the edge; fixed per figure
     w_star_nats = growth_rate(f_star, r, gamma, p)
     w_star_bits = w_star_nats / _LN2
-    cap = kl_window * d_star                          # shared colour/bar cap
 
     A, B = risk_neutral_segment_endpoints(r, gamma)
-    f_lo, f_hi = admissible_f_range(r, gamma)
     s_lo, s_hi, s_star = optimal_slider_interval(r, gamma, p, kl_window)
     s_grid = np.linspace(s_lo, s_hi, n_frames)
     start_index = int(np.argmin(np.abs(s_grid - s_star)))
@@ -341,155 +388,223 @@ def build_simplex_figure(
     def q_of_s(s: float) -> np.ndarray:
         return A + s * (B - A)
 
+    def q3_of_s(s: float) -> float:
+        return float(A[2] + s * (B[2] - A[2]))
+
+    # Bar x-axis: fixed [0, max total] so the blocks resize, not the axis.
+    totals = np.array([
+        d_star + kl_divergence(p, tilted_measure(q_of_s(s), f_star, r, gamma))
+        for s in s_grid
+    ])
+    bar_xmax = float(totals.max())
+
     xy_p = barycentric_to_cartesian(p)
     xy_qstar = barycentric_to_cartesian(q_star)
 
+    # Readout block geometry (top-left, on empty canvas): fixed here so the
+    # contour labels can also steer clear of it.
+    _READ_X = -0.11
+    _READ_Y = np.array([1.03, 0.965, 0.90, 0.835, 0.77])
+
     fig = make_subplots(
-        rows=1,
-        cols=2,
-        column_widths=[0.72, 0.28],
-        horizontal_spacing=0.08,
-        specs=[[{"type": "xy"}, {"type": "xy"}]],
+        rows=2, cols=1, row_heights=[0.88, 0.12], vertical_spacing=0.04,
+        specs=[[{"type": "xy"}], [{"type": "bar"}]],
     )
 
     # ------------------------------------------------------------------ #
-    #  (1) KL contours -- faint level sets of q -> D(p||q), background texture
+    #  (1) KL contours -- exact polylines, one go.Scatter line per level.
+    #  Levels are multiples of the edge D(p||q*), so they track (r, gamma, p).
     # ------------------------------------------------------------------ #
-    n_grid = 260
-    gx = np.linspace(0.0, 1.0, n_grid)
-    gy = np.linspace(0.0, np.sqrt(3.0) / 2.0, n_grid)
-    GX, GY = np.meshgrid(gx, gy)
-    bary = _cartesian_to_barycentric(np.stack([GX, GY], axis=-1))
-    inside = np.all(bary > 1e-9, axis=-1)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        Z = np.sum(np.where(bary > 0.0, p * np.log(p / bary), 0.0), axis=-1)
-    Z = np.where(inside, Z, np.nan)
-
-    # Levels as multiples of the edge D(p||q*), not hard numbers, so they track
-    # (r, gamma, p). The level equal to the edge is drawn darker: it is tangent
-    # to Q at q*, the visual proof that q* is the nearest point of Q to p.
-    for mult in (0.25, 0.5, 1.0, 2.0, 4.0):
+    contour_mults = (0.25, 0.5, 1.0, 2.0, 4.0, 8.0)
+    contour_curves = {}   # mult -> Cartesian curve, kept for label placement
+    for mult in contour_mults:
         level = mult * d_star
+        curve = barycentric_to_cartesian(_kl_level_curve(p, level))
+        contour_curves[mult] = curve
         tangent = mult == 1.0
-        color = _CONTOUR_TANGENT if tangent else _CONTOUR_FAINT
         fig.add_trace(
-            go.Contour(
-                x=gx, y=gy, z=Z,
-                contours=dict(
-                    start=level, end=level, size=level,
-                    coloring="lines", showlabels=False,
+            go.Scatter(
+                x=curve[:, 0], y=curve[:, 1], mode="lines",
+                line=dict(
+                    color=_CONTOUR_TANGENT if tangent else _CONTOUR_FAINT,
+                    width=1.4 if tangent else 1.0,
                 ),
-                line=dict(width=1.4 if tangent else 1.0),
-                colorscale=[[0.0, color], [1.0, color]],
-                showscale=False, hoverinfo="skip",
-                connectgaps=False, name="", showlegend=False,
+                hovertemplate=f"D(p&#8741;&#183;) = {level:.4f} nats<extra></extra>",
+                showlegend=False, name="",
             ),
             row=1, col=1,
         )
 
     # ------------------------------------------------------------------ #
-    #  Triangle outline -- quiet definition, no hover
+    #  Triangle outline -- quiet frame, no hover
     # ------------------------------------------------------------------ #
     tri = barycentric_to_cartesian(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]]))
     fig.add_trace(
         go.Scatter(
             x=tri[:, 0], y=tri[:, 1], mode="lines",
-            line=dict(color=with_alpha(LABEL, 0.45), width=1.2),
+            line=dict(color=_OUTLINE, width=1.2),
             hoverinfo="skip", showlegend=False,
         ),
         row=1, col=1,
     )
 
     # ------------------------------------------------------------------ #
-    #  (2) M_qstar -- the chord { m(q*, f) }, lowest in the hierarchy
+    #  (3) Q (solid) and M_wstar (dashed) -- thin neutral grey, exact ends.
+    #  No colour ramp: the contour family already reads off D(p||q) along Q and
+    #  D(p||m) along M_wstar, so a second encoding would be redundant.
     # ------------------------------------------------------------------ #
-    f_line = np.linspace(f_lo, f_hi, 160)
-    m_qstar = np.array([tilted_measure(q_star, f, r, gamma) for f in f_line])
-    xy_mq = barycentric_to_cartesian(m_qstar)
+    xy_A, xy_B = barycentric_to_cartesian(A), barycentric_to_cartesian(B)
+    xy_mA = barycentric_to_cartesian(tilted_measure(A, f_star, r, gamma))
+    xy_mB = barycentric_to_cartesian(tilted_measure(B, f_star, r, gamma))
     fig.add_trace(
         go.Scatter(
-            x=xy_mq[:, 0], y=xy_mq[:, 1], mode="lines",
-            line=dict(color=with_alpha(LABEL, 0.6), width=1.1, dash="dot"),
-            hoverinfo="skip", showlegend=False,
-        ),
-        row=1, col=1,
-    )
-
-    # ------------------------------------------------------------------ #
-    #  (3) Q (solid) and M_wstar (dashed) -- one ramp, distinguished by style
-    #
-    #  Each is a SINGLE markers trace of ~150 densely spaced points coloured by
-    #  its own divergence from p, on the shared periwinkle ramp (cmin=0,
-    #  cmax=cap). Q reads solid via full opacity; M_wstar reads dashed via a
-    #  periodic opacity pattern -- style, not hue, tells them apart. Colour is
-    #  deliberately non-monotone (D is convex along Q, minimal at q*), so the
-    #  same shade appears on both sides of q*: it conveys magnitude only.
-    # ------------------------------------------------------------------ #
-    n_seg = 150
-    s_seg = np.linspace(0.0, 1.0, n_seg)
-    q_seg = np.array([q_of_s(s) for s in s_seg])
-    xy_q = barycentric_to_cartesian(q_seg)
-    d_q = np.array([kl_divergence(p, q) for q in q_seg])
-
-    m_seg = np.array([tilted_measure(q, f_star, r, gamma) for q in q_seg])
-    xy_m = barycentric_to_cartesian(m_seg)
-    d_m = np.array([kl_divergence(p, m) for m in m_seg])
-
-    # Dash pattern for M_wstar: three markers shown, two hidden, repeating.
-    dash_opacity = np.where((np.arange(n_seg) % 5) < 3, 1.0, 0.0)
-
-    fig.add_trace(
-        go.Scatter(
-            x=xy_q[:, 0], y=xy_q[:, 1], mode="markers",
-            marker=dict(
-                color=d_q, colorscale=_PERIWINKLE_RAMP, cmin=0.0, cmax=cap,
-                size=6.5, line=dict(width=0), showscale=False,
-            ),
+            x=[xy_A[0], xy_B[0]], y=[xy_A[1], xy_B[1]], mode="lines",
+            line=dict(color=_LINE_GREY, width=1.6),
             hoverinfo="skip", showlegend=False, name="Q",
         ),
         row=1, col=1,
     )
     fig.add_trace(
         go.Scatter(
-            x=xy_m[:, 0], y=xy_m[:, 1], mode="markers",
-            marker=dict(
-                color=d_m, colorscale=_PERIWINKLE_RAMP, cmin=0.0, cmax=cap,
-                size=6.0, opacity=dash_opacity, line=dict(width=0),
-                showscale=False,
-            ),
+            x=[xy_mA[0], xy_mB[0]], y=[xy_mA[1], xy_mB[1]], mode="lines",
+            line=dict(color=_LINE_GREY, width=1.6, dash="dash"),
             hoverinfo="skip", showlegend=False, name="M_wstar",
         ),
         row=1, col=1,
     )
 
-    # ------------------------------------------------------------------ #
-    #  Segment labels (text traces, static) -- Q, M(w*), M(q*)
-    # ------------------------------------------------------------------ #
-    def _label_at(frac_seg, xy_seg, text, color, dy=0.0, dx=0.0):
-        i = int(round(frac_seg * (len(xy_seg) - 1)))
+    # Line labels, at whichever end has the most clear space, nudged
+    # perpendicular to the line so they sit just off it.
+    def _line_label(P0, P1, text, avoid):
+        P0, P1 = np.asarray(P0), np.asarray(P1)
+        d = P1 - P0
+        n = np.array([-d[1], d[0]])
+        n = n / (np.hypot(*n) + 1e-12)
+        # Pick the endpoint furthest from the avoid set, then push outward.
+        ends = np.array([P0 + 0.06 * (P0 - P1), P1 + 0.06 * (P1 - P0)])
+        j = _furthest_index(ends, avoid)
+        base = ends[j]
+        # Offset perpendicular, on the side away from the avoid centroid.
+        centroid = avoid.mean(axis=0)
+        side = np.sign(np.dot(base + 0.001 * n - centroid, n)) or 1.0
+        pos = base + side * 0.045 * n
         return go.Scatter(
-            x=[xy_seg[i, 0] + dx], y=[xy_seg[i, 1] + dy], mode="text",
-            text=[text], textposition="middle center",
-            textfont=dict(size=12.5, color=color),
+            x=[pos[0]], y=[pos[1]], mode="text", text=[text],
+            textposition="middle center", textfont=dict(size=_LINE_FONT, color=_LINE_GREY),
             cliponaxis=False, hoverinfo="skip", showlegend=False,
         )
 
-    fig.add_trace(_label_at(0.10, xy_q, "<i>Q</i>", _mix(HERO, INK, 0.35), dy=0.035), row=1, col=1)
-    fig.add_trace(_label_at(0.12, xy_m, "<i>M</i><sub>w*</sub>", _mix(HERO, INK, 0.35), dy=-0.04), row=1, col=1)
-    fig.add_trace(_label_at(0.82, xy_mq, "<i>M</i><sub>q*</sub>", LABEL, dy=0.035), row=1, col=1)
+    _line_avoid = np.vstack([xy_p, xy_qstar, xy_A, xy_B, xy_mA, xy_mB])
+    fig.add_trace(_line_label(xy_A, xy_B, "<i>Q</i>", _line_avoid), row=1, col=1)
+    fig.add_trace(_line_label(xy_mA, xy_mB, "<i>M</i><sub>w*</sub>", _line_avoid), row=1, col=1)
 
     # ------------------------------------------------------------------ #
-    #  (4) Static landmarks -- p (the belief) and q* (the projection)
+    #  Contour value labels -- placed where each curve is least crowded, i.e.
+    #  the curve point furthest from every other drawn element (and from labels
+    #  already placed, so they spread out). The tangent level is labelled more
+    #  prominently -- it is the one contour the eye should find.
+    # ------------------------------------------------------------------ #
+    q_samples = barycentric_to_cartesian(np.array([q_of_s(s) for s in np.linspace(0, 1, 24)]))
+    m_samples = barycentric_to_cartesian(
+        np.array([tilted_measure(q_of_s(s), f_star, r, gamma) for s in np.linspace(0, 1, 24)])
+    )
+    tri_v = barycentric_to_cartesian(np.eye(3))
+    readout_anchor = np.array([[_READ_X, _READ_Y[0]], [_READ_X, _READ_Y[-1]]])
+    base_avoid = np.vstack([xy_p[None, :], xy_qstar[None, :], q_samples, m_samples,
+                            tri_v, readout_anchor])
+
+    # Pass 1: the five faint labels, greedy furthest-from-everything so they
+    # spread out. Pass 2: the tangent label, into the emptiest spot that remains.
+    placed = []
+    faint_x, faint_y, faint_t = [], [], []
+    for mult in contour_mults:
+        if mult == 1.0:
+            continue
+        curve = contour_curves[mult][:-1]     # drop the duplicated closing point
+        avoid = np.vstack([base_avoid] + ([np.array(placed)] if placed else []))
+        px, py = curve[_furthest_index(curve, avoid)]
+        placed.append([px, py])
+        faint_x.append(px)
+        faint_y.append(py)
+        faint_t.append(f"{mult * d_star:.4f}")
+    fig.add_trace(
+        go.Scatter(
+            x=faint_x, y=faint_y, mode="text", text=faint_t,
+            textposition="middle center", textfont=dict(size=9, color=_CONTOUR_LABEL),
+            cliponaxis=False, hoverinfo="skip", showlegend=False,
+        ),
+        row=1, col=1,
+    )
+    tangent_curve = contour_curves[1.0][:-1]
+    tpx, tpy = tangent_curve[_furthest_index(tangent_curve, np.vstack([base_avoid, np.array(placed)]))]
+    fig.add_trace(
+        go.Scatter(
+            x=[tpx], y=[tpy], mode="text",
+            text=[f"D(p&#8741;q*) = {d_star:.4f}"],
+            textposition="middle center",
+            textfont=dict(size=11, color=_CONTOUR_LABEL_TANGENT),
+            cliponaxis=False, hoverinfo="skip", showlegend=False,
+        ),
+        row=1, col=1,
+    )
+
+    # ------------------------------------------------------------------ #
+    #  (3c) Pointers: static p -> q* (heavier dash, orange), and the moving
+    #  p -> q and p -> m (lime). Pointers, not magnitudes: thin and subordinate.
+    # ------------------------------------------------------------------ #
+    def _frame_state(s: float) -> dict:
+        q = q_of_s(s)
+        m = tilted_measure(q, f_star, r, gamma)
+        return dict(
+            q=q, m=m, q3=q3_of_s(s),
+            d_pq=kl_divergence(p, q), d_pm=kl_divergence(p, m),
+            xq=barycentric_to_cartesian(q), xm=barycentric_to_cartesian(m),
+        )
+
+    st0 = _frame_state(s_grid[start_index])
+
+    fig.add_trace(   # static edge pointer p -> q*
+        go.Scatter(
+            x=[xy_p[0], xy_qstar[0]], y=[xy_p[1], xy_qstar[1]], mode="lines",
+            line=dict(color=with_alpha(_ANCHOR, 0.55), width=1.2, dash="longdash"),
+            hoverinfo="skip", showlegend=False,
+        ),
+        row=1, col=1,
+    )
+    fig.add_trace(   # moving pointer p -> q
+        go.Scatter(
+            x=[xy_p[0], st0["xq"][0]], y=[xy_p[1], st0["xq"][1]], mode="lines",
+            line=dict(color=with_alpha(_MOVING, 0.85), width=1.2, dash="dot"),
+            hoverinfo="skip", showlegend=False,
+        ),
+        row=1, col=1,
+    )
+    idx_leg_pq = len(fig.data) - 1
+    fig.add_trace(   # moving pointer p -> m
+        go.Scatter(
+            x=[xy_p[0], st0["xm"][0]], y=[xy_p[1], st0["xm"][1]], mode="lines",
+            line=dict(color=with_alpha(_MOVING, 0.85), width=1.2, dash="dot"),
+            hoverinfo="skip", showlegend=False,
+        ),
+        row=1, col=1,
+    )
+    idx_leg_pm = len(fig.data) - 1
+
+    # ------------------------------------------------------------------ #
+    #  (4/5) Static anchors p and q* (orange), moving pair q and m (lime).
+    #  Point labels share one convention: same font, a fixed vertical offset,
+    #  anchors above their marker and movers below (so the start frame, where
+    #  q sits on q* and m on p, does not stack two labels).
     # ------------------------------------------------------------------ #
     fig.add_trace(
         go.Scatter(
             x=[xy_p[0]], y=[xy_p[1]], mode="markers+text",
-            marker=dict(color=ACCENT, size=12, symbol="circle",
+            marker=dict(color=_ANCHOR, size=12, symbol="circle",
                         line=dict(color=PAPER, width=1.5)),
             text=["<b><i>p</i></b>"], textposition="top center",
-            textfont=dict(size=14, color=INK),
-            customdata=[[p[0], p[1], p[2], 0.0]],
-            hovertemplate=_bary_hovertemplate("p  (belief)", "D(p&#8741;p)"),
+            textfont=dict(size=_POINT_FONT, color=INK),
+            customdata=[[p[0], p[1], p[2]]],
+            hovertemplate=_point_hovertemplate("p", None),
             showlegend=False,
         ),
         row=1, col=1,
@@ -497,67 +612,39 @@ def build_simplex_figure(
     fig.add_trace(
         go.Scatter(
             x=[xy_qstar[0]], y=[xy_qstar[1]], mode="markers+text",
-            marker=dict(color=ACCENT, size=15, symbol="star",
+            marker=dict(color=_ANCHOR, size=15, symbol="star",
                         line=dict(color=PAPER, width=1.0)),
             text=["<b><i>q</i>*</b>"], textposition="top center",
-            textfont=dict(size=14, color=INK),
+            textfont=dict(size=_POINT_FONT, color=INK),
             customdata=[[q_star[0], q_star[1], q_star[2], d_star]],
-            hovertemplate=_bary_hovertemplate("q*  (projection of p onto Q)", "D(p&#8741;q*)"),
+            hovertemplate=_point_hovertemplate("q*", "D(p&#8741;q*)"),
             showlegend=False,
         ),
         row=1, col=1,
     )
-
-    # ------------------------------------------------------------------ #
-    #  (5) Per-frame layer: the connector, then the moving q and m markers.
-    #  Built at the start frame (nearest q*); frames overwrite their x/y.
-    # ------------------------------------------------------------------ #
-    def _frame_state(s: float) -> dict:
-        q = q_of_s(s)
-        m = tilted_measure(q, f_star, r, gamma)
-        d_pq = kl_divergence(p, q)
-        d_pm = kl_divergence(p, m)
-        xq = barycentric_to_cartesian(q)
-        xm = barycentric_to_cartesian(m)
-        return dict(q=q, m=m, d_pq=d_pq, d_pm=d_pm, xq=xq, xm=xm)
-
-    st0 = _frame_state(s_grid[start_index])
-
-    # Connector first, so the moving markers sit on top of it.
-    fig.add_trace(
-        go.Scatter(
-            x=[st0["xq"][0], st0["xm"][0]], y=[st0["xq"][1], st0["xm"][1]],
-            mode="lines", line=dict(color=with_alpha(INK, 0.5), width=1.0, dash="dot"),
-            hoverinfo="skip", showlegend=False,
-        ),
-        row=1, col=1,
-    )
-    idx_connector = len(fig.data) - 1
-
     fig.add_trace(
         go.Scatter(
             x=[st0["xq"][0]], y=[st0["xq"][1]], mode="markers+text",
             marker=dict(color=_MOVING, size=11, symbol="circle",
                         line=dict(color=PAPER, width=1.5)),
             text=["<i>q</i>"], textposition="bottom center",
-            textfont=dict(size=13, color=INK),
+            textfont=dict(size=_POINT_FONT, color=_mix(_MOVING, INK, 0.35)),
             customdata=[[st0["q"][0], st0["q"][1], st0["q"][2], st0["d_pq"]]],
-            hovertemplate=_bary_hovertemplate("q  (on Q)", "D(p&#8741;q)"),
+            hovertemplate=_point_hovertemplate("q", "D(p&#8741;q)"),
             showlegend=False,
         ),
         row=1, col=1,
     )
     idx_q = len(fig.data) - 1
-
     fig.add_trace(
         go.Scatter(
             x=[st0["xm"][0]], y=[st0["xm"][1]], mode="markers+text",
             marker=dict(color=_MOVING, size=10, symbol="diamond",
                         line=dict(color=PAPER, width=1.5)),
             text=["<i>m</i>"], textposition="bottom center",
-            textfont=dict(size=13, color=INK),
+            textfont=dict(size=_POINT_FONT, color=_mix(_MOVING, INK, 0.35)),
             customdata=[[st0["m"][0], st0["m"][1], st0["m"][2], st0["d_pm"]]],
-            hovertemplate=_bary_hovertemplate("m(q, w*)  (on M_w*)", "D(p&#8741;m)"),
+            hovertemplate=_point_hovertemplate("m", "D(p&#8741;m)"),
             showlegend=False,
         ),
         row=1, col=1,
@@ -565,133 +652,144 @@ def build_simplex_figure(
     idx_m = len(fig.data) - 1
 
     # ------------------------------------------------------------------ #
-    #  Vertex labels, just outside the triangle
+    #  Vertex labels, just outside the triangle (one trace, per-point anchor).
     # ------------------------------------------------------------------ #
-    vlabels = [
-        (np.array([1.0, 0.0, 0.0]), f"&#948;<sub>1</sub> (&#947; = {_fmt_gamma(gamma[0])})", "top right", 0.0, -0.055),
-        (np.array([0.0, 1.0, 0.0]), f"&#948;<sub>2</sub> (&#947; = {_fmt_gamma(gamma[1])})", "top left", 0.0, -0.055),
-        (np.array([0.0, 0.0, 1.0]), f"&#948;<sub>3</sub> (&#947; = {_fmt_gamma(gamma[2])})", "top center", 0.06, 0.0),
-    ]
-    for vertex, text, pos, dy, dyy in vlabels:
-        xy = barycentric_to_cartesian(vertex)
-        fig.add_trace(
-            go.Scatter(
-                x=[xy[0]], y=[xy[1] + dy + dyy], mode="text",
-                text=[text], textposition=pos,
-                textfont=dict(size=12.5, color=LABEL),
-                cliponaxis=False, hoverinfo="skip", showlegend=False,
-            ),
-            row=1, col=1,
-        )
+    vx = barycentric_to_cartesian(np.eye(3))
+    fig.add_trace(
+        go.Scatter(
+            x=[vx[0, 0], vx[1, 0], vx[2, 0]],
+            y=[vx[0, 1] - 0.02, vx[1, 1] - 0.02, vx[2, 1] + 0.03],
+            mode="text",
+            text=[
+                f"&#948;<sub>1</sub> (&#947; = {_fmt_gamma(gamma[0])})",
+                f"&#948;<sub>2</sub> (&#947; = {_fmt_gamma(gamma[1])})",
+                f"&#948;<sub>3</sub> (&#947; = {_fmt_gamma(gamma[2])})",
+            ],
+            textposition=["bottom left", "bottom right", "top center"],
+            textfont=dict(size=12, color=LABEL),
+            cliponaxis=False, hoverinfo="skip", showlegend=False,
+        ),
+        row=1, col=1,
+    )
 
     # ------------------------------------------------------------------ #
-    #  RIGHT PANEL -- the stacked decomposition bar (nats)
+    #  Readout -- a left-aligned text block in the top-left, OUT of the
+    #  triangle and out of layout.annotations (a text trace, updated per frame,
+    #  so a slider step never triggers a relayout).
     # ------------------------------------------------------------------ #
-    bar_x = ["D(p&#8741;q)"]
-    # Lower block: the edge, D(p||q*). Identical in every frame.
+    def _readout_lines(state: dict) -> list[str]:
+        return [
+            f"<i>q</i><sub>3</sub> = {state['q3']:.4f}",
+            f"D(p&#8741;q) = {state['d_pq']:.4f}",
+            f"D(p&#8741;q*) = {d_star:.4f}",
+            f"D(p&#8741;m(q,w*)) = {state['d_pm']:.4f}",
+            f"W(w*) = {w_star_nats:.4f} nats ( = {w_star_bits:.4f} bits )",
+        ]
+
     fig.add_trace(
-        go.Bar(
-            x=bar_x, y=[d_star], name="edge",
-            marker=dict(color=_EDGE_COLOR, line=dict(width=0)),
-            hovertemplate="edge  D(p&#8741;q*) = %{y:.4f} nats<extra></extra>",
-            showlegend=False,
+        go.Scatter(
+            x=[_READ_X] * len(_READ_Y), y=list(_READ_Y), mode="text",
+            text=_readout_lines(st0), textposition="middle right",
+            textfont=dict(size=11, color=INK),
+            cliponaxis=False, hoverinfo="skip", showlegend=False,
         ),
-        row=1, col=2,
+        row=1, col=1,
     )
-    idx_edge = len(fig.data) - 1
-    # Upper block: the unspanned remainder, D(p||m(q, w*)). Grows off q*.
+    idx_readout = len(fig.data) - 1
+
+    # ------------------------------------------------------------------ #
+    #  Bottom row: the slim horizontal stacked decomposition bar (nats).
+    #  Left "edge" block is identical in every frame; only "unspanned" grows.
+    # ------------------------------------------------------------------ #
     fig.add_trace(
         go.Bar(
-            x=bar_x, y=[st0["d_pm"]], name="unspanned",
-            marker=dict(color=_UNSPANNED_COLOR, line=dict(width=0)),
-            hovertemplate="unspanned  D(p&#8741;m(q,w*)) = %{y:.4f} nats<extra></extra>",
+            x=[d_star], y=[0], orientation="h", name="edge",
+            marker=dict(color=_EDGE_COLOR, line=dict(width=0)),
+            text=["edge"], textposition="inside", insidetextanchor="middle",
+            textfont=dict(size=11, color=PAPER), constraintext="inside",
+            hovertemplate="edge  D(p&#8741;q*) = %{x:.4f} nats<extra></extra>",
             showlegend=False,
         ),
-        row=1, col=2,
+        row=2, col=1,
+    )
+    # (the edge block is invariant across frames, so it is never re-sent)
+    fig.add_trace(
+        go.Bar(
+            x=[st0["d_pm"]], y=[0], orientation="h", name="unspanned",
+            marker=dict(color=_UNSPANNED_COLOR, line=dict(width=0)),
+            text=["unspanned"], textposition="inside", insidetextanchor="middle",
+            textfont=dict(size=11, color=INK), constraintext="inside",
+            hovertemplate="unspanned  D(p&#8741;m(q,w*)) = %{x:.4f} nats<extra></extra>",
+            showlegend=False,
+        ),
+        row=2, col=1,
     )
     idx_unspanned = len(fig.data) - 1
 
-    # Block labels, as text riding to the right of the bar at stable heights.
+    # Running total D(p||q) at the right end of the bar.
     fig.add_trace(
         go.Scatter(
-            x=[1.0], y=[d_star / 2.0], mode="text", text=["edge"],
-            textposition="middle right", textfont=dict(size=12, color=INK),
-            xaxis="x2", yaxis="y2", cliponaxis=False,
-            hoverinfo="skip", showlegend=False,
-        )
+            x=[st0["d_pq"]], y=[0], mode="text",
+            text=[f"  D(p&#8741;q) = {st0['d_pq']:.4f}"],
+            textposition="middle right", textfont=dict(size=11, color=INK),
+            cliponaxis=False, hoverinfo="skip", showlegend=False,
+        ),
+        row=2, col=1,
     )
-    fig.add_trace(
-        go.Scatter(
-            x=[1.0], y=[d_star + (cap - d_star) / 2.0], mode="text",
-            text=["unspanned"], textposition="middle right",
-            textfont=dict(size=12, color=LABEL),
-            xaxis="x2", yaxis="y2", cliponaxis=False,
-            hoverinfo="skip", showlegend=False,
-        )
-    )
+    idx_total = len(fig.data) - 1
 
     # ------------------------------------------------------------------ #
-    #  Frames -- one per s, explicitly named "s000".."s0NN"
+    #  Frames -- one per s, explicitly named "s000".."s0NN". Each declares the
+    #  exact traces it touches, so a step never replaces the contours.
     # ------------------------------------------------------------------ #
-    def _readout(state: dict) -> str:
-        return (
-            "<b>growth-rate decomposition</b><br>"
-            f"D(p&#8741;q)&#9;&#9;= {state['d_pq']:.4f}<br>"
-            f"D(p&#8741;q*)&#9;&#9;= {d_star:.4f}<br>"
-            f"D(p&#8741;m(q, w*))&#9;= {state['d_pm']:.4f}<br>"
-            f"W(w*)&#9;&#9;&#9;= {w_star_nats:.4f} nats "
-            f"( = {w_star_bits:.4f} bits )"
-        )
-
-    def _readout_annotation(state: dict) -> dict:
-        return dict(
-            xref="x domain", yref="y domain", x=0.02, y=0.99,
-            xanchor="left", yanchor="top", align="left",
-            text=_readout(state), showarrow=False,
-            font=dict(size=11.5, color=INK), bgcolor=_SCRIM,
-            bordercolor=with_alpha(LABEL, 0.35), borderwidth=1, borderpad=5,
-        )
-
     frame_names = [f"s{i:03d}" for i in range(n_frames)]
     frames = []
     for name, s in zip(frame_names, s_grid):
         state = _frame_state(s)
-        frame_data = [
-            go.Scatter(  # connector
-                x=[state["xq"][0], state["xm"][0]],
-                y=[state["xq"][1], state["xm"][1]],
-            ),
-            go.Scatter(  # moving q
-                x=[state["xq"][0]], y=[state["xq"][1]],
-                customdata=[[state["q"][0], state["q"][1], state["q"][2], state["d_pq"]]],
-            ),
-            go.Scatter(  # moving m
-                x=[state["xm"][0]], y=[state["xm"][1]],
-                customdata=[[state["m"][0], state["m"][1], state["m"][2], state["d_pm"]]],
-            ),
-            go.Bar(y=[state["d_pm"]]),  # upper (unspanned) block
-        ]
         frames.append(
             go.Frame(
                 name=name,
-                data=frame_data,
-                traces=[idx_connector, idx_q, idx_m, idx_unspanned],
-                layout=go.Layout(annotations=[_readout_annotation(state)]),
+                data=[
+                    go.Scatter(x=[xy_p[0], state["xq"][0]], y=[xy_p[1], state["xq"][1]]),
+                    go.Scatter(x=[xy_p[0], state["xm"][0]], y=[xy_p[1], state["xm"][1]]),
+                    go.Scatter(
+                        x=[state["xq"][0]], y=[state["xq"][1]],
+                        customdata=[[state["q"][0], state["q"][1], state["q"][2], state["d_pq"]]],
+                    ),
+                    go.Scatter(
+                        x=[state["xm"][0]], y=[state["xm"][1]],
+                        customdata=[[state["m"][0], state["m"][1], state["m"][2], state["d_pm"]]],
+                    ),
+                    go.Scatter(
+                        x=[_READ_X] * len(_READ_Y), y=list(_READ_Y),
+                        text=_readout_lines(state),
+                    ),
+                    go.Bar(x=[state["d_pm"]], y=[0]),
+                    go.Scatter(x=[state["d_pq"]], y=[0],
+                               text=[f"  D(p&#8741;q) = {state['d_pq']:.4f}"]),
+                ],
+                traces=[idx_leg_pq, idx_leg_pm, idx_q, idx_m,
+                        idx_readout, idx_unspanned, idx_total],
             )
         )
     fig.frames = frames
 
     # ------------------------------------------------------------------ #
-    #  Slider
+    #  Slider -- driven by named frames. Labelled by q_3 (the market's
+    #  probability of state 3), which parametrises Q and means something; the
+    #  rail shows only a handful of tick labels, and the live value rides in the
+    #  readout block, so the currentvalue box is suppressed.
     # ------------------------------------------------------------------ #
-    # Every step keeps its s label (Plotly auto-thins which appear on the rail,
-    # and the currentvalue readout mirrors the active step's label live).
+    label_at = set(np.linspace(0, n_frames - 1, 5).round().astype(int).tolist())
     slider_steps = []
-    for name, s in zip(frame_names, s_grid):
+    for i, (name, s) in enumerate(zip(frame_names, s_grid)):
         slider_steps.append(
             dict(
                 method="animate",
-                label=f"{s:.2f}",
+                label=f"{q3_of_s(s):.2f}" if i in label_at else "",
+                # redraw=True: with the contours now light polylines a full
+                # repaint per step is cheap, and redraw=False corrupts the
+                # stacked bar (it drops the static "edge" block on animate).
                 args=[[name], dict(mode="immediate",
                                    frame=dict(duration=0, redraw=True),
                                    transition=dict(duration=0))],
@@ -699,10 +797,10 @@ def build_simplex_figure(
         )
     slider = dict(
         active=start_index,
-        x=0.0, xanchor="left", y=-0.04, yanchor="top", len=0.72,
-        pad=dict(t=10, b=10),
-        currentvalue=dict(prefix="q at s = ", font=dict(size=12, color=LABEL)),
-        tickcolor=with_alpha(LABEL, 0.5),
+        x=0.0, xanchor="left", y=-0.14, yanchor="top", len=1.0,
+        pad=dict(t=4, b=4),
+        currentvalue=dict(visible=False),
+        tickcolor=with_alpha(LABEL, 0.3),
         font=dict(size=10, color=LABEL),
         steps=slider_steps,
     )
@@ -710,36 +808,39 @@ def build_simplex_figure(
     # ------------------------------------------------------------------ #
     #  Axes and layout
     # ------------------------------------------------------------------ #
+    # Triangle: equal aspect, no axes; range inset at top-left to seat the
+    # readout on empty canvas above/left of the triangle.
     fig.update_xaxes(
-        range=[-0.11, 1.11], showgrid=False, zeroline=False,
+        range=[-0.13, 1.13], showgrid=False, zeroline=False,
         showticklabels=False, visible=False, row=1, col=1,
     )
     fig.update_yaxes(
-        range=[-0.16, 1.0], scaleanchor="x", scaleratio=1.0,
+        range=[-0.10, 1.07], scaleanchor="x", scaleratio=1.0,
         showgrid=False, zeroline=False, showticklabels=False, visible=False,
         row=1, col=1,
     )
-    # Right panel: a single category, fixed y so blocks resize, not the axis.
+    # Bar: nats on x (fixed range), y hidden entirely.
     fig.update_xaxes(
-        showgrid=False, zeroline=False, showticklabels=False,
-        range=[-0.6, 2.4], row=1, col=2,
+        range=[0.0, bar_xmax * 1.34], title_text="nats per period",
+        title_font=dict(size=12, color=LABEL), title_standoff=6,
+        tickfont=dict(size=9, color=LABEL),
+        showgrid=False, zeroline=False,
+        ticks="outside", ticklen=3, tickcolor=with_alpha(LABEL, 0.5),
+        row=2, col=1,
     )
     fig.update_yaxes(
-        range=[0.0, cap * 1.06], title_text="nats per period",
-        title_font=dict(size=13, color=LABEL), tickfont=dict(color=LABEL),
-        gridcolor=with_alpha(LABEL, 0.15), zeroline=True,
-        zerolinecolor=with_alpha(LABEL, 0.4), row=1, col=2,
+        range=[-0.6, 0.6], showgrid=False, zeroline=False,
+        showticklabels=False, visible=False, row=2, col=1,
     )
 
     fig.update_layout(
-        barmode="stack",
-        autosize=True, height=520,
-        margin=dict(t=24, r=16, b=64, l=16),
+        barmode="stack", bargap=0.35,
+        autosize=True, height=560,
+        margin=dict(t=18, r=16, b=104, l=16),
         paper_bgcolor=PAPER, plot_bgcolor=PAPER,
         hovermode="closest", hoverlabel=dict(namelength=-1),
         showlegend=False,
         sliders=[slider],
-        annotations=[_readout_annotation(st0)],
     )
     return fig
 
@@ -840,5 +941,24 @@ def _run_checks() -> None:
     print(f"  slider s in [{s_lo:.6f}, {s_hi:.6f}], s* = {s_star:.6f}")
 
 
+def _check_contours() -> None:
+    """New in the revision: every emitted KL level curve sits on its level."""
+    r = 0.97
+    gamma = np.array([2.0, 1.0, 0.4])
+    p = np.array([0.5, 0.2, 0.3])
+    d_star = kl_divergence(p, manufactured_measure(optimal_fraction(r, gamma, p), r, gamma, p))
+
+    worst = 0.0
+    for mult in (0.25, 0.5, 1.0, 2.0, 4.0, 8.0):
+        level = mult * d_star
+        curve = _kl_level_curve(p, level)
+        for q in curve[::29]:                     # a sample of points on the curve
+            err = abs(kl_divergence(p, q) - level)
+            worst = max(worst, err)
+            assert err <= 1e-9, f"contour {mult}x off level: {err:.2e}"
+    print(f"  contour level curves on-level to {worst:.2e}  (all six levels).")
+
+
 if __name__ == "__main__":
     _run_checks()
+    _check_contours()
