@@ -64,9 +64,11 @@ GRID = "#e9ebef"    # gridlines that whisper
 PAPER = "#ffffff"
 
 # --- Semantic accent colourway (import these into plot functions) ---
-HERO = "#7575f7"                    
-SECONDARY = "#84cc16"               
-ACCENT = "#f4511e"                  
+HERO = "#7575f7"                    # periwinkle: primary; "attainable reality"
+SECONDARY = "#84cc16"               # lime: secondary; "unattainable"
+ACCENT = "#f4511e"                  # orange: "look here"
+HERMES = "#1e3a8a"                  # navy: semantically neutral, but coloured
+LAPIS = "#3730a3"                   # a darker variant of periwinkle
 
 
 def with_alpha(color: str, alpha: float) -> str:
