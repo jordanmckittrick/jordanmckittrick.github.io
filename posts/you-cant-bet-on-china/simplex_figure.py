@@ -19,11 +19,17 @@ The geometry, stated once and used everywhere below:
 * ``m(q,f) = q Y(f) / r``                     the tilted measure
 * ``M_wstar = { m(q, f*) : q in Q }``         a line segment
 
-Everything the figure needs is derived from ``(r, gamma, p)``; nothing about
-the running example is baked in. Colour is two accents over greyscale: burnt
-orange for the fixed anchors ``p`` and ``q*``, periwinkle for the KL contour
-family, a dark neutral for ``Q``, ``M_wstar`` and the moving pair ``q``/``m``,
-and a light grey for the dashed pointers from ``p``.
+Adding an untradable third asset ``gamma2`` completes the market and fixes a
+unique risk-neutral measure ``q~`` (with partner ``m~`` on ``M_wstar``); marking
+those makes the figure illustrate the stranded-growth decomposition (3.3)/(3.4)
+as well as (1.6).
+
+Everything is derived from ``(r, gamma, p, gamma2)``; nothing about the running
+example is baked in. Colour follows ``_brand.yml``: orange ("look here") for
+``p``, periwinkle ("attainable reality") for ``q*``, lime ("unattainable") for
+``q~`` and ``m~``, navy (neutral-but-coloured) for the KL contour family, and
+ink (scaffolding) for ``Q``, ``M_wstar`` and the moving pair ``q``/``m`` -- with
+the dashed pointers and the triangle frame a reduced-opacity tint of ink.
 """
 
 from __future__ import annotations
@@ -35,7 +41,7 @@ import scipy.optimize as opt
 # Importing the brand module registers "plotly_white+blog" as the default
 # template (font, ink, paper, gridless neutrals) and gives us the semantic
 # palette. HERO is the house periwinkle, ACCENT the burnt orange.
-from blogkit.brand_plotly import HERO, ACCENT, INK, LABEL, PAPER, with_alpha
+from blogkit.brand_plotly import HERO, SECONDARY, ACCENT, HERMES, INK, LABEL, PAPER, with_alpha
 
 _LN2 = np.log(2.0)
 
@@ -284,20 +290,28 @@ def _mix(hex_a: str, hex_b: str, t: float) -> str:
     return "#{:02x}{:02x}{:02x}".format(*c)
 
 
-# Two accents over greyscale (hue = meaning):
-_ANCHOR = ACCENT                       # burnt orange: the fixed anchors p, q* only
-_CONTOUR = HERO                        # periwinkle: the KL contour family only
-_NEUTRAL = _mix(INK, LABEL, 0.55)      # dark neutral: Q, M_wstar, and the moving q, m
-_LEG = with_alpha(LABEL, 0.5)          # light grey: the dashed pointers from p
-_OUTLINE = with_alpha(LABEL, 0.5)      # a light grey for the triangle frame
+# Colour by meaning (semantics from _brand.yml; palette from brand_plotly):
+_P_COLOR = ACCENT                      # orange, "look here": p
+_QSTAR_COLOR = HERO                    # periwinkle, "attainable reality": q*
+_UNATTAIN = SECONDARY                  # lime, "unattainable": q~ and m~
+_CONTOUR = HERMES                      # navy, neutral-but-coloured: contours + labels
+_NEUTRAL = INK                         # ink scaffolding: Q, M_wstar, and moving q, m
+_SCAFFOLD = with_alpha(INK, 0.35)      # ink at 35%: the dashed legs + triangle frame
 
-_CONTOUR_FAINT = with_alpha(_CONTOUR, 0.42)
-_CONTOUR_TANGENT = with_alpha(_CONTOUR, 0.85)
-_CONTOUR_LABEL = with_alpha(_mix(_CONTOUR, INK, 0.30), 0.85)
-_CONTOUR_LABEL_TANGENT = _mix(_CONTOUR, INK, 0.45)
+# A white ring around every point marker, so a dot sitting on a dark line
+# (q, q~ on Q; m, m~ on M_wstar) reads as a separate object, not a thickening.
+# Set to 0.0 to drop it everywhere without touching anything else.
+MARKER_OUTLINE_PX = 1.5
 
-_POINT_FONT = 12                       # one convention for point labels p, q*, q, m
+_CONTOUR_FAINT = with_alpha(_CONTOUR, 0.40)
+_CONTOUR_TANGENT = with_alpha(_CONTOUR, 0.70)
+_CONTOUR_LABEL = with_alpha(_CONTOUR, 0.60)
+_CONTOUR_LABEL_TANGENT = with_alpha(_CONTOUR, 0.85)
+
+_POINT_FONT = 12                       # one convention for all six point labels
 _LINE_FONT = 12.5                      # a second for the line labels Q, M_wstar
+_POINT_SIZE = 8                        # q, m, q~, m~
+_ANCHOR_SIZE = 11                      # p and q* -- slightly larger
 
 # ---- Figure geometry -------------------------------------------------------
 # Axis ranges leave a little room outside the triangle for the vertex labels.
@@ -340,73 +354,101 @@ def build_simplex_figure(
     r: float,
     gamma: np.ndarray,
     p: np.ndarray,
+    gamma2: np.ndarray = (0.5, 0.7, 1.7),
     n_frames: int = 60,
 ) -> go.Figure:
     """Assemble the single-panel simplex figure for the belief ``p``.
 
-    A large triangle sized to fill the column. It carries the KL contour family
-    of ``q -> D(p||q)`` (periwinkle, the level equal to the edge drawn stronger
-    because it is tangent to ``Q`` at ``q*``), the segments ``Q`` (heavier) and
-    ``M_wstar`` (lighter) in a dark neutral, the fixed anchors ``p`` and ``q*``
-    (orange), and a moving pair ``q`` on ``Q`` and ``m(q, w*)`` on ``M_wstar``
-    (dark neutral) joined to ``p`` by light-grey pointers. A one-line readout in
-    the top-left renders the decomposition (1.6) as an arithmetic identity.
+    A triangle sized to fill the column. It carries the KL contour family of
+    ``q -> D(p||q)`` (navy, faint, behind everything; the level tangent to ``Q``
+    at ``q*`` drawn stronger), the segment ``Q`` (solid ink, heavier) and its
+    image ``M_wstar`` (solid ink, lighter, drawn with a gap for the ``p -> m``
+    leg), the fixed anchors ``p`` (orange) and ``q*`` (periwinkle), the
+    complete-market measure ``q~`` and its partner ``m~`` (lime, from the
+    untradable third asset ``gamma2``), and a slider-driven moving pair ``q`` on
+    ``Q`` and ``m`` on ``M_wstar`` (ink) joined to ``p`` by dashed pointers. A
+    one-line readout renders the decomposition (1.6).
 
-    There is no Plotly slider and no hover: the named frames ``s000..`` are
-    driven by the native range input that :func:`simplex_figure_html` emits.
+    The named frames ``s000..`` drive the native range input that
+    :func:`simplex_figure_html` emits; there is no Plotly slider and no hover
+    beyond the six labelled points.
 
     Parameters
     ----------
     r
         Risk-free gross return, the same in every state.
     gamma
-        Length-3 risky gross returns, one per state.
+        Length-3 gross returns of the tradable risky asset.
     p
-        Length-3 belief (true state probabilities), all strictly positive.
+        Length-3 belief, all strictly positive.
+    gamma2
+        Length-3 gross returns of the untradable third asset. With the risk-free
+        asset and ``gamma`` it completes the market, fixing ``q~`` as the unique
+        risk-neutral measure of ``G3 = [ r 1 | gamma | gamma2 ]``.
     n_frames
-        Number of animation frames along the segment ``Q``.
+        Number of animation frames along ``Q``.
 
     Returns
     -------
     go.Figure
-        A single responsive-width figure whose fixed height makes the triangle
-        fill the column; ``layout.meta`` carries ``n_frames`` and ``start_index``
-        for the slider.
+        A responsive-width figure whose height fills the column; ``layout.meta``
+        carries ``n_frames``, ``start_index`` and the two slider landmarks.
     """
     gamma = np.asarray(gamma, dtype=float)
+    gamma2 = np.asarray(gamma2, dtype=float)
     p = np.asarray(p, dtype=float)
 
     # ---- Core quantities, all derived ----
     f_star = optimal_fraction(r, gamma, p)
     q_star = manufactured_measure(f_star, r, gamma, p)
-    d_star = kl_divergence(p, q_star)               # the constant edge D(p||q*)
+    d_star = kl_divergence(p, q_star)
 
     A, B = risk_neutral_segment_endpoints(r, gamma)
 
-    # The slider walks s in [0.02, 0.98] -- 2% in from each end of Q, where
-    # D(p||q) diverges. s* lands on q*, and the figure opens there.
+    # q~: the unique risk-neutral measure once the untradable third asset gamma2
+    # completes the market (G3^T q~ = r 1). m~ = m(q~, w*) is its M_wstar partner.
+    G3 = np.column_stack([r * np.ones(3), gamma, gamma2])
+    q_tilde = np.linalg.solve(G3.T, r * np.ones(3))
+    m_tilde = tilted_measure(q_tilde, f_star, r, gamma)
+
+    # Parameters along Q (q(s) = A + s (B - A)) of q* and q~.
     k = int(np.argmax(np.abs(B - A)))
-    s_star = float((q_star[k] - A[k]) / (B[k] - A[k]))
+
+    def s_of(qq: np.ndarray) -> float:
+        return float((qq[k] - A[k]) / (B[k] - A[k]))
+
+    s_star = s_of(q_star)
+    s_tilde = s_of(q_tilde)
+
     s_grid = np.linspace(0.02, 0.98, n_frames)
     start_index = int(np.argmin(np.abs(s_grid - s_star)))
-    # Snap the opening frame exactly onto q* so it reads "... + 0.0000 = ..." --
-    # an imperceptible nudge to one frame's position, but a clean start readout.
-    s_grid[start_index] = s_star
+    s_grid[start_index] = s_star   # open exactly on q* for a clean readout
 
     def q_of_s(s: float) -> np.ndarray:
         return A + s * (B - A)
 
     xy_p = barycentric_to_cartesian(p)
     xy_qstar = barycentric_to_cartesian(q_star)
+    xy_qtilde = barycentric_to_cartesian(q_tilde)
+    xy_mtilde = barycentric_to_cartesian(m_tilde)
+    xy_A, xy_B = barycentric_to_cartesian(A), barycentric_to_cartesian(B)
+    xy_mA = barycentric_to_cartesian(tilted_measure(A, f_star, r, gamma))
+    xy_mB = barycentric_to_cartesian(tilted_measure(B, f_star, r, gamma))
 
-    # The one-line readout sits in the empty region above the triangle's
-    # upper-left, left-aligned from this anchor.
     read_x, read_y = -0.09, 0.905
+
+    def _frame_state(s: float) -> dict:
+        q = q_of_s(s)
+        m = tilted_measure(q, f_star, r, gamma)
+        return dict(q=q, m=m, s=s, d_pq=kl_divergence(p, q), d_pm=kl_divergence(p, m),
+                    xq=barycentric_to_cartesian(q), xm=barycentric_to_cartesian(m))
+
+    st0 = _frame_state(s_grid[start_index])
 
     fig = go.Figure()
 
     # ------------------------------------------------------------------ #
-    #  (1) KL contours -- exact polylines, one go.Scatter line per level.
+    #  (1) KL contours -- navy (hermes), faint, behind everything.
     # ------------------------------------------------------------------ #
     contour_mults = (0.25, 0.5, 1.0, 2.0, 4.0, 8.0)
     contour_curves = {}
@@ -418,82 +460,76 @@ def build_simplex_figure(
         fig.add_trace(go.Scatter(
             x=curve[:, 0], y=curve[:, 1], mode="lines",
             line=dict(color=_CONTOUR_TANGENT if tangent else _CONTOUR_FAINT,
-                      width=1.5 if tangent else 1.0),
+                      width=1.4 if tangent else 1.0),
             hoverinfo="skip", showlegend=False, name=""))
 
-    # Triangle outline -- quiet frame.
+    # Triangle outline -- ink at 35% (scaffolding).
     tri = barycentric_to_cartesian(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]]))
-    fig.add_trace(go.Scatter(
-        x=tri[:, 0], y=tri[:, 1], mode="lines",
-        line=dict(color=_OUTLINE, width=1.2), hoverinfo="skip", showlegend=False))
+    fig.add_trace(go.Scatter(x=tri[:, 0], y=tri[:, 1], mode="lines",
+        line=dict(color=_SCAFFOLD, width=1.2), hoverinfo="skip", showlegend=False))
 
     # ------------------------------------------------------------------ #
-    #  (8a) Q (heavier) and M_wstar (lighter), both SOLID dark neutral.
-    #  Weight, not dash, distinguishes primary object from its image -- and it
-    #  keeps the dashed pointer landing on m from tangling with a dashed line.
+    #  (8a) Q -- solid ink, heavier.
     # ------------------------------------------------------------------ #
-    xy_A, xy_B = barycentric_to_cartesian(A), barycentric_to_cartesian(B)
-    xy_mA = barycentric_to_cartesian(tilted_measure(A, f_star, r, gamma))
-    xy_mB = barycentric_to_cartesian(tilted_measure(B, f_star, r, gamma))
-    fig.add_trace(go.Scatter(
-        x=[xy_A[0], xy_B[0]], y=[xy_A[1], xy_B[1]], mode="lines",
+    fig.add_trace(go.Scatter(x=[xy_A[0], xy_B[0]], y=[xy_A[1], xy_B[1]], mode="lines",
         line=dict(color=_NEUTRAL, width=2.2), hoverinfo="skip", showlegend=False, name="Q"))
-    fig.add_trace(go.Scatter(
-        x=[xy_mA[0], xy_mB[0]], y=[xy_mA[1], xy_mB[1]], mode="lines",
-        line=dict(color=_NEUTRAL, width=1.5), hoverinfo="skip", showlegend=False, name="M_wstar"))
-
-    # (8d) line labels, at whichever end has clear space, offset perpendicular.
-    def _line_label(P0, P1, text, avoid):
-        P0, P1 = np.asarray(P0), np.asarray(P1)
-        d = P1 - P0
-        n = np.array([-d[1], d[0]])
-        n = n / (np.hypot(*n) + 1e-12)
-        ends = np.array([P0 + 0.06 * (P0 - P1), P1 + 0.06 * (P1 - P0)])
-        base = ends[_furthest_index(ends, avoid)]
-        centroid = avoid.mean(axis=0)
-        side = np.sign(np.dot(base + 0.001 * n - centroid, n)) or 1.0
-        pos = base + side * 0.045 * n
-        return go.Scatter(
-            x=[pos[0]], y=[pos[1]], mode="text", text=[text],
-            textposition="middle center", textfont=dict(size=_LINE_FONT, color=_NEUTRAL),
-            cliponaxis=False, hoverinfo="skip", showlegend=False)
-
-    _line_avoid = np.vstack([xy_p, xy_qstar, xy_A, xy_B, xy_mA, xy_mB])
-    fig.add_trace(_line_label(xy_A, xy_B, "<i>Q</i>", _line_avoid))
-    fig.add_trace(_line_label(xy_mA, xy_mB, "<i>M</i><sub>w*</sub>", _line_avoid))
 
     # ------------------------------------------------------------------ #
-    #  (9) Contour value labels -- LAYOUT ANNOTATIONS (constant every frame),
-    #  each rotated parallel to its curve and given a solid plot-background so
-    #  it punches a clean hole in the line behind it. Placed where each curve is
-    #  least crowded; the tangent level is placed last, into the emptiest spot.
+    #  (3) M_wstar -- two solid ink segments with a gap, and the p -> m leg in
+    #  the gap. p = m(q*, w*) lies exactly on M_wstar, so the leg is a sub-segment
+    #  of the line; the gap keeps the dashed leg from hiding under the solid one.
+    #  point(s) is linear in s, with p at s_star and m at the frame's s.
     # ------------------------------------------------------------------ #
-    q_samples = barycentric_to_cartesian(np.array([q_of_s(s) for s in np.linspace(0, 1, 24)]))
-    m_samples = barycentric_to_cartesian(
-        np.array([tilted_measure(q_of_s(s), f_star, r, gamma) for s in np.linspace(0, 1, 24)])
-    )
-    tri_v = barycentric_to_cartesian(np.eye(3))
-    base_avoid = np.vstack([xy_p[None, :], xy_qstar[None, :], q_samples, m_samples,
-                            tri_v, np.array([[read_x, read_y]])])
+    def mw_point(s):
+        return xy_mA + s * (xy_mB - xy_mA)
 
-    def _tangent_angle(curve_closed: np.ndarray, idx: int) -> float:
-        """Screen angle (deg) of a polyline at vertex ``idx``, as a textangle.
+    def mw_pieces(s):
+        lo, hi = (s_star, s) if s_star <= s else (s, s_star)
+        p_lo, p_hi = mw_point(lo), mw_point(hi)
+        return (mw_point(0.0), p_lo), (p_hi, mw_point(1.0)), (p_lo, p_hi)
 
-        Plotly's ``textangle`` is clockwise-positive while ``atan2`` is
-        counter-clockwise, so negate; then fold into [-90, 90] to keep text
-        upright. Equal-aspect axes mean the data angle is the screen angle.
-        """
-        n = len(curve_closed) - 1                 # closed: last == first
-        a = curve_closed[(idx - 1) % n]
-        b = curve_closed[(idx + 1) % n]
-        ta = -np.degrees(np.arctan2(b[1] - a[1], b[0] - a[0]))
+    def _seg(a_b, color, width, dash=None):
+        (x0, y0), (x1, y1) = a_b
+        return go.Scatter(x=[x0, x1], y=[y0, y1], mode="lines",
+                          line=dict(color=color, width=width, dash=dash),
+                          hoverinfo="skip", showlegend=False)
+
+    seg1_0, seg2_0, leg_pm_0 = mw_pieces(st0["s"])
+    fig.add_trace(_seg(seg1_0, _NEUTRAL, 1.5)); idx_seg1 = len(fig.data) - 1
+    fig.add_trace(_seg(seg2_0, _NEUTRAL, 1.5)); idx_seg2 = len(fig.data) - 1
+
+    # Dashed legs from p (the only dashed elements): p -> m (in the M_wstar gap)
+    # and p -> q (an ordinary chord, since p is not on Q).
+    fig.add_trace(_seg(leg_pm_0, _SCAFFOLD, 1.1, "dash")); idx_leg_pm = len(fig.data) - 1
+    fig.add_trace(_seg((xy_p, st0["xq"]), _SCAFFOLD, 1.1, "dash")); idx_leg_pq = len(fig.data) - 1
+
+    # ------------------------------------------------------------------ #
+    #  Contour + line label annotations (constant every frame; rotated, with a
+    #  plot-background that punches a hole in the curve behind the text).
+    # ------------------------------------------------------------------ #
+    def _angle_deg(dx: float, dy: float) -> float:
+        ta = -np.degrees(np.arctan2(dy, dx))     # textangle is clockwise-positive
         if ta > 90.0:
             ta -= 180.0
         elif ta < -90.0:
             ta += 180.0
         return float(ta)
 
-    contour_annotations = []
+    def _tangent_angle(curve_closed: np.ndarray, idx: int) -> float:
+        n = len(curve_closed) - 1                # closed: last == first
+        a = curve_closed[(idx - 1) % n]
+        b = curve_closed[(idx + 1) % n]
+        return _angle_deg(b[0] - a[0], b[1] - a[1])
+
+    q_samples = barycentric_to_cartesian(np.array([q_of_s(s) for s in np.linspace(0, 1, 24)]))
+    m_samples = barycentric_to_cartesian(
+        np.array([tilted_measure(q_of_s(s), f_star, r, gamma) for s in np.linspace(0, 1, 24)]))
+    tri_v = barycentric_to_cartesian(np.eye(3))
+    markers_xy = np.vstack([xy_p, xy_qstar, xy_qtilde, xy_mtilde])
+    read_xy = np.array([[read_x, read_y]])
+    base_avoid = np.vstack([markers_xy, q_samples, m_samples, tri_v, read_xy])
+
+    annotations = []
     placed = []
     for mult in [m for m in contour_mults if m != 1.0] + [1.0]:   # tangent last
         curve = contour_curves[mult]
@@ -503,62 +539,79 @@ def build_simplex_figure(
         px, py = open_curve[idx]
         placed.append([px, py])
         tangent = mult == 1.0
-        contour_annotations.append(dict(
+        annotations.append(dict(
             x=float(px), y=float(py), xref="x", yref="y",
             text=f"{mult * d_star:.2f}", textangle=_tangent_angle(curve, idx),
             showarrow=False, bgcolor=PAPER, borderpad=1,
             font=dict(size=9, color=_CONTOUR_LABEL_TANGENT if tangent else _CONTOUR_LABEL)))
 
-    # ------------------------------------------------------------------ #
-    #  Per-frame state, and the moving/static pointers from p.
-    # ------------------------------------------------------------------ #
-    def _frame_state(s: float) -> dict:
-        q = q_of_s(s)
-        m = tilted_measure(q, f_star, r, gamma)
-        return dict(
-            q=q, m=m, d_pq=kl_divergence(p, q), d_pm=kl_divergence(p, m),
-            xq=barycentric_to_cartesian(q), xm=barycentric_to_cartesian(m))
+    # (8) Q and M_wstar labels -- inside the triangle, along the line, rotated,
+    # offset perpendicular, in the clearest stretch away from markers.
+    def _line_label(P0, P1, text, avoid):
+        P0, P1 = np.asarray(P0), np.asarray(P1)
+        d = P1 - P0
+        nrm = np.array([-d[1], d[0]])
+        nrm = nrm / (np.hypot(*nrm) + 1e-12)
+        pts = P0 + np.linspace(0.12, 0.88, 40)[:, None] * d
+        base = pts[_furthest_index(pts, avoid)]
+        side = np.sign(np.dot(base - avoid.mean(axis=0), nrm)) or 1.0
+        pos = base + side * 0.035 * nrm
+        return dict(x=float(pos[0]), y=float(pos[1]), xref="x", yref="y", text=text,
+                    textangle=_angle_deg(d[0], d[1]), showarrow=False,
+                    bgcolor=PAPER, borderpad=1, font=dict(size=_LINE_FONT, color=_NEUTRAL))
 
-    st0 = _frame_state(s_grid[start_index])
-
-    # The dashed legs are the only dashed elements in the figure, so they read
-    # unambiguously as connectors. The static p -> q* leg is dropped: with the
-    # decomposition now spelled out in the readout it added a third near-parallel
-    # leg (coincident with p -> q at the start) for no extra information.
-    fig.add_trace(go.Scatter(   # moving pointer p -> q
-        x=[xy_p[0], st0["xq"][0]], y=[xy_p[1], st0["xq"][1]], mode="lines",
-        line=dict(color=_LEG, width=1.1, dash="dash"), hoverinfo="skip", showlegend=False))
-    idx_leg_pq = len(fig.data) - 1
-    fig.add_trace(go.Scatter(   # moving pointer p -> m
-        x=[xy_p[0], st0["xm"][0]], y=[xy_p[1], st0["xm"][1]], mode="lines",
-        line=dict(color=_LEG, width=1.1, dash="dash"), hoverinfo="skip", showlegend=False))
-    idx_leg_pm = len(fig.data) - 1
+    annotations.append(_line_label(xy_A, xy_B, "<i>Q</i>",
+                                   np.vstack([markers_xy, m_samples, read_xy])))
+    annotations.append(_line_label(xy_mA, xy_mB, "<i>M</i><sub>w*</sub>",
+                                   np.vstack([markers_xy, q_samples, read_xy])))
 
     # ------------------------------------------------------------------ #
-    #  (8c) Markers: small orange anchors p, q*; small dark-neutral movers q, m.
-    #  Point labels share one convention (anchors above, movers below).
+    #  Point markers -- all filled circles; colour, not shape, carries meaning.
+    #  A white ring lifts a dot off any line it sits on. Hover shows barycentric
+    #  coordinates only (the readout carries the divergences).
     # ------------------------------------------------------------------ #
-    fig.add_trace(go.Scatter(
-        x=[xy_p[0]], y=[xy_p[1]], mode="markers+text",
-        marker=dict(color=_ANCHOR, size=8, symbol="circle", line=dict(color=PAPER, width=1.0)),
-        text=["<b><i>p</i></b>"], textposition="top center",
-        textfont=dict(size=_POINT_FONT, color=INK), hoverinfo="skip", showlegend=False))
-    fig.add_trace(go.Scatter(
-        x=[xy_qstar[0]], y=[xy_qstar[1]], mode="markers+text",
-        marker=dict(color=_ANCHOR, size=11, symbol="star", line=dict(color=PAPER, width=0.8)),
-        text=["<b><i>q</i>*</b>"], textposition="top center",
-        textfont=dict(size=_POINT_FONT, color=INK), hoverinfo="skip", showlegend=False))
+    def _hover(sym: str) -> str:
+        return (f"{sym} = (%{{customdata[0]:.3f}}, %{{customdata[1]:.3f}}, "
+                f"%{{customdata[2]:.3f}})<extra></extra>")
+
+    def _add_point(xy, bary, color, size, label, textpos, sym):
+        fig.add_trace(go.Scatter(
+            x=[xy[0]], y=[xy[1]], mode="markers+text",
+            marker=dict(color=color, size=size, symbol="circle",
+                        line=dict(color=PAPER, width=MARKER_OUTLINE_PX)),
+            text=[label], textposition=textpos, textfont=dict(size=_POINT_FONT, color=INK),
+            customdata=[list(map(float, bary))], hovertemplate=_hover(sym),
+            showlegend=False))
+
+    # One label convention: below the marker by default; the two MOVING labels
+    # flip above when they close on a static one (q on q* at the start, or q on
+    # q~ mid-slider), so overlapping labels never stack.
+    def _tp(xy, others, thresh=0.06):
+        d = min(float(np.hypot(*(np.asarray(o) - xy))) for o in others)
+        return "top center" if d < thresh else "bottom center"
+
+    _add_point(xy_p, p, _P_COLOR, _ANCHOR_SIZE, "<i>p</i>", "bottom center", "p")
+    _add_point(xy_qstar, q_star, _QSTAR_COLOR, _ANCHOR_SIZE, "<i>q*</i>", "bottom center", "q*")
+    _add_point(xy_qtilde, q_tilde, _UNATTAIN, _POINT_SIZE, "<i>q&#771;</i>", "bottom center", "q&#771;")
+    _add_point(xy_mtilde, m_tilde, _UNATTAIN, _POINT_SIZE, "<i>m&#771;</i>", "bottom center", "m&#771;")
+
     fig.add_trace(go.Scatter(
         x=[st0["xq"][0]], y=[st0["xq"][1]], mode="markers+text",
-        marker=dict(color=_NEUTRAL, size=8, symbol="circle", line=dict(color=PAPER, width=1.0)),
-        text=["<i>q</i>"], textposition="bottom center",
-        textfont=dict(size=_POINT_FONT, color=INK), hoverinfo="skip", showlegend=False))
+        marker=dict(color=_NEUTRAL, size=_POINT_SIZE, symbol="circle",
+                    line=dict(color=PAPER, width=MARKER_OUTLINE_PX)),
+        text=["<i>q</i>"], textposition=_tp(st0["xq"], [xy_qstar, xy_qtilde]),
+        textfont=dict(size=_POINT_FONT, color=INK),
+        customdata=[list(map(float, st0["q"]))], hovertemplate=_hover("q"),
+        showlegend=False))
     idx_q = len(fig.data) - 1
     fig.add_trace(go.Scatter(
         x=[st0["xm"][0]], y=[st0["xm"][1]], mode="markers+text",
-        marker=dict(color=_NEUTRAL, size=8, symbol="diamond", line=dict(color=PAPER, width=1.0)),
-        text=["<i>m</i>"], textposition="bottom center",
-        textfont=dict(size=_POINT_FONT, color=INK), hoverinfo="skip", showlegend=False))
+        marker=dict(color=_NEUTRAL, size=_POINT_SIZE, symbol="circle",
+                    line=dict(color=PAPER, width=MARKER_OUTLINE_PX)),
+        text=["<i>m</i>"], textposition=_tp(st0["xm"], [xy_p, xy_mtilde]),
+        textfont=dict(size=_POINT_FONT, color=INK),
+        customdata=[list(map(float, st0["m"]))], hovertemplate=_hover("m"),
+        showlegend=False))
     idx_m = len(fig.data) - 1
 
     # Vertex labels, just outside the triangle (one trace, per-point anchor).
@@ -577,15 +630,11 @@ def build_simplex_figure(
         cliponaxis=False, hoverinfo="skip", showlegend=False))
 
     # ------------------------------------------------------------------ #
-    #  Readout -- one line, the decomposition (1.6) as an arithmetic identity:
-    #  D(p||q) = <constant edge> + <unspanned> = <total>. A per-frame text trace.
+    #  Readout -- one line, the decomposition (1.6) as an arithmetic identity.
     # ------------------------------------------------------------------ #
     def _readout_text(state: dict) -> str:
-        # Clamp the unspanned term at 0: at q* it is zero up to rounding, and a
-        # bare float there prints as "-0.0000".
-        d_pm = max(state["d_pm"], 0.0)
-        return (f"D(p&#8741;q) = {d_star:.4f} + {d_pm:.4f} "
-                f"= {state['d_pq']:.4f}")
+        d_pm = max(state["d_pm"], 0.0)     # at q* it is 0 up to rounding
+        return f"D(p&#8741;q) = {d_star:.4f} + {d_pm:.4f} = {state['d_pq']:.4f}"
 
     fig.add_trace(go.Scatter(
         x=[read_x], y=[read_y], mode="text", text=[_readout_text(st0)],
@@ -595,39 +644,52 @@ def build_simplex_figure(
 
     # ------------------------------------------------------------------ #
     #  Frames -- one per s, named "s000".. Each declares the exact traces it
-    #  touches (the two pointers, q, m, and the readout); nothing else moves.
+    #  touches: the two M_wstar pieces, the two legs, q, m and the readout.
     # ------------------------------------------------------------------ #
     frame_names = [f"s{i:03d}" for i in range(n_frames)]
     frames = []
     for name, s in zip(frame_names, s_grid):
         state = _frame_state(s)
+        s1, s2, lpm = mw_pieces(s)
         frames.append(go.Frame(
             name=name,
             data=[
+                go.Scatter(x=[s1[0][0], s1[1][0]], y=[s1[0][1], s1[1][1]]),
+                go.Scatter(x=[s2[0][0], s2[1][0]], y=[s2[0][1], s2[1][1]]),
+                go.Scatter(x=[lpm[0][0], lpm[1][0]], y=[lpm[0][1], lpm[1][1]]),
                 go.Scatter(x=[xy_p[0], state["xq"][0]], y=[xy_p[1], state["xq"][1]]),
-                go.Scatter(x=[xy_p[0], state["xm"][0]], y=[xy_p[1], state["xm"][1]]),
-                go.Scatter(x=[state["xq"][0]], y=[state["xq"][1]]),
-                go.Scatter(x=[state["xm"][0]], y=[state["xm"][1]]),
+                go.Scatter(x=[state["xq"][0]], y=[state["xq"][1]],
+                           textposition=_tp(state["xq"], [xy_qstar, xy_qtilde]),
+                           customdata=[list(map(float, state["q"]))]),
+                go.Scatter(x=[state["xm"][0]], y=[state["xm"][1]],
+                           textposition=_tp(state["xm"], [xy_p, xy_mtilde]),
+                           customdata=[list(map(float, state["m"]))]),
                 go.Scatter(x=[read_x], y=[read_y], text=[_readout_text(state)]),
             ],
-            traces=[idx_leg_pq, idx_leg_pm, idx_q, idx_m, idx_readout]))
+            traces=[idx_seg1, idx_seg2, idx_leg_pm, idx_leg_pq, idx_q, idx_m, idx_readout]))
     fig.frames = frames
 
     # ------------------------------------------------------------------ #
-    #  Axes and layout -- single panel, equal aspect, height derived so the
-    #  triangle fills the width. No slider (native input does that), no hover.
+    #  Axes and layout -- single panel, explicit domains, equal aspect, height
+    #  derived so the plot-area aspect matches the range aspect.
     # ------------------------------------------------------------------ #
-    fig.update_xaxes(range=list(_X_RANGE), showgrid=False, zeroline=False,
+    fig.update_xaxes(range=list(_X_RANGE), domain=[0.0, 1.0],
+                     showgrid=False, zeroline=False,
                      showticklabels=False, visible=False)
-    fig.update_yaxes(range=list(_Y_RANGE), scaleanchor="x", scaleratio=1.0,
+    fig.update_yaxes(range=list(_Y_RANGE), domain=[0.0, 1.0],
+                     scaleanchor="x", scaleratio=1.0,
                      showgrid=False, zeroline=False, showticklabels=False, visible=False)
     fig.update_layout(
         autosize=True, height=_figure_height(),
         margin=dict(l=_MARGIN_PX, r=_MARGIN_PX, t=_MARGIN_PX, b=_MARGIN_PX),
         paper_bgcolor=PAPER, plot_bgcolor=PAPER,
-        hovermode=False, dragmode=False,
-        showlegend=False, annotations=contour_annotations,
-        meta=dict(n_frames=n_frames, start_index=start_index),
+        hovermode="closest",
+        hoverlabel=dict(bgcolor=PAPER, bordercolor=with_alpha(INK, 0.35),
+                        font=dict(size=11, color=INK)),
+        dragmode=False, showlegend=False, annotations=annotations,
+        meta=dict(n_frames=n_frames, start_index=start_index,
+                  landmark_qtilde=100.0 * (s_tilde - 0.02) / 0.96,
+                  landmark_qstar=100.0 * (s_star - 0.02) / 0.96),
     )
     return fig
 
@@ -638,24 +700,25 @@ def simplex_figure_html(fig: go.Figure) -> str:
     Returns one HTML string for a Quarto cell to render (via ``IPython.HTML``):
     the Plotly figure div (plotly.js from CDN, modebar and scroll-zoom off), a
     native ``<input type="range">`` whose ``input`` event animates the named
-    frame, and an optional resize handler that keeps the triangle filling the
-    column. It deliberately does NOT use a Plotly slider: that slider's handle
-    sticks in a drag state and tracks the cursor without a click.
+    frame, and a resize handler that fills the column. There is deliberately no
+    Plotly slider (its handle sticks in a drag state and tracks the cursor
+    without a click). The track carries two faint landmark ticks at q~ and q*.
     """
     import plotly.io as pio
 
     meta = dict(fig.layout.meta or {})
     n = int(meta.get("n_frames", len(fig.frames)))
     start = int(meta.get("start_index", 0))
+    lm_qt = float(meta.get("landmark_qtilde", 42.0))
+    lm_qs = float(meta.get("landmark_qstar", 79.0))
     div_id = "simplex-figure"
     fig_html = pio.to_html(
         fig, include_plotlyjs="cdn", full_html=False, div_id=div_id,
         auto_play=False,   # otherwise the frames run once on load, off q*
         config={"displayModeBar": False, "scrollZoom": False})
 
-    # The slider width tracks the triangle's DRAWN width (= plot width / x-span),
-    # centred, so it sits beneath the triangle. Styled with Bootstrap runtime
-    # variables so it is legible in both the light and dark site themes.
+    # Two faint landmark ticks on the track (lime = q~, periwinkle = q*), thin
+    # enough to stay unobtrusive. Widths are the triangle's drawn width, centred.
     return f"""{fig_html}
 <div class="simplex-slider-wrap"><input type="range" class="simplex-slider"
   min="0" max="{n - 1}" value="{start}" step="1"
@@ -663,15 +726,16 @@ def simplex_figure_html(fig: go.Figure) -> str:
 <style>
 .simplex-slider-wrap {{ margin: .3rem auto .6rem; width: 83%; }}
 .simplex-slider {{ -webkit-appearance: none; appearance: none; width: 100%;
-  height: 2px; border-radius: 2px; background: var(--bs-border-color, #cfd3d8);
-  outline: none; cursor: pointer; }}
+  height: 3px; border-radius: 2px; outline: none; cursor: pointer;
+  background:
+    linear-gradient(#84cc16, #84cc16) {lm_qt:.2f}% 50% / 2px 9px no-repeat,
+    linear-gradient(#7575f7, #7575f7) {lm_qs:.2f}% 50% / 2px 9px no-repeat,
+    var(--bs-border-color, #cfd3d8); }}
 .simplex-slider::-webkit-slider-thumb {{ -webkit-appearance: none; appearance: none;
   width: 15px; height: 15px; border-radius: 50%;
   background: var(--bs-body-color, #1f2328); border: 2px solid var(--bs-body-bg, #fff); }}
 .simplex-slider::-moz-range-thumb {{ width: 15px; height: 15px; border: 2px solid var(--bs-body-bg, #fff);
   border-radius: 50%; background: var(--bs-body-color, #1f2328); }}
-.simplex-slider::-moz-range-track {{ height: 2px; border-radius: 2px;
-  background: var(--bs-border-color, #cfd3d8); }}
 </style>
 <script>
 (function () {{
@@ -686,14 +750,26 @@ def simplex_figure_html(fig: go.Figure) -> str:
     if (window.Plotly) Plotly.animate(gd, [frame(input.value)],
       {{mode: "immediate", frame: {{duration: 0, redraw: false}}, transition: {{duration: 0}}}});
   }});
-  // Optional: hold height = {_ASPECT:.4f} x width so the triangle fills the
-  // column at any width, and match the slider to the triangle's drawn width.
+  // Fill the column. Plotly's autosize is starved to its 700px default by the
+  // min-content figure grid, so measure the block column (.cell-output-display)
+  // and set width + height explicitly, keeping plot-area aspect = range aspect
+  // so the (scaleanchor) triangle fills the width without letterboxing. Reset
+  // the ranges each time or scaleanchor keeps (and compounds) expanded ones.
+  var MARG = 8;
+  function host() {{ return gd.closest(".cell-output-display") || gd.parentElement; }}
   function fit() {{
-    if (!window.Plotly || !gd.offsetWidth) return;
-    var w = gd.offsetWidth;
-    Plotly.relayout(gd, {{height: Math.round(w * {_ASPECT:.6f})}});
-    wrap.style.width = Math.round(w / {_X_SPAN:.4f}) + "px";
+    if (!window.Plotly) {{ return setTimeout(fit, 30); }}
+    var w = (host() && host().clientWidth) || gd.offsetWidth;
+    if (!w) {{ return setTimeout(fit, 30); }}
+    var h = Math.round((w - 2 * MARG) * {_ASPECT:.6f} + 2 * MARG);
+    Plotly.relayout(gd, {{
+      width: w, height: h, autosize: false,
+      "xaxis.range": [{_X_RANGE[0]}, {_X_RANGE[1]}],
+      "yaxis.range": [{_Y_RANGE[0]}, {_Y_RANGE[1]}]
+    }});
+    wrap.style.width = Math.round((w - 2 * MARG) / {_X_SPAN:.4f}) + "px";
   }}
+  if (window.ResizeObserver) {{ new ResizeObserver(fit).observe(host()); }}
   window.addEventListener("resize", fit);
   setTimeout(fit, 0);
 }})();
@@ -826,8 +902,11 @@ def _check_layout_aspect() -> None:
         f"plot-area aspect {ratio_plot:.4f} != range aspect {ratio_range:.4f} "
         f"(rel {rel:.2%})"
     )
+    triangle_px = plot_w / _X_SPAN     # data x-span 1.0, drawn at plot_w / _X_SPAN
     print(f"  layout: height = {height} px, plot area {plot_w}x{plot_h} px, "
           f"aspect {ratio_plot:.4f} vs range {ratio_range:.4f} (rel {rel:.3%}).")
+    print(f"  drawn triangle width = {triangle_px:.0f} px "
+          f"(at the {_REF_WIDTH} px reference column).")
 
     # Largest divergence the slider can reach, at s in {0.02, 0.98}.
     r, gamma, p = 0.97, np.array([2.0, 1.0, 0.4]), np.array([0.5, 0.2, 0.3])
@@ -837,7 +916,59 @@ def _check_layout_aspect() -> None:
           f"(at the slider extremes s = 0.02, 0.98).")
 
 
+def _check_qtilde() -> None:
+    """New: the complete-market measure q~ and its partner m~ (equation (3.3))."""
+    r = 0.97
+    gamma = np.array([2.0, 1.0, 0.4])
+    gamma2 = np.array([0.5, 0.7, 1.7])
+    p = np.array([0.5, 0.2, 0.3])
+
+    def close(a, b, tol=1e-9, msg=""):
+        a, b = np.asarray(a, float), np.asarray(b, float)
+        assert np.all(np.abs(a - b) <= tol), f"{msg}: {a} != {b} (tol {tol})"
+
+    f_star = optimal_fraction(r, gamma, p)
+    q_star = manufactured_measure(f_star, r, gamma, p)
+    d_star = kl_divergence(p, q_star)
+    A, B = risk_neutral_segment_endpoints(r, gamma)
+
+    G3 = np.column_stack([r * np.ones(3), gamma, gamma2])
+    q_tilde = np.linalg.solve(G3.T, r * np.ones(3))
+    m_tilde = tilted_measure(q_tilde, f_star, r, gamma)
+    sigma = kl_divergence(p, m_tilde)
+    d_pqt = kl_divergence(p, q_tilde)
+
+    close(np.linalg.det(G3), -0.853600, 1e-6, "det(G3)")
+    close(q_tilde, [0.15, 0.55, 0.30], 1e-9, "q~")
+    assert np.all(q_tilde > 0.0), "q~ not strictly positive"
+    close(np.sum(q_tilde), 1.0, 1e-12, "sum(q~)")
+    close(np.dot(q_tilde, gamma), r, 1e-12, "q~ on Q: dot(q~, gamma) = r")
+    close(m_tilde, [0.265121, 0.562294, 0.172585], 1e-6, "m~")
+    close(np.sum(m_tilde), 1.0, 1e-12, "sum(m~)")
+    close(d_pqt, 0.399666, 1e-6, "D(p||q~)")
+    close(sigma, 0.276338, 1e-6, "sigma = D(p||m~)")
+    close(d_star + sigma, d_pqt, 1e-9, "D(p||q*) + sigma = D(p||q~)")
+
+    # s parameters, and both strictly inside the clipped slider range.
+    k = int(np.argmax(np.abs(B - A)))
+    s_tilde = (q_tilde[k] - A[k]) / (B[k] - A[k])
+    s_star = (q_star[k] - A[k]) / (B[k] - A[k])
+    close(s_tilde, 0.4211, 1e-3, "s(q~)")
+    close(s_star, 0.7941, 1e-3, "s(q*)")
+    assert 0.02 < s_tilde < 0.98 and 0.02 < s_star < 0.98, "landmarks not inside slider range"
+
+    # Cartesian positions for sanity.
+    close(barycentric_to_cartesian(q_tilde), [0.700000, 0.259808], 1e-6, "xy(q~)")
+    close(barycentric_to_cartesian(m_tilde), [0.648587, 0.149463], 1e-6, "xy(m~)")
+
+    print(f"  q~ = ({q_tilde[0]:.6f}, {q_tilde[1]:.6f}, {q_tilde[2]:.6f}), "
+          f"D(p||q~) = {d_pqt:.6f}, sigma = {sigma:.6f}.")
+    print(f"  landmarks: s(q~) = {s_tilde:.4f}, s(q*) = {s_star:.4f} "
+          f"(both inside [0.02, 0.98]).")
+
+
 if __name__ == "__main__":
     _run_checks()
     _check_contours()
     _check_layout_aspect()
+    _check_qtilde()
