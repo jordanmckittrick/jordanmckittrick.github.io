@@ -308,20 +308,26 @@ _CONTOUR_TANGENT = with_alpha(_CONTOUR, 0.70)
 _CONTOUR_LABEL = with_alpha(_CONTOUR, 0.60)
 _CONTOUR_LABEL_TANGENT = with_alpha(_CONTOUR, 0.85)
 
-_POINT_FONT = 12                       # one convention for all six point labels
-_LINE_FONT = 12.5                      # a second for the line labels Q, M_wstar
-_POINT_SIZE = 8                        # q, m, q~, m~
-_ANCHOR_SIZE = 11                      # p and q* -- slightly larger
+# Font sizes, all named here: the figure renders ~750 px wide, so these are
+# sized for that, not for the ~300 px draft they were first chosen at.
+_READOUT_FONT = 17
+_LINE_FONT = 17                        # line labels Q, M_wstar
+_VERTEX_FONT = 15                      # vertex labels delta_i
+_POINT_FONT = 15                       # the six point labels
+_CONTOUR_FONT = 12                     # contour value labels
+
+_MARKER_SIZE = 11                      # one size for all six points; colour carries meaning
 
 # ---- Figure geometry -------------------------------------------------------
 # Axis ranges leave a little room outside the triangle for the vertex labels.
 # The fixed pixel height is DERIVED so the plot-area aspect equals the range
 # aspect: the (undistorted, scaleratio=1) triangle then fills the column width
 # instead of rendering narrow inside a too-wide plot with dead side margins.
-# The optional resize script in ``simplex_figure_html`` keeps that true at any
-# width.
+# The resize script in ``simplex_figure_html`` reads _ASPECT/_X_RANGE/_Y_RANGE
+# through f-string interpolation, so it tracks these automatically.
 _X_RANGE = (-0.10, 1.10)               # width 1.20
-_Y_RANGE = (-0.11, 0.95)               # height 1.06
+_Y_RANGE = (-0.06, 0.95)               # height 1.01 (lower bound lifted to trim dead space)
+_LINE_LABEL_OFFSET = 0.02              # how far outside the edge Q / M_wstar labels sit
 _X_SPAN = _X_RANGE[1] - _X_RANGE[0]
 _Y_SPAN = _Y_RANGE[1] - _Y_RANGE[0]
 _ASPECT = _Y_SPAN / _X_SPAN            # plot height / width = 0.8833...
@@ -355,7 +361,7 @@ def build_simplex_figure(
     gamma: np.ndarray,
     p: np.ndarray,
     gamma2: np.ndarray = (0.5, 0.7, 1.7),
-    n_frames: int = 60,
+    n_frames: int = 180,
 ) -> go.Figure:
     """Assemble the single-panel simplex figure for the belief ``p``.
 
@@ -419,10 +425,20 @@ def build_simplex_figure(
 
     s_star = s_of(q_star)
     s_tilde = s_of(q_tilde)
+    # Open midway between q~ and q* so all six points are visible on load (on q*
+    # the moving q would hide the static q* marker).
+    s_open = 0.5 * (s_tilde + s_star)
 
     s_grid = np.linspace(0.02, 0.98, n_frames)
-    start_index = int(np.argmin(np.abs(s_grid - s_star)))
-    s_grid[start_index] = s_star   # open exactly on q* for a clean readout
+    # Snap each landmark s onto its nearest grid point so the slider can land on
+    # it exactly (otherwise a landmark falls between frames and is unreachable).
+    idx_tilde = int(np.argmin(np.abs(s_grid - s_tilde)))
+    s_grid[idx_tilde] = s_tilde
+    idx_star = int(np.argmin(np.abs(s_grid - s_star)))
+    s_grid[idx_star] = s_star
+    start_index = int(np.argmin(np.abs(s_grid - s_open)))
+    s_grid[start_index] = s_open
+    assert len({idx_tilde, idx_star, start_index}) == 3, "landmark indices collide"
 
     def q_of_s(s: float) -> np.ndarray:
         return A + s * (B - A)
@@ -469,10 +485,11 @@ def build_simplex_figure(
         line=dict(color=_SCAFFOLD, width=1.2), hoverinfo="skip", showlegend=False))
 
     # ------------------------------------------------------------------ #
-    #  (8a) Q -- solid ink, heavier.
+    #  (6) Q -- solid ink. Same weight as M_wstar now that the outside labels
+    #  identify each line, so the weight distinction has no remaining job.
     # ------------------------------------------------------------------ #
     fig.add_trace(go.Scatter(x=[xy_A[0], xy_B[0]], y=[xy_A[1], xy_B[1]], mode="lines",
-        line=dict(color=_NEUTRAL, width=2.2), hoverinfo="skip", showlegend=False, name="Q"))
+        line=dict(color=_NEUTRAL, width=1.5), hoverinfo="skip", showlegend=False, name="Q"))
 
     # ------------------------------------------------------------------ #
     #  (3) M_wstar -- two solid ink segments with a gap, and the p -> m leg in
@@ -529,13 +546,29 @@ def build_simplex_figure(
     read_xy = np.array([[read_x, read_y]])
     base_avoid = np.vstack([markers_xy, q_samples, m_samples, tri_v, read_xy])
 
+    _TANGENT_CLEAR = 0.05   # min clearance (data units) the tangent label keeps
     annotations = []
     placed = []
     for mult in [m for m in contour_mults if m != 1.0] + [1.0]:   # tangent last
         curve = contour_curves[mult]
         open_curve = curve[:-1]
-        avoid = np.vstack([base_avoid] + ([np.array(placed)] if placed else []))
-        idx = _furthest_index(open_curve, avoid)
+        if mult == 1.0:
+            # (10) The tangent contour kisses Q at q*, so label it NEAR the
+            # tangency, not far from it: among curve points at or right of p's x
+            # and clear of every marker and both lines, take the one closest to q*.
+            avoid_pts = np.vstack([markers_xy, q_samples, m_samples])
+            clear = np.sqrt(((open_curve[:, None, :] - avoid_pts[None, :, :]) ** 2)
+                            .sum(-1)).min(axis=1)
+            ok = (open_curve[:, 0] >= xy_p[0]) & (clear >= _TANGENT_CLEAR)
+            cand = np.where(ok)[0]
+            if len(cand) == 0:                    # relax clearance if nothing qualifies
+                cand = np.where(open_curve[:, 0] >= xy_p[0])[0]
+            d_to_qstar = np.hypot(open_curve[cand, 0] - xy_qstar[0],
+                                  open_curve[cand, 1] - xy_qstar[1])
+            idx = int(cand[int(np.argmin(d_to_qstar))])
+        else:
+            avoid = np.vstack([base_avoid] + ([np.array(placed)] if placed else []))
+            idx = _furthest_index(open_curve, avoid)
         px, py = open_curve[idx]
         placed.append([px, py])
         tangent = mult == 1.0
@@ -543,27 +576,22 @@ def build_simplex_figure(
             x=float(px), y=float(py), xref="x", yref="y",
             text=f"{mult * d_star:.2f}", textangle=_tangent_angle(curve, idx),
             showarrow=False, bgcolor=PAPER, borderpad=1,
-            font=dict(size=9, color=_CONTOUR_LABEL_TANGENT if tangent else _CONTOUR_LABEL)))
+            font=dict(size=_CONTOUR_FONT,
+                      color=_CONTOUR_LABEL_TANGENT if tangent else _CONTOUR_LABEL)))
 
-    # (8) Q and M_wstar labels -- inside the triangle, along the line, rotated,
-    # offset perpendicular, in the clearest stretch away from markers.
-    def _line_label(P0, P1, text, avoid):
-        P0, P1 = np.asarray(P0), np.asarray(P1)
-        d = P1 - P0
-        nrm = np.array([-d[1], d[0]])
-        nrm = nrm / (np.hypot(*nrm) + 1e-12)
-        pts = P0 + np.linspace(0.12, 0.88, 40)[:, None] * d
-        base = pts[_furthest_index(pts, avoid)]
-        side = np.sign(np.dot(base - avoid.mean(axis=0), nrm)) or 1.0
-        pos = base + side * 0.035 * nrm
+    # (5) Q and M_wstar labels -- just OUTSIDE the triangle, beside where each
+    # line exits the upper-left edge (delta_1--delta_3): Q at its endpoint B,
+    # M_wstar at m(B, w*). Offset outward along that edge's normal, right-anchored
+    # so the text runs left away from the triangle, horizontal, no arrows.
+    _EDGE_NORMAL = np.array([-np.sqrt(3.0) / 2.0, 0.5])   # outward unit normal
+    def _outside_label(exit_xy, text):
+        pos = np.asarray(exit_xy) + _LINE_LABEL_OFFSET * _EDGE_NORMAL
         return dict(x=float(pos[0]), y=float(pos[1]), xref="x", yref="y", text=text,
-                    textangle=_angle_deg(d[0], d[1]), showarrow=False,
-                    bgcolor=PAPER, borderpad=1, font=dict(size=_LINE_FONT, color=_NEUTRAL))
+                    xanchor="right", yanchor="middle", showarrow=False,
+                    font=dict(size=_LINE_FONT, color=_NEUTRAL))
 
-    annotations.append(_line_label(xy_A, xy_B, "<i>Q</i>",
-                                   np.vstack([markers_xy, m_samples, read_xy])))
-    annotations.append(_line_label(xy_mA, xy_mB, "<i>M</i><sub>w*</sub>",
-                                   np.vstack([markers_xy, q_samples, read_xy])))
+    annotations.append(_outside_label(xy_B, "<i>Q</i>"))
+    annotations.append(_outside_label(xy_mB, "<i>M</i><sub>w*</sub>"))
 
     # ------------------------------------------------------------------ #
     #  Point markers -- all filled circles; colour, not shape, carries meaning.
@@ -574,30 +602,31 @@ def build_simplex_figure(
         return (f"{sym} = (%{{customdata[0]:.3f}}, %{{customdata[1]:.3f}}, "
                 f"%{{customdata[2]:.3f}})<extra></extra>")
 
-    def _add_point(xy, bary, color, size, label, textpos, sym):
+    def _add_point(xy, bary, color, label, textpos, sym):
         fig.add_trace(go.Scatter(
             x=[xy[0]], y=[xy[1]], mode="markers+text",
-            marker=dict(color=color, size=size, symbol="circle",
+            marker=dict(color=color, size=_MARKER_SIZE, symbol="circle",
                         line=dict(color=PAPER, width=MARKER_OUTLINE_PX)),
             text=[label], textposition=textpos, textfont=dict(size=_POINT_FONT, color=INK),
             customdata=[list(map(float, bary))], hovertemplate=_hover(sym),
             showlegend=False))
+        return len(fig.data) - 1
 
     # One label convention: below the marker by default; the two MOVING labels
-    # flip above when they close on a static one (q on q* at the start, or q on
-    # q~ mid-slider), so overlapping labels never stack.
+    # flip above when they close on a static one (q on q~ or q*, m on p or m~),
+    # so overlapping labels never stack.
     def _tp(xy, others, thresh=0.06):
         d = min(float(np.hypot(*(np.asarray(o) - xy))) for o in others)
         return "top center" if d < thresh else "bottom center"
 
-    _add_point(xy_p, p, _P_COLOR, _ANCHOR_SIZE, "<i>p</i>", "bottom center", "p")
-    _add_point(xy_qstar, q_star, _QSTAR_COLOR, _ANCHOR_SIZE, "<i>q*</i>", "bottom center", "q*")
-    _add_point(xy_qtilde, q_tilde, _UNATTAIN, _POINT_SIZE, "<i>q&#771;</i>", "bottom center", "q&#771;")
-    _add_point(xy_mtilde, m_tilde, _UNATTAIN, _POINT_SIZE, "<i>m&#771;</i>", "bottom center", "m&#771;")
+    idx_p = _add_point(xy_p, p, _P_COLOR, "<i>p</i>", "bottom center", "p")
+    idx_qstar = _add_point(xy_qstar, q_star, _QSTAR_COLOR, "<i>q*</i>", "bottom center", "q*")
+    idx_qtilde = _add_point(xy_qtilde, q_tilde, _UNATTAIN, "<i>q&#771;</i>", "bottom center", "q&#771;")
+    idx_mtilde = _add_point(xy_mtilde, m_tilde, _UNATTAIN, "<i>m&#771;</i>", "bottom center", "m&#771;")
 
     fig.add_trace(go.Scatter(
         x=[st0["xq"][0]], y=[st0["xq"][1]], mode="markers+text",
-        marker=dict(color=_NEUTRAL, size=_POINT_SIZE, symbol="circle",
+        marker=dict(color=_NEUTRAL, size=_MARKER_SIZE, symbol="circle",
                     line=dict(color=PAPER, width=MARKER_OUTLINE_PX)),
         text=["<i>q</i>"], textposition=_tp(st0["xq"], [xy_qstar, xy_qtilde]),
         textfont=dict(size=_POINT_FONT, color=INK),
@@ -606,7 +635,7 @@ def build_simplex_figure(
     idx_q = len(fig.data) - 1
     fig.add_trace(go.Scatter(
         x=[st0["xm"][0]], y=[st0["xm"][1]], mode="markers+text",
-        marker=dict(color=_NEUTRAL, size=_POINT_SIZE, symbol="circle",
+        marker=dict(color=_NEUTRAL, size=_MARKER_SIZE, symbol="circle",
                     line=dict(color=PAPER, width=MARKER_OUTLINE_PX)),
         text=["<i>m</i>"], textposition=_tp(st0["xm"], [xy_p, xy_mtilde]),
         textfont=dict(size=_POINT_FONT, color=INK),
@@ -626,7 +655,7 @@ def build_simplex_figure(
             f"&#948;<sub>3</sub> (&#947; = {_fmt_gamma(gamma[2])})",
         ],
         textposition=["bottom left", "bottom right", "top center"],
-        textfont=dict(size=12, color=LABEL),
+        textfont=dict(size=_VERTEX_FONT, color=LABEL),
         cliponaxis=False, hoverinfo="skip", showlegend=False))
 
     # ------------------------------------------------------------------ #
@@ -638,13 +667,17 @@ def build_simplex_figure(
 
     fig.add_trace(go.Scatter(
         x=[read_x], y=[read_y], mode="text", text=[_readout_text(st0)],
-        textposition="middle right", textfont=dict(size=12, color=INK),
+        textposition="middle right", textfont=dict(size=_READOUT_FONT, color=INK),
         cliponaxis=False, hoverinfo="skip", showlegend=False))
     idx_readout = len(fig.data) - 1
 
     # ------------------------------------------------------------------ #
-    #  Frames -- one per s, named "s000".. Each declares the exact traces it
-    #  touches: the two M_wstar pieces, the two legs, q, m and the readout.
+    #  Frames -- one per s, named "s000".. Plotly.animate re-appends the SVG
+    #  group of every trace a frame lists, pushing it to the top of the stack, so
+    #  the FOUR STATIC markers are included too (with unchanged coordinates) and
+    #  the list is ordered so re-append leaves lines under markers, and the
+    #  moving pair q, m on top of everything. frame.data[i] applies to
+    #  frame.traces[i], so the two lists are built in the same order.
     # ------------------------------------------------------------------ #
     frame_names = [f"s{i:03d}" for i in range(n_frames)]
     frames = []
@@ -654,19 +687,24 @@ def build_simplex_figure(
         frames.append(go.Frame(
             name=name,
             data=[
-                go.Scatter(x=[s1[0][0], s1[1][0]], y=[s1[0][1], s1[1][1]]),
-                go.Scatter(x=[s2[0][0], s2[1][0]], y=[s2[0][1], s2[1][1]]),
-                go.Scatter(x=[lpm[0][0], lpm[1][0]], y=[lpm[0][1], lpm[1][1]]),
-                go.Scatter(x=[xy_p[0], state["xq"][0]], y=[xy_p[1], state["xq"][1]]),
-                go.Scatter(x=[state["xq"][0]], y=[state["xq"][1]],
+                go.Scatter(x=[s1[0][0], s1[1][0]], y=[s1[0][1], s1[1][1]]),          # seg1
+                go.Scatter(x=[s2[0][0], s2[1][0]], y=[s2[0][1], s2[1][1]]),          # seg2
+                go.Scatter(x=[lpm[0][0], lpm[1][0]], y=[lpm[0][1], lpm[1][1]]),      # p->m
+                go.Scatter(x=[xy_p[0], state["xq"][0]], y=[xy_p[1], state["xq"][1]]),  # p->q
+                go.Scatter(x=[read_x], y=[read_y], text=[_readout_text(state)]),     # readout
+                go.Scatter(x=[xy_qtilde[0]], y=[xy_qtilde[1]]),                      # q~ static
+                go.Scatter(x=[xy_mtilde[0]], y=[xy_mtilde[1]]),                      # m~ static
+                go.Scatter(x=[xy_p[0]], y=[xy_p[1]]),                                # p static
+                go.Scatter(x=[xy_qstar[0]], y=[xy_qstar[1]]),                        # q* static
+                go.Scatter(x=[state["xq"][0]], y=[state["xq"][1]],                   # q moving
                            textposition=_tp(state["xq"], [xy_qstar, xy_qtilde]),
                            customdata=[list(map(float, state["q"]))]),
-                go.Scatter(x=[state["xm"][0]], y=[state["xm"][1]],
+                go.Scatter(x=[state["xm"][0]], y=[state["xm"][1]],                   # m moving
                            textposition=_tp(state["xm"], [xy_p, xy_mtilde]),
                            customdata=[list(map(float, state["m"]))]),
-                go.Scatter(x=[read_x], y=[read_y], text=[_readout_text(state)]),
             ],
-            traces=[idx_seg1, idx_seg2, idx_leg_pm, idx_leg_pq, idx_q, idx_m, idx_readout]))
+            traces=[idx_seg1, idx_seg2, idx_leg_pm, idx_leg_pq, idx_readout,
+                    idx_qtilde, idx_mtilde, idx_p, idx_qstar, idx_q, idx_m]))
     fig.frames = frames
 
     # ------------------------------------------------------------------ #
@@ -687,9 +725,12 @@ def build_simplex_figure(
         hoverlabel=dict(bgcolor=PAPER, bordercolor=with_alpha(INK, 0.35),
                         font=dict(size=11, color=INK)),
         dragmode=False, showlegend=False, annotations=annotations,
+        # Landmark track positions are INDEX fractions (the slider's positions),
+        # not s fractions; carry the indices too for the snap-on-release script.
         meta=dict(n_frames=n_frames, start_index=start_index,
-                  landmark_qtilde=100.0 * (s_tilde - 0.02) / 0.96,
-                  landmark_qstar=100.0 * (s_star - 0.02) / 0.96),
+                  idx_qtilde=idx_tilde, idx_qstar=idx_star,
+                  landmark_qtilde=100.0 * idx_tilde / (n_frames - 1),
+                  landmark_qstar=100.0 * idx_star / (n_frames - 1)),
     )
     return fig
 
@@ -711,31 +752,40 @@ def simplex_figure_html(fig: go.Figure) -> str:
     start = int(meta.get("start_index", 0))
     lm_qt = float(meta.get("landmark_qtilde", 42.0))
     lm_qs = float(meta.get("landmark_qstar", 79.0))
+    idx_qt = int(meta.get("idx_qtilde", 0))
+    idx_qs = int(meta.get("idx_qstar", 0))
     div_id = "simplex-figure"
     fig_html = pio.to_html(
         fig, include_plotlyjs="cdn", full_html=False, div_id=div_id,
-        auto_play=False,   # otherwise the frames run once on load, off q*
+        auto_play=False,   # otherwise the frames run once on load, off the open frame
         config={"displayModeBar": False, "scrollZoom": False})
 
-    # Two faint landmark ticks on the track (lime = q~, periwinkle = q*), thin
-    # enough to stay unobtrusive. Widths are the triangle's drawn width, centred.
+    # Two landmark ticks on the track (lime = q~, periwinkle = q*), each with a
+    # small matching label beneath, positioned at the snapped INDEX fractions.
     return f"""{fig_html}
-<div class="simplex-slider-wrap"><input type="range" class="simplex-slider"
-  min="0" max="{n - 1}" value="{start}" step="1"
-  aria-label="Move q along the segment Q"></div>
+<div class="simplex-slider-wrap">
+  <input type="range" class="simplex-slider"
+    min="0" max="{n - 1}" value="{start}" step="1" aria-label="Move q along the segment Q">
+  <span class="simplex-landmark simplex-landmark-qt" style="left: {lm_qt:.2f}%;">q&#771;</span>
+  <span class="simplex-landmark simplex-landmark-qs" style="left: {lm_qs:.2f}%;">q*</span>
+</div>
 <style>
-.simplex-slider-wrap {{ margin: .3rem auto .6rem; width: 83%; }}
+.simplex-slider-wrap {{ position: relative; margin: .3rem auto 1.5rem; width: 83%; }}
 .simplex-slider {{ -webkit-appearance: none; appearance: none; width: 100%;
   height: 3px; border-radius: 2px; outline: none; cursor: pointer;
   background:
-    linear-gradient(#84cc16, #84cc16) {lm_qt:.2f}% 50% / 2px 9px no-repeat,
-    linear-gradient(#7575f7, #7575f7) {lm_qs:.2f}% 50% / 2px 9px no-repeat,
+    linear-gradient(#84cc16, #84cc16) {lm_qt:.2f}% 50% / 3px 16px no-repeat,
+    linear-gradient(#7575f7, #7575f7) {lm_qs:.2f}% 50% / 3px 16px no-repeat,
     var(--bs-border-color, #cfd3d8); }}
 .simplex-slider::-webkit-slider-thumb {{ -webkit-appearance: none; appearance: none;
   width: 15px; height: 15px; border-radius: 50%;
   background: var(--bs-body-color, #1f2328); border: 2px solid var(--bs-body-bg, #fff); }}
 .simplex-slider::-moz-range-thumb {{ width: 15px; height: 15px; border: 2px solid var(--bs-body-bg, #fff);
   border-radius: 50%; background: var(--bs-body-color, #1f2328); }}
+.simplex-landmark {{ position: absolute; top: 18px; transform: translateX(-50%);
+  font-size: 12px; font-style: italic; pointer-events: none; white-space: nowrap; }}
+.simplex-landmark-qt {{ color: #84cc16; }}
+.simplex-landmark-qs {{ color: #7575f7; }}
 </style>
 <script>
 (function () {{
@@ -744,11 +794,21 @@ def simplex_figure_html(fig: go.Figure) -> str:
           || document.querySelector(".simplex-slider-wrap");
   var input = wrap.querySelector(".simplex-slider");
   var frame = function (i) {{ return "s" + String(i).padStart(3, "0"); }};
-  // Drive the named frame on each input event. redraw:false is fine here --
-  // only scatter positions/text change, and there is nothing to restack.
-  input.addEventListener("input", function () {{
-    if (window.Plotly) Plotly.animate(gd, [frame(input.value)],
+  function animate(i) {{
+    if (window.Plotly) Plotly.animate(gd, [frame(i)],
       {{mode: "immediate", frame: {{duration: 0, redraw: false}}, transition: {{duration: 0}}}});
+  }}
+  // Continuous drag.
+  input.addEventListener("input", function () {{ animate(input.value); }});
+  // Snap onto a landmark on release ("change" fires then, not during the drag).
+  var LANDMARKS = [{idx_qt}, {idx_qs}], SNAP_TOL = 3;
+  input.addEventListener("change", function () {{
+    var v = parseInt(input.value, 10);
+    for (var i = 0; i < LANDMARKS.length; i++) {{
+      if (Math.abs(v - LANDMARKS[i]) <= SNAP_TOL) {{
+        input.value = LANDMARKS[i]; animate(LANDMARKS[i]); break;
+      }}
+    }}
   }});
   // Fill the column. Plotly's autosize is starved to its 700px default by the
   // min-content figure grid, so measure the block column (.cell-output-display)
@@ -914,6 +974,49 @@ def _check_layout_aspect() -> None:
     d_ends = [kl_divergence(p, A + s * (B - A)) for s in (0.02, 0.98)]
     print(f"  largest reachable D(p||q) = {max(d_ends):.4f} nats "
           f"(at the slider extremes s = 0.02, 0.98).")
+
+    f_star = optimal_fraction(r, gamma, p)
+    q_star = manufactured_measure(f_star, r, gamma, p)
+    d_star = kl_divergence(p, q_star)
+    xy_p = barycentric_to_cartesian(p)
+    xy_qstar = barycentric_to_cartesian(q_star)
+
+    # (5) Outside line labels: assert each anchor, minus an estimate of its
+    # rendered text width, stays inside _X_RANGE (they are right-anchored, so the
+    # text runs left). If M_wstar overflows, reduce _LINE_LABEL_OFFSET.
+    edge_n = np.array([-np.sqrt(3.0) / 2.0, 0.5])
+    px_per_x = plot_w / _X_SPAN
+    for exit_bary, nchars, name in ((B, 1, "Q"),
+                                    (tilted_measure(B, f_star, r, gamma), 4, "M_wstar")):
+        anchor_x = (barycentric_to_cartesian(exit_bary) + _LINE_LABEL_OFFSET * edge_n)[0]
+        left_x = anchor_x - nchars * 0.60 * _LINE_FONT / px_per_x   # ~0.6 em/glyph
+        assert left_x >= _X_RANGE[0], (
+            f"'{name}' label overflows x-range: left edge {left_x:.3f} < {_X_RANGE[0]}"
+        )
+        print(f"  line label '{name}': anchor x = {anchor_x:.3f}, est. left edge "
+              f"{left_x:.3f} (inside [{_X_RANGE[0]}, {_X_RANGE[1]}]).")
+
+    # (7) delta_1 / delta_2 labels anchor at y = -0.02 with text below; check the
+    # text clears the new y-range bottom.
+    text_h_data = _VERTEX_FONT / (plot_h / _Y_SPAN)
+    vlabel_bottom = -0.02 - text_h_data
+    assert vlabel_bottom > _Y_RANGE[0], "vertex labels overflow the y-range bottom"
+    print(f"  vertex labels: anchor y = -0.020, text bottom ~ {vlabel_bottom:.3f}, "
+          f"y-range bottom {_Y_RANGE[0]} (clearance {vlabel_bottom - _Y_RANGE[0]:.3f}).")
+
+    # (9) Landmark snapping: three distinct grid indices; (10) tangent label.
+    fig = build_simplex_figure(r, gamma, p)
+    mt = dict(fig.layout.meta)
+    idxs = (int(mt["idx_qtilde"]), int(mt["idx_qstar"]), int(mt["start_index"]))
+    assert len(set(idxs)) == 3, f"landmark indices collide: {idxs}"
+    print(f"  landmark indices: q~ = {idxs[0]}, q* = {idxs[1]}, open = {idxs[2]} "
+          f"(of {mt['n_frames']}); track %% q~ = {float(mt['landmark_qtilde']):.2f}, "
+          f"q* = {float(mt['landmark_qstar']):.2f}.")
+    tang = [a for a in fig.layout.annotations if a.text == f"{d_star:.2f}"]
+    tx, ty = float(tang[0].x), float(tang[0].y)
+    print(f"  tangent label '{d_star:.2f}' at ({tx:.3f}, {ty:.3f}), "
+          f"{np.hypot(tx - xy_qstar[0], ty - xy_qstar[1]):.3f} data units from q*; "
+          f"x >= x_p ({xy_p[0]:.3f}): {tx >= xy_p[0]}.")
 
 
 def _check_qtilde() -> None:
