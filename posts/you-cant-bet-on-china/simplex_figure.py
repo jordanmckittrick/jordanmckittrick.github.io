@@ -332,13 +332,35 @@ _X_SPAN = _X_RANGE[1] - _X_RANGE[0]
 _Y_SPAN = _Y_RANGE[1] - _Y_RANGE[0]
 _ASPECT = _Y_SPAN / _X_SPAN            # plot height / width = 0.8833...
 _MARGIN_PX = 8
-_REF_WIDTH = 920                       # Quarto grid body-width; the figure fills it
+_REF_WIDTH = 920                       # Quarto grid body-width; the assertion harness's
+                                       # reference column (the JS fit() measures the real one)
+_WIDTH_FRACTION = 0.90                 # render at 90% of the measured column, centred, so the
+                                       # figure clears a laptop viewport and keeps the caption on
+_COLUMN_PX = 613                       # measured Quarto body column; used only to size the
+                                       # text-fit checks to the narrowest common render
 
 
 def _figure_height() -> int:
     """Fixed height (px) that makes the plot-area aspect match the range aspect."""
     plot_w = _REF_WIDTH - 2 * _MARGIN_PX
     return round(plot_w * _ASPECT + 2 * _MARGIN_PX)
+
+
+_READOUT_CHARS = 25    # glyphs in the wider (symbol) line of the two-line readout
+
+
+def _readout_extent() -> tuple[float, float, float]:
+    """(width, line-height, px/unit) of the two-line readout, in data units.
+
+    Sized at the real column (``_WIDTH_FRACTION * _COLUMN_PX``) -- the narrowest
+    common render, where fixed-px text is widest in data units -- so the upper-left
+    fit is checked conservatively. The block is left-anchored, so ``width`` is its
+    full extent to the right of ``read_x``; ``line_h`` is one line (half the block).
+    """
+    ppu = (_WIDTH_FRACTION * _COLUMN_PX - 2 * _MARGIN_PX) / _X_SPAN
+    width = _READOUT_CHARS * 0.55 * _READOUT_FONT / ppu
+    line_h = 1.3 * _READOUT_FONT / ppu
+    return width, line_h, ppu
 
 
 def _fmt_gamma(x: float) -> str:
@@ -357,14 +379,25 @@ def _furthest_index(cand_xy: np.ndarray, avoid_xy: np.ndarray) -> int:
 # A tiny greedy placer picks one of four sides for each moving label, scoring by
 # clearance from everything nearby, biased toward "bottom center", with
 # hysteresis so the choice does not flicker while dragging.
-_TEXTPOS_CANDIDATES = ("bottom center", "top center", "middle left", "middle right")
+# Eight of Plotly's nine textpositions (all but "middle center", which buries the
+# marker). Both Q and M_wstar run diagonally, so the four diagonal positions are
+# the ones most able to clear a line passing through the label's own anchor.
+_TEXTPOS_CANDIDATES = ("bottom center", "top center", "middle left", "middle right",
+                       "top left", "top right", "bottom left", "bottom right")
 _LABEL_BOTTOM_BONUS = 0.02   # clearance "credit" so a label only leaves the bottom when it must
 _LABEL_HYSTERESIS = 0.015    # a new side must beat the incumbent by this to switch (anti-flicker)
+_LABEL_GAP_PX = 4.0          # anchor->box gap (px): wide enough that a diagonal box has real
+                             # clearance from a line through the anchor, so it can win the score
 # Box geometry uses a NARROWER reference than the figure's, so text (a fixed
 # pixel size) is treated as relatively larger in data units -- conservative,
 # because at narrower render widths the labels really are relatively larger.
 _LABEL_BOX_SCALE = 0.8
 _BOX_PX_PER_UNIT = (_LABEL_BOX_SCALE * _REF_WIDTH - 2 * _MARGIN_PX) / _X_SPAN
+# q lies ON Q and m lies ON M_wstar, so each line passes through its label's
+# anchor. A candidate whose box comes within this of either line is disqualified
+# (a hard constraint, like the marker disks) -- the only reliable cure for the
+# label clipping the line it sits on.
+_LINE_CLEARANCE = 2.5 / _BOX_PX_PER_UNIT
 
 
 def _label_box(anchor_xy: np.ndarray, textpos: str, n_chars: float,
@@ -375,12 +408,13 @@ def _label_box(anchor_xy: np.ndarray, textpos: str, n_chars: float,
     sits one marker-radius plus a small gap off the anchor, on the named side, and
     is sized at ``_LABEL_BOX_SCALE`` of the reference width to stay conservative.
     """
-    mr, gap = _MARKER_SIZE / 2.0, 2.0
+    mr, gap = _MARKER_SIZE / 2.0, _LABEL_GAP_PX
     tw, th = n_chars * 0.55 * font_px, float(font_px)
-    off = {"bottom center": (0.0, -(mr + gap + th / 2.0)),
-           "top center": (0.0, mr + gap + th / 2.0),
-           "middle left": (-(mr + gap + tw / 2.0), 0.0),
-           "middle right": (mr + gap + tw / 2.0, 0.0)}[textpos]
+    dx, dy = mr + gap + tw / 2.0, mr + gap + th / 2.0
+    off = {"bottom center": (0.0, -dy), "top center": (0.0, dy),
+           "middle left": (-dx, 0.0), "middle right": (dx, 0.0),
+           "top left": (-dx, dy), "top right": (dx, dy),
+           "bottom left": (-dx, -dy), "bottom right": (dx, -dy)}[textpos]
     center = np.asarray(anchor_xy, float) + np.array(off) / _BOX_PX_PER_UNIT
     half = np.array([tw / 2.0, th / 2.0]) / _BOX_PX_PER_UNIT
     return center, half
@@ -400,10 +434,30 @@ def _seg_pt_dist(a: np.ndarray, b: np.ndarray, pt: np.ndarray) -> float:
     return float(np.hypot(*(a + t * ab - pt)))
 
 
+def _seg_box_dist(a: np.ndarray, b: np.ndarray, center: np.ndarray,
+                  half: np.ndarray, n: int = 40) -> float:
+    """Minimum distance from segment a--b to an axis-aligned box (0 if it crosses).
+
+    Sampling ~40 points along the segment and taking the least point-to-box
+    distance is accurate enough here and simpler than the analytic form. A box
+    can clip a line while its CENTRE scores as clear, so the scorer uses this,
+    not ``_seg_pt_dist``, for the lines and edges a label must avoid.
+    """
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    ts = np.linspace(0.0, 1.0, n)[:, None]
+    pts = a[None, :] + ts * (b - a)[None, :]                 # (n, 2)
+    d = np.maximum(np.abs(pts - center) - half, 0.0)         # per-point box gap
+    return float(np.min(np.hypot(d[:, 0], d[:, 1])))
+
+
 # How far (in barycentric units) a conservative label box may poke past an edge
 # and still count as "inside". Near the delta_2 corner q and m are so cramped
 # that a moving label's box grazes an edge by a few pixels into the white margin;
 # the box is an over-estimate, so the rendered glyph stays essentially inside.
+# Tightening toward 0.015 was tried (rev 7): even with eight candidates, near the
+# delta_2 corner every position pokes past a 0.015 margin, so the placer's inside
+# fallback lands outside and _check_labels fails at frame 517. Left at 0.035, the
+# smallest value at which all frames keep the box inside.
 _INSIDE_MARGIN = 0.035
 
 
@@ -413,21 +467,28 @@ def _box_inside_triangle(center: np.ndarray, half: np.ndarray) -> bool:
     return bool(np.all(_cartesian_to_barycentric(corners) >= -_INSIDE_MARGIN))
 
 
-def _choose_label(anchor_xy, n_chars, avoid_markers, avoid_points, avoid_boxes, edges, prev):
+def _choose_label(anchor_xy, n_chars, avoid_markers, avoid_points, avoid_boxes,
+                  edges, lines, prev):
     """Greedily pick a textposition maximising clearance, biased to the bottom.
 
     A candidate is DISQUALIFIED if its box would overlap a marker DISK (radius
-    ``_MARKER_SIZE/2``) or leave the triangle -- so the bottom bias can never win
-    a spot that buries a marker. Otherwise the score is the least clearance to
-    the marker disks, the soft anchor points, the other label's box, and the
-    triangle edges, plus a bottom bonus. Hysteresis keeps the incumbent ``prev``
-    unless another side beats it by ``_LABEL_HYSTERESIS``. Returns ``(pos, box)``.
+    ``_MARKER_SIZE/2``), overlap another label's box, leave the triangle, or come
+    within ``_LINE_CLEARANCE`` of either line in ``lines`` (Q and M_wstar, which
+    pass through the anchor) -- so the bottom bias can never win a spot that
+    buries a marker or clips a line. Otherwise the score is the least clearance to
+    the marker disks, the soft anchor points, the other label's box, the triangle
+    edges, and the lines, plus a bottom bonus. Hysteresis keeps the incumbent
+    ``prev`` unless another side beats it by ``_LABEL_HYSTERESIS``. If EVERY
+    candidate is disqualified, fall back to the one with the largest line
+    clearance rather than erroring. Returns ``(pos, box)``.
     """
     mr = (_MARKER_SIZE / 2.0) / _BOX_PX_PER_UNIT
-    scores, boxes = {}, {}
+    scores, boxes, line_clear = {}, {}, {}
     for tp in _TEXTPOS_CANDIDATES:
         c, h = _label_box(anchor_xy, tp, n_chars, _POINT_FONT)
         boxes[tp] = (c, h)
+        lc = min((_seg_box_dist(a, b, c, h) for a, b in lines), default=1e9)
+        line_clear[tp] = lc
         if not _box_inside_triangle(c, h):
             scores[tp] = -1e9
             continue
@@ -445,16 +506,21 @@ def _choose_label(anchor_xy, n_chars, avoid_markers, avoid_points, avoid_boxes, 
                     bad = True
                     break
                 d = min(d, float(np.hypot(*np.maximum(gv, 0.0))))
+        if not bad and lc < _LINE_CLEARANCE:        # clipping either line disqualifies
+            bad = True
         if bad:
             scores[tp] = -1e9
             continue
         for pt in avoid_points:
             d = min(d, _pt_box_dist(pt, c, h))
         for a, b in edges:
-            d = min(d, _seg_pt_dist(a, b, c))
+            d = min(d, _seg_box_dist(a, b, c, h))
+        d = min(d, lc)                              # the lines count toward clearance too
         scores[tp] = d + (_LABEL_BOTTOM_BONUS if tp == "bottom center" else 0.0)
     best = max(_TEXTPOS_CANDIDATES, key=lambda t: scores[t])
-    if prev is not None and prev != best and scores[prev] > -1e8:
+    if scores[best] <= -1e8:                        # all disqualified: least-bad by line clearance
+        best = max(_TEXTPOS_CANDIDATES, key=lambda t: line_clear[t])
+    elif prev is not None and prev != best and scores[prev] > -1e8:
         if scores[best] - scores[prev] <= _LABEL_HYSTERESIS:
             best = prev
     return best, boxes[best]
@@ -468,7 +534,7 @@ def build_simplex_figure(
     gamma: np.ndarray,
     p: np.ndarray,
     gamma2: np.ndarray = (0.5, 0.7, 1.7),
-    n_frames: int = 180,
+    n_frames: int = 540,
 ) -> go.Figure:
     """Assemble the single-panel simplex figure for the belief ``p``.
 
@@ -566,11 +632,6 @@ def build_simplex_figure(
     xy_mA = barycentric_to_cartesian(tilted_measure(A, f_star, r, gamma))
     xy_mB = barycentric_to_cartesian(tilted_measure(B, f_star, r, gamma))
 
-    # Two-line readout, top-left. Anchored near the triangle's upper-left edge
-    # (not far out at the plot's left margin) and low enough that the block does
-    # not overflow the top of _Y_RANGE.
-    read_x, read_y = -0.02, 0.895
-
     def _frame_state(s: float) -> dict:
         q = q_of_s(s)
         m = tilted_measure(q, f_star, r, gamma)
@@ -596,6 +657,20 @@ def build_simplex_figure(
             line=dict(color=_CONTOUR_TANGENT if tangent else _CONTOUR_FAINT,
                       width=1.4 if tangent else 1.0),
             hoverinfo="skip", showlegend=False, name=""))
+
+    # Two-line readout, dropped into the empty upper-left wedge. Target height is
+    # the midpoint of the 4x and 8x contour tops. Left-anchored at the x-range's
+    # left edge, it is ~25 glyphs wide and so reaches rightward INTO the triangle
+    # as it descends -- the left edge x = y / sqrt(3) moves right with height -- so
+    # walk read_y UP until the block's lower-right corner clears that edge.
+    read_x = _X_RANGE[0] + 0.01
+    _read_w, _read_lh, _ = _readout_extent()
+    read_y_target = 0.5 * (contour_curves[4.0][:, 1].max()
+                           + contour_curves[8.0][:, 1].max())
+    read_y = read_y_target
+    while (read_x + _read_w > (read_y - _read_lh) / np.sqrt(3.0)
+           and read_y + _read_lh < _Y_RANGE[1]):
+        read_y += 0.005
 
     # Triangle outline -- ink at 35% (scaffolding).
     tri = barycentric_to_cartesian(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]]))
@@ -735,15 +810,17 @@ def build_simplex_figure(
         _label_box(xy_qtilde, "bottom center", 1.3, _POINT_FONT),
         _label_box(xy_mtilde, "bottom center", 1.3, _POINT_FONT),
     ]
+    # q lies on Q and m lies on M_wstar; each label must clear BOTH lines.
+    _lines = [(xy_A, xy_B), (xy_mA, xy_mB)]
     tp_q_list, tp_m_list = [], []
     _prev_q = _prev_m = None
     for _s in s_grid:
         _st = _frame_state(_s)
         _xq, _xm = _st["xq"], _st["xm"]
         _tpq, _boxq = _choose_label(_xq, 1, _statics + [_xm], _vlab + [_read_anchor],
-                                    _static_boxes, _edges, _prev_q)
+                                    _static_boxes, _edges, _lines, _prev_q)
         _tpm, _boxm = _choose_label(_xm, 1, _statics + [_xq], _vlab + [_read_anchor],
-                                    _static_boxes + [_boxq], _edges, _prev_m)
+                                    _static_boxes + [_boxq], _edges, _lines, _prev_m)
         tp_q_list.append(_tpq)
         tp_m_list.append(_tpm)
         _prev_q, _prev_m = _tpq, _tpm
@@ -815,8 +892,8 @@ def build_simplex_figure(
     # ------------------------------------------------------------------ #
     def _readout_text(state: dict) -> str:
         d_pm = max(state["d_pm"], 0.0)     # at q* it is 0 up to rounding
-        return (f"D(p&#8741;q)  =  D(p&#8741;q*)  +  D(p&#8741;m)<br>"
-                f"{state['d_pq']:.4f}  =  {d_star:.4f}  +  {d_pm:.4f}")
+        return (f"D(p&#8741;q) = D(p&#8741;q*) + D(p&#8741;m)<br>"
+                f"{state['d_pq']:.4f} = {d_star:.4f} + {d_pm:.4f}")
 
     fig.add_trace(go.Scatter(
         x=[read_x], y=[read_y], mode="text", text=[_readout_text(st0)],
@@ -832,7 +909,7 @@ def build_simplex_figure(
     #  moving pair q, m on top of everything. frame.data[i] applies to
     #  frame.traces[i], so the two lists are built in the same order.
     # ------------------------------------------------------------------ #
-    frame_names = [f"s{i:03d}" for i in range(n_frames)]
+    frame_names = [f"s{i:04d}" for i in range(n_frames)]
     frames = []
     for i, (name, s) in enumerate(zip(frame_names, s_grid)):
         state = _frame_state(s)
@@ -882,6 +959,7 @@ def build_simplex_figure(
         # not s fractions; carry the indices too for the snap-on-release script.
         meta=dict(n_frames=n_frames, start_index=start_index,
                   idx_qtilde=idx_tilde, idx_qstar=idx_star,
+                  read_x=float(read_x), read_y=float(read_y),
                   landmark_qtilde=100.0 * idx_tilde / (n_frames - 1),
                   landmark_qstar=100.0 * idx_star / (n_frames - 1)),
     )
@@ -932,12 +1010,17 @@ def simplex_figure_html(fig: go.Figure) -> str:
   <span class="simplex-landmark simplex-landmark-qs" style="left: {lm_qs:.2f}%;">q*</span>
 </div>
 <style>
+/* The delta_1 / delta_2 corner labels are drawn with cliponaxis=False and, being
+   fixed-pixel text, reach a little past the plot's SVG box -- more so now the
+   figure renders at {_WIDTH_FRACTION:.0%} width. Let them show in the centring
+   margin instead of being clipped by Plotly's main-svg overflow:hidden. */
+#{div_id} .main-svg {{ overflow: visible; }}
 /* Geometry is explicit (not baseline-dependent): the wrapper has a fixed height,
    the grey track is a ::before, the input is absolutely centred on it, and paint
    order is track (z0) -> coloured ticks (z1) -> ink thumb (z2), so the moving
    ink dot sits on top, exactly as in the simplex. */
 .simplex-slider-wrap {{ position: relative; height: 22px; line-height: 0;
-  margin: .3rem auto 1.8rem; width: 83%; }}
+  margin: .3rem auto 2.2rem; width: 83%; }}
 .simplex-slider-wrap::before {{ content: ""; position: absolute; left: 0; top: 50%;
   width: 100%; height: 3px; border-radius: 2px; transform: translateY(-50%);
   background: var(--bs-border-color, #cfd3d8); z-index: 0; }}
@@ -954,7 +1037,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
   z-index: 1; pointer-events: none; }}
 .simplex-tick-qt {{ background: #84cc16; }}
 .simplex-tick-qs {{ background: #7575f7; }}
-.simplex-landmark {{ position: absolute; top: 22px; transform: translateX(-50%);
+.simplex-landmark {{ position: absolute; top: 26px; transform: translateX(-50%);
   font-size: 15px; font-style: italic; color: var(--bs-body-color, #1f2328);
   pointer-events: none; white-space: nowrap; }}
 .simplex-q-label {{ position: absolute; right: 100%; top: 50%; transform: translateY(-50%);
@@ -967,7 +1050,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
   var wrap = gd.parentNode.querySelector(".simplex-slider-wrap")
           || document.querySelector(".simplex-slider-wrap");
   var input = wrap.querySelector(".simplex-slider");
-  var frame = function (i) {{ return "s" + String(i).padStart(3, "0"); }};
+  var frame = function (i) {{ return "s" + String(i).padStart(4, "0"); }};
   function animate(i) {{
     if (window.Plotly) Plotly.animate(gd, [frame(i)],
       {{mode: "immediate", frame: {{duration: 0, redraw: false}}, transition: {{duration: 0}}}});
@@ -975,7 +1058,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
   // Continuous drag.
   input.addEventListener("input", function () {{ animate(input.value); }});
   // Snap onto a landmark on release ("change" fires then, not during the drag).
-  var LANDMARKS = [{idx_qt}, {idx_qs}], SNAP_TOL = 3;
+  var LANDMARKS = [{idx_qt}, {idx_qs}], SNAP_TOL = 9;
   input.addEventListener("change", function () {{
     var v = parseInt(input.value, 10);
     for (var i = 0; i < LANDMARKS.length; i++) {{
@@ -989,13 +1072,18 @@ def simplex_figure_html(fig: go.Figure) -> str:
   // and set width + height explicitly, keeping plot-area aspect = range aspect
   // so the (scaleanchor) triangle fills the width without letterboxing. Reset
   // the ranges each time or scaleanchor keeps (and compounds) expanded ones.
-  var MARG = 8;
+  var MARG = 8, WFRAC = {_WIDTH_FRACTION};
   function host() {{ return gd.closest(".cell-output-display") || gd.parentElement; }}
   function fit() {{
     if (!window.Plotly) {{ return setTimeout(fit, 30); }}
-    var w = (host() && host().clientWidth) || gd.offsetWidth;
-    if (!w) {{ return setTimeout(fit, 30); }}
+    var measured = (host() && host().clientWidth) || gd.offsetWidth;
+    if (!measured) {{ return setTimeout(fit, 30); }}
+    // Render at a fraction of the column and centre it, so the figure clears a
+    // laptop viewport. host() is the full column, so shrinking gd does not change
+    // what we measure -- no resize feedback loop.
+    var w = Math.round(measured * WFRAC);
     var h = Math.round((w - 2 * MARG) * {_ASPECT:.6f} + 2 * MARG);
+    gd.style.margin = "0 auto";
     Plotly.relayout(gd, {{
       width: w, height: h, autosize: false,
       "xaxis.range": [{_X_RANGE[0]}, {_X_RANGE[1]}],
@@ -1142,11 +1230,16 @@ def _check_layout_aspect() -> None:
         f"plot-area aspect {ratio_plot:.4f} != range aspect {ratio_range:.4f} "
         f"(rel {rel:.2%})"
     )
-    triangle_px = plot_w / _X_SPAN     # data x-span 1.0, drawn at plot_w / _X_SPAN
-    print(f"  layout: height = {height} px, plot area {plot_w}x{plot_h} px, "
-          f"aspect {ratio_plot:.4f} vs range {ratio_range:.4f} (rel {rel:.3%}).")
-    print(f"  drawn triangle width = {triangle_px:.0f} px "
-          f"(at the {_REF_WIDTH} px reference column).")
+    print(f"  layout: plot-area aspect {ratio_plot:.4f} vs range {ratio_range:.4f} "
+          f"(rel {rel:.3%}); build-time div height {height} px.")
+    # What the reader actually sees: the figure renders at _WIDTH_FRACTION of the
+    # column, so scale the reference and the real column by it before reporting.
+    for col in (_REF_WIDTH, _COLUMN_PX):
+        eff_w = _WIDTH_FRACTION * col
+        eff_h = (eff_w - 2 * _MARGIN_PX) * _ASPECT + 2 * _MARGIN_PX
+        tri_w = (eff_w - 2 * _MARGIN_PX) / _X_SPAN     # data x-span is 1.0
+        print(f"  @ {col} px column: figure {eff_w:.0f} x {eff_h:.0f} px "
+              f"(x{_WIDTH_FRACTION:.2f}), drawn triangle width {tri_w:.0f} px.")
 
     # Largest divergence the slider can reach, at s in {0.01, 0.99}.
     r, gamma, p = 0.97, np.array([2.0, 1.0, 0.4]), np.array([0.5, 0.2, 0.3])
@@ -1191,17 +1284,29 @@ def _check_layout_aspect() -> None:
     print(f"  apex label: anchor y = {apex_anchor_y:.3f}, top edge ~ {apex_top:.3f}, "
           f"y-range top {_Y_RANGE[1]} (clearance {_Y_RANGE[1] - apex_top:.3f}).")
 
-    # (4) two-line readout at (read_x, read_y), textposition middle-right: the
-    # block is centred on read_y, so its top edge is read_y + one line height.
-    read_x, read_y = -0.02, 0.895
-    read_top = read_y + 1.3 * _READOUT_FONT / (plot_h / _Y_SPAN)
-    assert read_top < _Y_RANGE[1], "two-line readout overflows the y-range top"
-    print(f"  readout: read_x = {read_x}, read_y = {read_y}, two-line top edge ~ "
-          f"{read_top:.3f}, y-range top {_Y_RANGE[1]} (fits).")
-
-    # (9) Landmark snapping: three distinct grid indices; (10) tangent label.
+    # (4) Two-line readout, left-anchored at read_x, block centred on read_y (both
+    # computed in the build from the contour tops). Two checks: its top edge fits
+    # _Y_RANGE, and its lower-right corner stays left of the triangle's left edge
+    # (x = y / sqrt(3)) at the block's bottom, where that edge sits furthest left.
     fig = build_simplex_figure(r, gamma, p)
     mt = dict(fig.layout.meta)
+    read_x, read_y = float(mt["read_x"]), float(mt["read_y"])
+    read_w, read_lh, _rppu = _readout_extent()
+    read_top = read_y + read_lh
+    assert read_top < _Y_RANGE[1], "two-line readout overflows the y-range top"
+    left_edge_x = (read_y - read_lh) / np.sqrt(3.0)
+    right_edge = read_x + read_w
+    assert right_edge <= left_edge_x + 1e-9, (
+        f"readout crosses triangle left edge: right {right_edge:.3f} > edge {left_edge_x:.3f}")
+    y4 = barycentric_to_cartesian(_kl_level_curve(p, 4.0 * d_star))[:, 1].max()
+    y8 = barycentric_to_cartesian(_kl_level_curve(p, 8.0 * d_star))[:, 1].max()
+    read_y_target = 0.5 * (y4 + y8)
+    print(f"  readout: read_x = {read_x:.3f}, read_y = {read_y:.3f} (contour-mid "
+          f"target {read_y_target:.3f}, backed off {read_y - read_y_target:+.3f}); "
+          f"width {read_w:.3f} du, right edge {right_edge:.3f} <= left edge "
+          f"{left_edge_x:.3f}; top {read_top:.3f} < {_Y_RANGE[1]}.")
+
+    # (9) Landmark snapping: three distinct grid indices; (10) tangent label.
     idxs = (int(mt["idx_qtilde"]), int(mt["idx_qstar"]), int(mt["start_index"]))
     assert len(set(idxs)) == 3, f"landmark indices collide: {idxs}"
     print(f"  landmark indices: q~ = {idxs[0]}, q* = {idxs[1]}, open = {idxs[2]} "
@@ -1283,6 +1388,16 @@ def _check_labels() -> None:
     ]
     mr_data = (_MARKER_SIZE / 2.0) / _BOX_PX_PER_UNIT
 
+    # Q and M_wstar, oriented as the build does, so the line-clearance check uses
+    # the same two segments the placer avoided.
+    A, B = risk_neutral_segment_endpoints(r, gamma)
+    if barycentric_to_cartesian(A)[0] > barycentric_to_cartesian(B)[0]:
+        A, B = B, A
+    xy_A, xy_B = barycentric_to_cartesian(A), barycentric_to_cartesian(B)
+    xy_mA = barycentric_to_cartesian(tilted_measure(A, f_star, r, gamma))
+    xy_mB = barycentric_to_cartesian(tilted_measure(B, f_star, r, gamma))
+    lines = {"Q": (xy_A, xy_B), "M_wstar": (xy_mA, xy_mB)}
+
     def _overlap(b1, b2):
         (c1, h1), (c2, h2) = b1, b2
         return bool(np.all(np.abs(c1 - c2) < (h1 + h2)))
@@ -1293,10 +1408,15 @@ def _check_labels() -> None:
         return float(np.hypot(d[0], d[1]))
 
     moved_q, worst_marker, worst_static = [], 1e9, 1e9
+    worst_line = {"q": (1e9, -1), "m": (1e9, -1)}     # (clearance, frame) per moving label
+    tp_count = {"q": {tp: 0 for tp in _TEXTPOS_CANDIDATES},
+                "m": {tp: 0 for tp in _TEXTPOS_CANDIDATES}}
     for i, fr in enumerate(fig.frames):
         dq, dm = fr.data[9], fr.data[10]            # q, m moving (frame data order)
         bq = _label_box(np.array([dq.x[0], dq.y[0]]), dq.textposition, 1, _POINT_FONT)
         bm = _label_box(np.array([dm.x[0], dm.y[0]]), dm.textposition, 1, _POINT_FONT)
+        tp_count["q"][dq.textposition] += 1
+        tp_count["m"][dm.textposition] += 1
         clear = _pt_box_dist(np.array([dm.x[0], dm.y[0]]), *bq)   # q box vs m marker
         worst_marker = min(worst_marker, clear)
         assert clear >= mr_data - 1e-9, f"frame {i}: q label box overlaps m marker"
@@ -1306,6 +1426,15 @@ def _check_labels() -> None:
             worst_static = min(worst_static, _box_gap(bq, sb), _box_gap(bm, sb))
         assert _box_inside_triangle(*bq), f"frame {i}: q label box leaves triangle"
         assert _box_inside_triangle(*bm), f"frame {i}: m label box leaves triangle"
+        # Each moving label must clear BOTH lines by _LINE_CLEARANCE.
+        for key, box in (("q", bq), ("m", bm)):
+            for name, (a, b) in lines.items():
+                lc = _seg_box_dist(a, b, *box)
+                if lc < worst_line[key][0]:
+                    worst_line[key] = (lc, i)
+                assert lc >= _LINE_CLEARANCE - 1e-9, (
+                    f"frame {i}: {key} label clips {name} (clearance {lc:.4f} "
+                    f"< {_LINE_CLEARANCE:.4f})")
         if dq.textposition != "bottom center":
             moved_q.append(i)
 
@@ -1320,6 +1449,13 @@ def _check_labels() -> None:
     print(f"  min clearance: moving-box / m-marker {worst_marker:.4f} "
           f"(marker r {mr_data:.4f}), moving-box / static-box {worst_static:.4f} data units; "
           f"all boxes stay inside the triangle.")
+    print(f"  min line clearance (>= _LINE_CLEARANCE {_LINE_CLEARANCE:.4f}): "
+          f"q {worst_line['q'][0]:.4f} at frame {worst_line['q'][1]}, "
+          f"m {worst_line['m'][0]:.4f} at frame {worst_line['m'][1]}.")
+    for key in ("q", "m"):
+        dist = ", ".join(f"{tp}={tp_count[key][tp]}"
+                         for tp in _TEXTPOS_CANDIDATES if tp_count[key][tp])
+        print(f"  {key} textposition distribution ({n} frames): {dist}.")
 
 
 if __name__ == "__main__":
