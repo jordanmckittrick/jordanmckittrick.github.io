@@ -309,14 +309,18 @@ _CONTOUR_LABEL = with_alpha(_CONTOUR, 0.60)
 _CONTOUR_LABEL_TANGENT = with_alpha(_CONTOUR, 0.85)
 
 # Font sizes, all named here: the figure renders ~750 px wide, so these are
-# sized for that, not for the ~300 px draft they were first chosen at.
-_READOUT_FONT = 18                     # the two-line decomposition readout
+# sized for that, not for the ~300 px draft they were first chosen at. (The
+# readout is no longer here -- it is an HTML/MathJax overlay sized in the CSS.)
 _LINE_FONT = 17                        # line labels Q, M_wstar
 _VERTEX_FONT = 17                      # vertex labels delta_i
 _POINT_FONT = 17                       # the six point labels
 _CONTOUR_FONT = 13                     # contour value labels
 
 _MARKER_SIZE = 11                      # one size for all six points; colour carries meaning
+# Slider dots match the simplex markers exactly. Plotly centres the white outline
+# on the marker edge, so the drawn diameter is core + one outline width. This is
+# the single source of truth for the slider thumb/tick size, in CSS and JS.
+_DOT_D_PX = _MARKER_SIZE + MARKER_OUTLINE_PX   # 12.5 px drawn diameter
 
 # ---- Figure geometry -------------------------------------------------------
 # Axis ranges leave a little room outside the triangle for the vertex labels.
@@ -346,25 +350,11 @@ def _figure_height() -> int:
     return round(plot_w * _ASPECT + 2 * _MARGIN_PX)
 
 
-# The two-line readout's rendered text extent, MEASURED in the browser with
-# getBBox (Chrome) rather than estimated -- the old 0.55 em/char guess was ~25%
-# too wide for this serif. The fonts are fixed in pixels, so these hold at every
-# render width. The symbol line "D(p||q) = D(p||q*) + D(p||m)" (italic letters) is
-# the wider line and never changes; the number line "x.xxxx = x.xxxx + x.xxxx" is
-# constant while D(p||q) < 10 (asserted in _check_layout_aspect).
-_READOUT_W_PX = 191.0   # widest line's rendered width (italic symbol line); getBBox = 191.2
-_READOUT_H_PX = 47.0    # both lines' rendered height; getBBox = 47.0
-_READOUT_PAD_PX = 10.0  # box padding on all four sides
-
-
-def _readout_ppu(width_px: float) -> float:
-    """Plot-area pixels per data unit at a given figure width."""
-    return (width_px - 2 * _MARGIN_PX) / _X_SPAN
-
-
-def _readout_yP(ppu: float) -> float:
-    """Text/box anchor y so the box's TOP edge lands on the apex (sqrt(3)/2)."""
-    return np.sqrt(3.0) / 2.0 - (_READOUT_H_PX / 2.0 + _READOUT_PAD_PX) / ppu
+# The readout is no longer a Plotly trace: it is an HTML element over the plot,
+# typeset by the page's own MathJax (stage 1 of moving labels out of Plotly). The
+# box is measured live in the browser; only its padding is fixed here (shared by
+# the CSS and the contour-label avoid estimate).
+_READOUT_PAD_PX = 10.0  # box padding on all four sides (CSS ``padding``)
 
 
 def _fmt_gamma(x: float) -> str:
@@ -617,25 +607,14 @@ def build_simplex_figure(
                       width=1.4 if tangent else 1.0),
             hoverinfo="skip", showlegend=False, name=""))
 
-    # Two-line boxed readout (item 5). The text trace and the box shape share ONE
-    # data anchor P = (read_x, read_y); every box offset from P is in PIXELS, so
-    # the fixed-px fonts keep their fit at every render width. read_x puts the
-    # box's LEFT edge just inside _X_RANGE[0] at the narrowest render (axis shapes
-    # are clipped to the plot, so a box past the range would be cut). read_y is
-    # set here for the _REF_WIDTH render so the figure is right before any JS;
-    # fit() recomputes it live so the box's TOP edge stays on the apex sqrt(3)/2.
-    read_x = _X_RANGE[0] + (_READOUT_PAD_PX + 1.0) / _BOX_PX_PER_UNIT
-    read_y = _readout_yP(_readout_ppu(_REF_WIDTH))
-    _read_half_h = _READOUT_H_PX / 2.0 + _READOUT_PAD_PX
-    # The box: a thin _SCAFFOLD rectangle (triangle-outline colour and width) on a
-    # PAPER fill, drawn BELOW the traces (nothing sits behind it at this position,
-    # verified) so the readout text trace paints on top.
-    readout_box = dict(
-        type="rect", xref="x", yref="y", xsizemode="pixel", ysizemode="pixel",
-        xanchor=float(read_x), yanchor=float(read_y),
-        x0=-_READOUT_PAD_PX, x1=_READOUT_W_PX + _READOUT_PAD_PX,
-        y0=-_read_half_h, y1=_read_half_h,
-        line=dict(color=_SCAFFOLD, width=1.2), fillcolor=PAPER, layer="below")
+    # The readout is now an HTML/MathJax overlay (see simplex_figure_html), not a
+    # Plotly trace. Its box sits in the upper-left, top edge on the apex; keep a
+    # conservative data-space footprint so the contour-label placer never lands a
+    # label under it. (No contour actually reaches this region, but the estimate
+    # makes that explicit and survives changes to the contours.)
+    readout_avoid = np.array([[x, y]
+                              for x in np.linspace(_X_RANGE[0], 0.40, 4)
+                              for y in np.linspace(0.71, np.sqrt(3.0) / 2.0, 3)])
 
     # Triangle outline -- ink at 35% (scaffolding).
     tri = barycentric_to_cartesian(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]]))
@@ -701,8 +680,7 @@ def build_simplex_figure(
         np.array([tilted_measure(q_of_s(s), f_star, r, gamma) for s in np.linspace(0, 1, 24)]))
     tri_v = barycentric_to_cartesian(np.eye(3))
     markers_xy = np.vstack([xy_p, xy_qstar, xy_qtilde, xy_mtilde])
-    read_xy = np.array([[read_x, read_y]])
-    base_avoid = np.vstack([markers_xy, q_samples, m_samples, tri_v, read_xy])
+    base_avoid = np.vstack([markers_xy, q_samples, m_samples, tri_v, readout_avoid])
 
     _TANGENT_CLEAR = 0.05   # min clearance (data units) the tangent label keeps
     annotations = []
@@ -827,60 +805,43 @@ def build_simplex_figure(
         cliponaxis=False, hoverinfo="skip", showlegend=False))
 
     # ------------------------------------------------------------------ #
-    #  Readout -- the decomposition (1.6) on two left-aligned lines (italic
-    #  letters, upright numbers), symbols above numbers, inside the box shape
-    #  above. Both lines are the same size and full ink: this is the figure's key
-    #  statement, and (like every other label) it carries no colour. The frames
-    #  update ONLY the text, so fit()'s live anchor (x, y) is never reset.
-    # ------------------------------------------------------------------ #
-    def _readout_text(state: dict) -> str:
-        d_pm = max(state["d_pm"], 0.0)     # at q* it is 0 up to rounding
-        # Letters italic, digits and operators upright, to match the post's LaTeX.
-        return (f"<i>D</i>(<i>p</i>&#8741;<i>q</i>) = <i>D</i>(<i>p</i>&#8741;<i>q</i><sup>*</sup>)"
-                f" + <i>D</i>(<i>p</i>&#8741;<i>m</i>)<br>"
-                f"{state['d_pq']:.4f} = {d_star:.4f} + {d_pm:.4f}")
-
-    fig.add_trace(go.Scatter(
-        x=[read_x], y=[read_y], mode="text", text=[_readout_text(st0)],
-        textposition="middle right", textfont=dict(size=_READOUT_FONT, color=INK),
-        cliponaxis=False, hoverinfo="skip", showlegend=False))
-    idx_readout = len(fig.data) - 1
-
-    # ------------------------------------------------------------------ #
     #  Frames -- one per s, named "s0000".. Plotly.animate re-appends the SVG
     #  group of every trace a frame lists, pushing it to the top of the stack, so
     #  the FOUR STATIC markers are included too (with unchanged coordinates) and
-    #  the list is ordered so re-append leaves lines under markers, and the
-    #  moving pair q, m on top of everything. frame.data[i] applies to
-    #  frame.traces[i], so the two lists are built in the same order.
+    #  the list is ordered so re-append leaves lines under markers, and the moving
+    #  pair q, m on top of everything. frame.data[i] applies to frame.traces[i],
+    #  so the two lists are built in the same order. The readout is no longer a
+    #  trace (it is an HTML/MathJax overlay); readout_values carries its per-frame
+    #  numbers -- D(p||q) and D(p||m) at 4 decimals -- for the overlay to swap in.
     # ------------------------------------------------------------------ #
     frame_names = [f"s{i:04d}" for i in range(n_frames)]
-    frames = []
+    frames, readout_values = [], []
     for i, (name, s) in enumerate(zip(frame_names, s_grid)):
         state = _frame_state(s)
         s1, s2, lpm = mw_pieces(s)
+        readout_values.append([f"{state['d_pq']:.4f}", f"{max(state['d_pm'], 0.0):.4f}"])
         frames.append(go.Frame(
             name=name,
             data=[
-                go.Scatter(x=[s1[0][0], s1[1][0]], y=[s1[0][1], s1[1][1]]),          # seg1
-                go.Scatter(x=[s2[0][0], s2[1][0]], y=[s2[0][1], s2[1][1]]),          # seg2
-                go.Scatter(x=[lpm[0][0], lpm[1][0]], y=[lpm[0][1], lpm[1][1]]),      # p->m
-                go.Scatter(x=[xy_p[0], state["xq"][0]], y=[xy_p[1], state["xq"][1]]),  # p->q
-                go.Scatter(text=[_readout_text(state)]),                             # readout (text only; anchor fixed by fit)
-                go.Scatter(x=[xy_qtilde[0]], y=[xy_qtilde[1]]),                      # q~ static
-                go.Scatter(x=[xy_mtilde[0]], y=[xy_mtilde[1]]),                      # m~ static
-                go.Scatter(x=[xy_p[0]], y=[xy_p[1]]),                                # p static
-                go.Scatter(x=[xy_qstar[0]], y=[xy_qstar[1]]),                        # q* static
-                go.Scatter(x=[state["xq"][0]], y=[state["xq"][1]],                   # q moving
+                go.Scatter(x=[s1[0][0], s1[1][0]], y=[s1[0][1], s1[1][1]]),          # seg1  (data 0)
+                go.Scatter(x=[s2[0][0], s2[1][0]], y=[s2[0][1], s2[1][1]]),          # seg2  (data 1)
+                go.Scatter(x=[lpm[0][0], lpm[1][0]], y=[lpm[0][1], lpm[1][1]]),      # p->m  (data 2)
+                go.Scatter(x=[xy_p[0], state["xq"][0]], y=[xy_p[1], state["xq"][1]]),  # p->q (data 3)
+                go.Scatter(x=[xy_qtilde[0]], y=[xy_qtilde[1]]),                      # q~ static (data 4)
+                go.Scatter(x=[xy_mtilde[0]], y=[xy_mtilde[1]]),                      # m~ static (data 5)
+                go.Scatter(x=[xy_p[0]], y=[xy_p[1]]),                                # p static  (data 6)
+                go.Scatter(x=[xy_qstar[0]], y=[xy_qstar[1]]),                        # q* static (data 7)
+                go.Scatter(x=[state["xq"][0]], y=[state["xq"][1]],                   # q moving  (data 8)
                            textposition=tp_q_list[i],
                            customdata=[list(map(float, state["q"]))]),
-                go.Scatter(x=[state["xm"][0]], y=[state["xm"][1]],                   # m moving
+                go.Scatter(x=[state["xm"][0]], y=[state["xm"][1]],                   # m moving  (data 9)
                            textposition=tp_m_list[i],
                            customdata=[list(map(float, state["m"]))]),
             ],
-            traces=[idx_seg1, idx_seg2, idx_leg_pm, idx_leg_pq, idx_readout,
+            traces=[idx_seg1, idx_seg2, idx_leg_pm, idx_leg_pq,
                     idx_qtilde, idx_mtilde, idx_p, idx_qstar, idx_q, idx_m]))
     fig.frames = frames
+    q_frame_pos, m_frame_pos = 8, 9     # q and m positions in each frame's data list
 
     # ------------------------------------------------------------------ #
     #  Axes and layout -- single panel, explicit domains, equal aspect, height
@@ -899,14 +860,17 @@ def build_simplex_figure(
         hovermode="closest",
         hoverlabel=dict(bgcolor=PAPER, bordercolor=with_alpha(INK, 0.35),
                         font=dict(size=11, color=INK)),
-        dragmode=False, showlegend=False, annotations=annotations, shapes=[readout_box],
+        dragmode=False, showlegend=False, annotations=annotations,
         # The slider places each tick/label at its landmark's INDEX FRACTION F =
         # idx/(n_frames-1); the CSS turns F into a pixel position that accounts
         # for thumb travel. Carry F (not a percentage) and the indices (for the
-        # snap-on-release script).
+        # snap-on-release script). readout_values / d_star_str feed the HTML
+        # readout overlay; q_frame_pos / m_frame_pos let the checks find the
+        # moving markers without hardcoding a shifting index.
         meta=dict(n_frames=n_frames, start_index=start_index,
                   idx_qtilde=idx_tilde, idx_qstar=idx_star,
-                  read_x=float(read_x), read_y=float(read_y), readout_trace=idx_readout,
+                  q_frame_pos=q_frame_pos, m_frame_pos=m_frame_pos,
+                  readout_values=readout_values, d_star_str=f"{d_star:.4f}",
                   frac_qtilde=idx_tilde / (n_frames - 1),
                   frac_qstar=idx_star / (n_frames - 1)),
     )
@@ -925,6 +889,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
     dots (lime q~, periwinkle q*) with ink labels, and snaps to a landmark on
     release.
     """
+    import json
     import plotly.io as pio
 
     meta = dict(fig.layout.meta or {})
@@ -934,8 +899,30 @@ def simplex_figure_html(fig: go.Figure) -> str:
     f_qs = float(meta.get("frac_qstar", 0.79))
     idx_qt = int(meta.get("idx_qtilde", 0))
     idx_qs = int(meta.get("idx_qstar", 0))
-    ro_idx = int(meta.get("readout_trace", 0))
     apex = float(np.sqrt(3.0) / 2.0)
+    # Readout overlay data: per-frame [D(p||q), D(p||m)] strings, the constant
+    # edge D(p||q*), and the LaTeX (identical to the post's caption: `\|` for the
+    # double bar). An array typesets the numbers under their symbols. Everything is
+    # json.dumps'd so backslashes reach the JS string intact, no hand-escaping.
+    values = list(meta.get("readout_values", []))
+    d_star_str = str(meta.get("d_star_str", "0.0000"))
+    values_json = json.dumps(values, separators=(",", ":"))
+    js_dstar = json.dumps(d_star_str)
+    # A 5-column array puts the numbers directly under their symbols with the
+    # operators lined up. MathJax ignores array `@{...}` column separators, so the
+    # operators are real columns; \mkern-5mu trims the wide default \arraycolsep
+    # back to roughly the spacing of an inline a = b + c.
+    js_arr_open = json.dumps(r"\begin{array}{ccccc}")
+    js_sym_row = json.dumps(r"D(p \| q) & \mkern-5mu=\mkern-5mu & D(p \| q^{*})"
+                            r" & \mkern-5mu+\mkern-5mu & D(p \| m) \\ ")
+    js_eq = json.dumps(r" & \mkern-5mu=\mkern-5mu & ")
+    js_plus = json.dumps(r" & \mkern-5mu+\mkern-5mu & ")
+    js_arr_close = json.dumps(r"\end{array}")
+    d0, m0 = (values[start] if start < len(values) else ("0.0000", "0.0000"))
+    # Plain-HTML readout shown until MathJax is ready (or if it never loads).
+    fallback_html = (f'<span class="ro-fallback"><i>D</i>(<i>p</i>&#8741;<i>q</i>) = '
+                     f'<i>D</i>(<i>p</i>&#8741;<i>q</i><sup>*</sup>) + '
+                     f'<i>D</i>(<i>p</i>&#8741;<i>m</i>)<br>{d0} = {d_star_str} + {m0}</span>')
     # Each tick/label sits at its landmark's index fraction, mapped to a pixel
     # position that accounts for thumb travel (a range thumb's centre runs from
     # d/2 to W-d/2, not 0 to W).
@@ -953,7 +940,11 @@ def simplex_figure_html(fig: go.Figure) -> str:
     # markers, their labels are ink like the simplex point labels, and a "Q"
     # label sits to the left. The ticks/labels/label are absolutely positioned so
     # the wrapper's JS-set width and centring are untouched.
-    return f"""{fig_html}
+    return f"""<div class="simplex-readout-slot"></div>
+<div class="simplex-fig-wrap">
+{fig_html}
+<div class="simplex-readout-layer"><div class="simplex-readout" id="simplex-readout">{fallback_html}</div></div>
+</div>
 <div class="simplex-slider-wrap">
   <span class="simplex-q-label">&#x1D4AC;</span>
   <input type="range" class="simplex-slider"
@@ -969,35 +960,50 @@ def simplex_figure_html(fig: go.Figure) -> str:
    figure renders at {_WIDTH_FRACTION:.0%} width. Let them show in the centring
    margin instead of being clipped by Plotly's main-svg overflow:hidden. */
 #{div_id} .main-svg {{ overflow: visible; }}
-/* Geometry is explicit (not baseline-dependent): the wrapper has a fixed height,
-   the grey track is a ::before, the input is absolutely centred on it, and paint
-   order is track (z0) -> coloured ticks (z1) -> ink thumb (z2), so the moving
-   ink dot sits on top, exactly as in the simplex. */
-/* --thumb-d is the single source of truth for the rendered dot diameter (the
-   15px core plus the 2px white ring, box-sizing:border-box so it holds in both
-   WebKit and Firefox). Thumb, ticks and the input's height all use it, and the
-   ticks/labels are positioned with the same d/2 + F*(track - d) travel formula
-   the thumb obeys -- so a tick sits exactly under the thumb at its landmark. */
-.simplex-slider-wrap {{ --thumb-d: 19px; position: relative; height: 22px; line-height: 0;
+/* The figure lives in a position:relative wrapper (centred, width set by fit()).
+   The readout is a SIBLING of the graph div -- Plotly owns the graph div's
+   children -- in an overlay that covers the plot and lets clicks/hover through. */
+.simplex-fig-wrap {{ position: relative; margin: 0 auto; }}
+.simplex-readout-layer {{ position: absolute; inset: 0; pointer-events: none; overflow: visible; }}
+.simplex-readout-slot:empty {{ display: none; }}
+/* The readout box: a real CSS border in the triangle-outline colour/width, PAPER
+   fill, INK text set explicitly (the site has a dark mode; the figure stays a
+   white card, but text would otherwise inherit a light page colour). Font size
+   1rem matches the body math. Position (overlay) or centring (block) is set by
+   fit()/roPlace(); block mode drops it into normal flow above the figure. */
+.simplex-readout {{ box-sizing: border-box; white-space: nowrap;
+  border: 1.2px solid {_SCAFFOLD}; background: {PAPER}; color: {INK};
+  padding: {_READOUT_PAD_PX:.0f}px; font-size: 1rem; line-height: 1; }}
+.simplex-readout mjx-container {{ margin: 0 !important; }}
+.simplex-readout .ro-fallback {{ display: inline-block; text-align: left; font-style: normal; }}
+.simplex-readout.ro-block {{ position: static; display: table; margin: 0 auto .6rem; }}
+.simplex-readout:not(.ro-block) {{ position: absolute; }}
+/* --thumb-d is the single source of truth for the drawn dot diameter, derived
+   from the simplex markers (_MARKER_SIZE + MARKER_OUTLINE_PX), with the ring at
+   MARKER_OUTLINE_PX and box-sizing:border-box so thumb and ticks agree in WebKit
+   and Firefox. The input is taller than the dot (a generous hit target); the
+   track, ticks and thumb stay vertically centred. Ticks/labels use the same
+   d/2 + F*(track - d) travel formula as the thumb. */
+.simplex-slider-wrap {{ --thumb-d: {_DOT_D_PX}px; position: relative; height: 28px; line-height: 0;
   margin: .3rem auto 2.2rem; width: 83%; }}
 .simplex-slider-wrap::before {{ content: ""; position: absolute; left: 0; top: 50%;
   width: 100%; height: 3px; border-radius: 2px; transform: translateY(-50%);
   background: var(--bs-border-color, #cfd3d8); z-index: 0; }}
 .simplex-slider {{ -webkit-appearance: none; appearance: none; position: absolute;
-  left: 0; top: 50%; width: 100%; height: var(--thumb-d); transform: translateY(-50%);
+  left: 0; top: 50%; width: 100%; height: 28px; transform: translateY(-50%);
   margin: 0; background: transparent; outline: none; cursor: pointer; z-index: 2; }}
 .simplex-slider::-webkit-slider-thumb {{ -webkit-appearance: none; appearance: none;
   box-sizing: border-box; width: var(--thumb-d); height: var(--thumb-d); border-radius: 50%;
-  background: var(--bs-body-color, #1f2328); border: 2px solid var(--bs-body-bg, #fff); }}
+  background: var(--bs-body-color, #1f2328); border: {MARKER_OUTLINE_PX}px solid var(--bs-body-bg, #fff); }}
 .simplex-slider::-moz-range-thumb {{ box-sizing: border-box; width: var(--thumb-d); height: var(--thumb-d);
-  border: 2px solid var(--bs-body-bg, #fff); border-radius: 50%; background: var(--bs-body-color, #1f2328); }}
+  border: {MARKER_OUTLINE_PX}px solid var(--bs-body-bg, #fff); border-radius: 50%; background: var(--bs-body-color, #1f2328); }}
 .simplex-tick {{ box-sizing: border-box; position: absolute; top: 50%;
   width: var(--thumb-d); height: var(--thumb-d); border-radius: 50%;
-  transform: translate(-50%, -50%); border: 2px solid var(--bs-body-bg, #fff);
+  transform: translate(-50%, -50%); border: {MARKER_OUTLINE_PX}px solid var(--bs-body-bg, #fff);
   z-index: 1; pointer-events: none; }}
 .simplex-tick-qt {{ background: #84cc16; }}
 .simplex-tick-qs {{ background: #7575f7; }}
-.simplex-landmark {{ position: absolute; top: 26px; transform: translate(-50%, 0);
+.simplex-landmark {{ position: absolute; top: 20px; transform: translate(-50%, 0);
   font-size: 15px; font-style: italic; color: var(--bs-body-color, #1f2328);
   pointer-events: none; white-space: nowrap; }}
 .simplex-q-label {{ position: absolute; right: 100%; top: 50%; transform: translateY(-50%);
@@ -1006,24 +1012,114 @@ def simplex_figure_html(fig: go.Figure) -> str:
 </style>
 <script>
 (function () {{
+  var MARG = {_MARGIN_PX}, WFRAC = {_WIDTH_FRACTION}, THUMB_D = {_DOT_D_PX};
+  var XSPAN = {_X_SPAN:.6f}, X0 = {_X_RANGE[0]}, Y1 = {_Y_RANGE[1]}, APEX = {apex:.10f};
   var gd = document.getElementById("{div_id}");
-  var wrap = gd.parentNode.querySelector(".simplex-slider-wrap")
-          || document.querySelector(".simplex-slider-wrap");
-  var input = wrap.querySelector(".simplex-slider");
+  var figWrap = gd.closest(".simplex-fig-wrap");
+  var scope = figWrap.parentNode;
+  var sliderWrap = scope.querySelector(".simplex-slider-wrap");
+  var layer = figWrap.querySelector(".simplex-readout-layer");
+  var slot = scope.querySelector(".simplex-readout-slot");
+  var readout = scope.querySelector(".simplex-readout");
+  var input = sliderWrap.querySelector(".simplex-slider");
   var frame = function (i) {{ return "s" + String(i).padStart(4, "0"); }};
   function animate(i) {{
     if (window.Plotly) Plotly.animate(gd, [frame(i)],
       {{mode: "immediate", frame: {{duration: 0, redraw: false}}, transition: {{duration: 0}}}});
   }}
-  // Continuous drag.
-  input.addEventListener("input", function () {{ animate(input.value); }});
-  // Snap onto a landmark on release ("change" fires then, not during the drag).
-  // The zone is ~SNAP_PX CSS px wide at any track width: convert px to frames
-  // from the thumb's usable travel (track width minus the thumb diameter), and
-  // recompute per release so a resize is picked up. 9 frames pulled too hard;
-  // 4 px lets the reader rest just BESIDE q* (where the readout's second term
-  // shrinks toward zero) without being yanked onto it.
-  var LANDMARKS = [{idx_qt}, {idx_qs}], SNAP_PX = 4, THUMB_D = 19, N = {n};
+
+  // ---- Readout overlay: an HTML element typeset by the page's own MathJax ----
+  var VALUES = {values_json};
+  var DSTAR = {js_dstar}, A_OPEN = {js_arr_open}, SYM = {js_sym_row};
+  var EQ = {js_eq}, PLUS = {js_plus}, A_CLOSE = {js_arr_close};
+  var mjReady = false, roCache = {{}}, roFrame = {start}, coldMs = null, warmed = false;
+  function roTex(i) {{
+    var v = VALUES[i] || ["", ""];
+    return A_OPEN + SYM + v[0] + EQ + DSTAR + PLUS + v[1] + A_CLOSE;
+  }}
+  function roNode(i) {{                         // cached per frame; cold cost timed once
+    if (roCache[i]) return roCache[i];
+    var t0 = performance.now();
+    var node = MathJax.tex2chtml(roTex(i), {{display: false}});
+    if (coldMs === null) coldMs = performance.now() - t0;
+    roCache[i] = node;
+    return node;
+  }}
+  function roRenderMath(i) {{
+    var miss = !roCache[i];
+    readout.replaceChildren(roNode(i));
+    if (miss) {{ MathJax.startup.document.clear(); MathJax.startup.document.updateDocument(); }}
+    roPlace();
+  }}
+  function roRenderFallback(i) {{
+    var v = VALUES[i] || ["", ""];
+    readout.innerHTML = '<span class="ro-fallback"><i>D</i>(<i>p</i>&#8741;<i>q</i>) = '
+      + '<i>D</i>(<i>p</i>&#8741;<i>q</i><sup>*</sup>) + <i>D</i>(<i>p</i>&#8741;<i>m</i>)<br>'
+      + v[0] + " = " + DSTAR + " + " + v[1] + "</span>";
+    roPlace();
+  }}
+  function roShow(i) {{ roFrame = i; if (mjReady) roRenderMath(i); else roRenderFallback(i); }}
+  function ppuNow() {{ var w = figWrap.clientWidth || gd.clientWidth || 0; return (w - 2 * MARG) / XSPAN; }}
+  function roPlace() {{
+    var ppu = ppuNow();
+    if (ppu <= 0) return;
+    // Overlay first: top edge on the apex, left edge 1px inside the plot area.
+    readout.classList.remove("ro-block");
+    if (readout.parentNode !== layer) layer.appendChild(readout);
+    readout.style.left = (MARG + 1) + "px";
+    readout.style.top = (MARG + (Y1 - APEX) * ppu) + "px";
+    var br = readout.getBoundingClientRect(), fr = figWrap.getBoundingClientRect();
+    var boxRight = X0 + (br.right - fr.left - MARG) / ppu;
+    var boxBottom = Y1 - (br.bottom - fr.top - MARG) / ppu;
+    var edgeX = boxBottom / Math.sqrt(3.0);            // triangle left edge at box bottom
+    if ((edgeX - boxRight) * ppu < 6) {{               // crowds the triangle -> block mode
+      readout.classList.add("ro-block");
+      readout.style.left = readout.style.top = "";
+      if (readout.parentNode !== slot) slot.appendChild(readout);
+    }}
+  }}
+  // MathJax loads with `defer`, so it may not exist when this script runs; poll
+  // for its startup promise, then swap the fallback for typeset math.
+  function whenMathJax(cb) {{
+    if (window.MathJax && MathJax.startup && MathJax.startup.promise
+        && typeof MathJax.tex2chtml === "function") {{
+      MathJax.startup.promise.then(cb);
+    }} else {{
+      setTimeout(function () {{ whenMathJax(cb); }}, 50);
+    }}
+  }}
+  whenMathJax(function () {{
+    mjReady = true;
+    // Match the body math's size: MathJax gives in-place body math an inline
+    // font-size (matchFontHeight, e.g. "90.5%") that a detached tex2chtml node
+    // does not get. Copy it onto the readout container so its math is the same
+    // size as the prose's -- and small enough to keep overlay mode at desktop.
+    var bodyC = document.querySelector("p mjx-container, .cell mjx-container, li mjx-container");
+    if (bodyC && bodyC.style.fontSize) readout.style.fontSize = bodyC.style.fontSize;
+    roRenderMath(roFrame);
+    if (coldMs !== null && coldMs > 8 && window.requestIdleCallback && !warmed) {{
+      warmed = true;                                   // pre-warm the cache in idle time
+      var i = 0;
+      requestIdleCallback(function step(dl) {{
+        while (i < VALUES.length && dl.timeRemaining() > 3) roNode(i++);
+        if (i < VALUES.length) requestIdleCallback(step);
+      }});
+    }}
+  }});
+  // Coalesce readout updates to one per animation frame (fast drags skip frames).
+  var roPending = null, roRaf = 0;
+  function roSchedule(i) {{
+    roPending = i;
+    if (!roRaf) roRaf = requestAnimationFrame(function () {{
+      roRaf = 0; var j = roPending; roPending = null; roShow(j);
+    }});
+  }}
+
+  // ---- Slider ----
+  input.addEventListener("input", function () {{ animate(input.value); roSchedule(+input.value); }});
+  // Snap onto a landmark on release ("change"); ~SNAP_PX CSS px wide at any track
+  // width (px -> frames from the thumb's usable travel, recomputed per release).
+  var LANDMARKS = [{idx_qt}, {idx_qs}], SNAP_PX = 4, N = {n};
   function snapTol() {{
     var travel = input.getBoundingClientRect().width - THUMB_D;
     return Math.max(1, Math.round(SNAP_PX * (N - 1) / travel));
@@ -1031,46 +1127,31 @@ def simplex_figure_html(fig: go.Figure) -> str:
   input.addEventListener("change", function () {{
     var v = parseInt(input.value, 10), tol = snapTol();
     for (var i = 0; i < LANDMARKS.length; i++) {{
-      if (Math.abs(v - LANDMARKS[i]) <= tol) {{
-        input.value = LANDMARKS[i]; animate(LANDMARKS[i]); break;
-      }}
+      if (Math.abs(v - LANDMARKS[i]) <= tol) {{ input.value = LANDMARKS[i]; animate(LANDMARKS[i]); break; }}
     }}
+    roSchedule(parseInt(input.value, 10));             // keep the readout in step with the snap
   }});
-  // Fill the column. Plotly's autosize is starved to its 700px default by the
-  // min-content figure grid, so measure the block column (.cell-output-display)
-  // and set width + height explicitly, keeping plot-area aspect = range aspect
-  // so the (scaleanchor) triangle fills the width without letterboxing. Reset
-  // the ranges each time or scaleanchor keeps (and compounds) expanded ones.
-  var MARG = 8, WFRAC = {_WIDTH_FRACTION};
+
+  // ---- Fit: fill the column at WFRAC width, centred; keep aspect; place readout ----
   function host() {{ return gd.closest(".cell-output-display") || gd.parentElement; }}
   function fit() {{
     if (!window.Plotly) {{ return setTimeout(fit, 30); }}
     var measured = (host() && host().clientWidth) || gd.offsetWidth;
     if (!measured) {{ return setTimeout(fit, 30); }}
-    // Render at a fraction of the column and centre it, so the figure clears a
-    // laptop viewport. host() is the full column, so shrinking gd does not change
-    // what we measure -- no resize feedback loop.
     var w = Math.round(measured * WFRAC);
     var h = Math.round((w - 2 * MARG) * {_ASPECT:.6f} + 2 * MARG);
-    // The readout's fonts are fixed px, so recompute its data anchor from the new
-    // px-per-unit and keep the box's TOP edge on the apex at every width.
-    var ppu = (w - 2 * MARG) / {_X_SPAN:.6f};
-    var yP = {apex:.10f} - ({_READOUT_H_PX} / 2 + {_READOUT_PAD_PX}) / ppu;
-    gd.style.margin = "0 auto";
-    Plotly.restyle(gd, {{y: [[yP]]}}, [{ro_idx}]);
+    figWrap.style.width = w + "px";                    // centre the wrapper (CSS margin:auto)
     Plotly.relayout(gd, {{
       width: w, height: h, autosize: false,
       "xaxis.range": [{_X_RANGE[0]}, {_X_RANGE[1]}],
-      "yaxis.range": [{_Y_RANGE[0]}, {_Y_RANGE[1]}],
-      "shapes[0].yanchor": yP
-    }}).then(function() {{
+      "yaxis.range": [{_Y_RANGE[0]}, {_Y_RANGE[1]}]
+    }}).then(function () {{
       // Plotly resizes the SVG but leaves the graph-div's inline height at the
-      // build-time default (_figure_height at _REF_WIDTH). At any narrower column
-      // that stale, taller height stays on the div and leaves dead whitespace
-      // below the triangle, so pull it down to the height Plotly actually used.
+      // build-time default; pull it down so no dead whitespace below the triangle.
       gd.style.height = gd._fullLayout.height + "px";
+      roPlace();                                       // reposition the readout for the new width
     }});
-    wrap.style.width = Math.round((w - 2 * MARG) / {_X_SPAN:.4f}) + "px";
+    sliderWrap.style.width = Math.round((w - 2 * MARG) / {_X_SPAN:.4f}) + "px";
   }}
   if (window.ResizeObserver) {{ new ResizeObserver(fit).observe(host()); }}
   window.addEventListener("resize", fit);
@@ -1259,35 +1340,17 @@ def _check_layout_aspect() -> None:
     print(f"  apex label: anchor y = {apex_anchor_y:.3f}, top edge ~ {apex_top:.3f}, "
           f"y-range top {_Y_RANGE[1]} (clearance {_Y_RANGE[1] - apex_top:.3f}).")
 
-    # (4) Boxed readout (item 5): text and box share the anchor P = (read_x, y_P),
-    # with box offsets in pixels; y_P is set so the box's TOP edge lands on the
-    # apex. Checked at the narrowest render, where the box is widest in data units.
-    # The number line "x.xxxx = x.xxxx + x.xxxx" is constant-width only while
-    # D(p||q) < 10 (single integer digit); the symbol line is fixed. Assert it.
+    # (4) Readout: now an HTML/MathJax overlay, so its box is measured live in the
+    # browser (box size, apex alignment and edge clearance are reported there, not
+    # asserted here). The one invariant that stays a Python assertion is that the
+    # number row "x.xxxx = x.xxxx + x.xxxx" keeps a constant width, which holds
+    # while D(p||q) < 10 (a single integer digit).
     d_max = max(d_ends)
-    assert d_max < 10.0, f"D(p||q) reaches {d_max:.3f} >= 10; the number line would widen"
+    assert d_max < 10.0, f"D(p||q) reaches {d_max:.3f} >= 10; the readout number row would widen"
+    print(f"  readout: HTML/MathJax overlay; box geometry checked in the browser. "
+          f"D_max = {d_max:.3f} < 10 (number row stays constant-width).")
     fig = build_simplex_figure(r, gamma, p)
     mt = dict(fig.layout.meta)
-    read_x = float(mt["read_x"])
-    # Box geometry at the NARROWEST render (item 1 basis), where it is widest in
-    # data units. y_P puts the box TOP on the apex; check the box's LEFT edge is
-    # inside _X_RANGE (axis shapes clip) and its RIGHT edge clears the triangle's
-    # left edge (x = y/sqrt(3)) at the box BOTTOM by >= 6 px.
-    ppu = _readout_ppu(_WIDTH_FRACTION * _COLUMN_PX)
-    y_P = _readout_yP(ppu)
-    box_left = read_x - _READOUT_PAD_PX / ppu
-    box_right = read_x + (_READOUT_W_PX + _READOUT_PAD_PX) / ppu
-    box_bottom = y_P - (_READOUT_H_PX / 2.0 + _READOUT_PAD_PX) / ppu
-    left_edge_x = box_bottom / np.sqrt(3.0)
-    spare_px = (left_edge_x - box_right) * ppu
-    assert box_left >= _X_RANGE[0], (
-        f"readout box left {box_left:.3f} pokes past x-range {_X_RANGE[0]}")
-    assert spare_px >= 6.0, (
-        f"readout box right within {spare_px:.1f}px of triangle left edge (< 6px)")
-    print(f"  readout box @ narrowest ({_WIDTH_FRACTION * _COLUMN_PX:.0f}px): read_x = "
-          f"{read_x:.3f}, box x [{box_left:.3f}, {box_right:.3f}], box top on apex "
-          f"{np.sqrt(3)/2:.3f}; right edge clears triangle left edge ({left_edge_x:.3f}) "
-          f"by {spare_px:.1f} px (>= 6); D_max = {d_max:.3f} < 10.")
 
     # (9) Landmark snapping: three distinct grid indices; (10) tangent label.
     idxs = (int(mt["idx_qtilde"]), int(mt["idx_qstar"]), int(mt["start_index"]))
@@ -1369,6 +1432,8 @@ def _check_labels() -> None:
     gamma2 = np.array([0.5, 0.7, 1.7])
     fig = build_simplex_figure(r, gamma, p)
     n = len(fig.frames)
+    mt = dict(fig.layout.meta)
+    q_pos, m_pos = int(mt["q_frame_pos"]), int(mt["m_frame_pos"])   # not hardcoded (indices shift)
     f_star = optimal_fraction(r, gamma, p)
     q_star = manufactured_measure(f_star, r, gamma, p)
     q_tilde = np.linalg.solve(np.column_stack([r * np.ones(3), gamma, gamma2]).T, r * np.ones(3))
@@ -1414,7 +1479,7 @@ def _check_labels() -> None:
     mqt_overlap, mqt_gap = [], 1e9
 
     for i, fr in enumerate(fig.frames):
-        dq, dm = fr.data[9], fr.data[10]            # q, m moving (frame data order)
+        dq, dm = fr.data[q_pos], fr.data[m_pos]     # q, m moving (positions from meta)
         mkq, mkm = np.array([dq.x[0], dq.y[0]]), np.array([dm.x[0], dm.y[0]])
         bq = _label_box(mkq, dq.textposition, 1, _POINT_FONT)
         bm = _label_box(mkm, dm.textposition, 1, _POINT_FONT)
