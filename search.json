@@ -2,7 +2,7 @@
   {
     "objectID": "blog.html",
     "href": "blog.html",
-    "title": "Blog",
+    "title": "Essays",
     "section": "",
     "text": "1: Shannon’s Demon, Made Exact\n\n\nHow to make an exponential amount of money from a portfolio of lemons without shorting anything\n\n\n\nquantitative finance\n\ninformation theory\n\nKelly criterion\n\nrisk-neutral measure\n\nlog-optimal investing\n\nvolatility harvesting\n\n\n\n\n\n\n\n\n\nAug 20, 2026\n\n\nJordan McKittrick\n\n\n\n\n\nNo matching items"
   },
@@ -32,7 +32,7 @@
     "href": "recommendations.html#other",
     "title": "Recommendations",
     "section": "Other",
-    "text": "Other\n\n3Blue1Brown\nMarginal Revolution\nRoger Federer as Religious Experience"
+    "text": "Other\n\n3Blue1Brown\nMarginal Revolution\nEconTalk\nRoger Federer as Religious Experience"
   },
   {
     "objectID": "posts/shannons-demon/index.html",
@@ -60,7 +60,7 @@
     "href": "about.html",
     "title": "Jordan McKittrick",
     "section": "",
-    "text": "I’m an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems.\nThis blog is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. Please reach out to me on LinkedIn if you find any mistakes or think this site can be improved."
+    "text": "I’m an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems. This website is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. I make no claims to novelty, though I’d be surprised if I don’t occasionally stumble into it. Needless to say, nothing I write on the subject of investing should be taken as financial advice. Feel free to borrow material as you see fit, though I’d be grateful if you would adequately cite this blog. Please reach out to me on LinkedIn if you find any mistakes, have any questions, or think this site can be improved."
   },
   {
     "objectID": "about.html#education",
