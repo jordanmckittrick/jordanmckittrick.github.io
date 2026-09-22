@@ -364,22 +364,35 @@ def _furthest_index(cand_xy: np.ndarray, avoid_xy: np.ndarray) -> int:
 # the gap from a marker's OUTER edge (radius _DOT_D_PX / 2) to its label, in CSS
 # px; one constant for every point label and the slider labels (item 1b/1d).
 _LABEL_GAP_PX = 3.0
+# INK BOXES (rev 12, item 1). A MathJax label's element box is a line box: it
+# reserves ascent/descent the glyphs may not use (p, q, m have no ascender, so the
+# empty band above their x-height made "below" labels sit visibly low). Each point
+# label is therefore placed and audited from its INK box -- the element box shrunk
+# by these per-glyph insets. The four insets (top, bottom, left, right) are in em
+# so they hold at any font size; the browser multiplies them by the label's
+# measured container font size. Measured by rendering each label and reading the
+# ink extent (MathJax SVG glyph geometry) against its element box and text
+# baseline; see scratchpad/ink_svg.html + ink_chtml.html. Left/right can be
+# slightly negative where an italic glyph overhangs its advance box.
+_INK_INSETS_EM = {
+    "p":      dict(t=0.4973, b=0.0719, l=-0.0353, r=0.0030),
+    "qstar":  dict(t=0.2716, b=0.0719, l=0.0299,  r=0.0141),
+    "qtilde": dict(t=0.3093, b=0.0719, l=0.0299,  r=-0.0211),
+    "mtilde": dict(t=0.3093, b=0.2376, l=0.0190,  r=0.0195),
+    "q":      dict(t=0.4975, b=0.0719, l=0.0299,  r=-0.0004),
+    "m":      dict(t=0.4975, b=0.2375, l=0.0190,  r=0.0195),
+}
 # q sits just right of q* along Q, and the superscript star of q*'s label sits up
 # and to the right -- directly in q's path. Shift q*'s label LEFT by this many px
-# so the star clears q's marker disk in every frame (item 4c). Re-derived at the
-# 19 px sizes on the FAITHFUL probe (labels scaled by MathJax's 90.5 % body match):
-# the floor that first clears is 6 px (~0.18 px of air at both widths), so 8 px is
-# used -- ~1.4 px of clearance at both widths, still below the old 11 px.
-_QSTAR_NUDGE_PX = 8.0
-# m's moving "top right" label sweeps across q~'s static label at the narrow
-# render around frames 325..336. Shift q~'s label RIGHT by this many px -- the
-# smallest value that removes every m-vs-q~ overlap at BOTH widths (item 4b),
-# derived on the faithful (body-matched) probe. The narrow width binds (its smaller
-# ppu packs the moving m and static q~ closer, and the fixed-px labels loom larger);
-# the wide width needs no shift at all. The floor is 17 px (~0.07 px of air), so
-# 18 px is used (~1.1 px). It never reaches the Q line -- the audit's Q-crossing
-# count stays 0 at both widths -- so q~'s label does not touch Q.
-_QTILDE_NUDGE_PX = 18.0
+# so the star's INK clears q's marker disk in every frame (item 3). Re-derived with
+# ink boxes on the faithful probe (see the browser sweep); p gets no nudge.
+_QSTAR_NUDGE_PX = 7.0
+# q~'s label is placed BELOW-LEFT of its marker (the side away from Q, which runs
+# down-and-right from q~), so no rightward nudge is needed (item 2). If its ink box
+# still grazes m's label near the q~ landmark at the narrow width, it is shifted
+# further LEFT by this many px (never right, never toward Q); 0 means no shift was
+# needed. Capped at 8 px by contract.
+_QTILDE_LEFT_PX = 0.0
 
 
 # ---- The fixed flip rule for m (item 2/4) -----------------------------------
@@ -710,19 +723,22 @@ def build_simplex_figure(
     # ------------------------------------------------------------------ #
     static_labels = [
         dict(key="p", tex="p", fb="<i>p</i>", xy=[float(v) for v in xy_p],
-             place="below", size=_POINT_FONT, color=INK),
+             place="below", size=_POINT_FONT, color=INK, ink=_INK_INSETS_EM["p"]),
         dict(key="qstar", tex="q^{*}", fb="<i>q</i><sup>*</sup>",
              xy=[float(v) for v in xy_qstar], place="below", size=_POINT_FONT,
-             color=INK, dx=-_QSTAR_NUDGE_PX),                       # nudged LEFT off q's path
+             color=INK, dx=-_QSTAR_NUDGE_PX, ink=_INK_INSETS_EM["qstar"]),  # nudged LEFT off q's path
         dict(key="qtilde", tex=r"\tilde{q}", fb="<i>q&#771;</i>",
-             xy=[float(v) for v in xy_qtilde], place="below", size=_POINT_FONT,
-             color=INK, dx=_QTILDE_NUDGE_PX),                       # nudged RIGHT off m's label
+             xy=[float(v) for v in xy_qtilde], place="bottomleft", size=_POINT_FONT,
+             color=INK, dx=-_QTILDE_LEFT_PX, ink=_INK_INSETS_EM["qtilde"]),  # below-left, away from Q
         dict(key="mtilde", tex=r"\tilde{m}", fb="<i>m&#771;</i>",
-             xy=[float(v) for v in xy_mtilde], place="below", size=_POINT_FONT, color=INK),
+             xy=[float(v) for v in xy_mtilde], place="below", size=_POINT_FONT, color=INK,
+             ink=_INK_INSETS_EM["mtilde"]),
     ]
     moving_labels = dict(
-        q=dict(tex="q", fb="<i>q</i>", place="topright", size=_POINT_FONT, color=INK),
-        m=dict(tex="m", fb="<i>m</i>", size=_POINT_FONT, color=INK),  # place per _M_FLIP
+        q=dict(key="q", tex="q", fb="<i>q</i>", place="topright", size=_POINT_FONT,
+               color=INK, ink=_INK_INSETS_EM["q"]),
+        m=dict(key="m", tex="m", fb="<i>m</i>", size=_POINT_FONT, color=INK,
+               ink=_INK_INSETS_EM["m"]),  # place per _M_FLIP
     )
     vx = barycentric_to_cartesian(np.eye(3))
     def _vfb(i):
@@ -864,6 +880,11 @@ def simplex_figure_html(fig: go.Figure) -> str:
     js_slider_qt = json.dumps(r"\tilde{q}")
     js_slider_qs = json.dumps(r"q^{*}")
     js_slider_q = json.dumps(r"\mathcal{Q}")
+    # Ink TOP inset (em) for the two slider landmark labels, so the dot-to-label gap
+    # matches the simplex (rev 12, item 1): the browser lifts each label by its ink
+    # top so the GAP is measured to the ink, not the reserved font ascent.
+    js_qt_inktop = _INK_INSETS_EM["qtilde"]["t"]
+    js_qs_inktop = _INK_INSETS_EM["qstar"]["t"]
     # \underset stacks each number (and each operator) under its symbol while the
     # = and + keep the SAME inline spacing the prose uses -- unlike an array, whose
     # column padding (MathJax ignores @{...}/\arraycolsep) doubled it. The number
@@ -1129,15 +1150,27 @@ def simplex_figure_html(fig: go.Figure) -> str:
   var STATIC_LABELS = [].concat(SPEC.statics, SPEC.lines, SPEC.vertices, SPEC.contours).map(mkLabel);
   var Lq = mkLabel(SPEC.moving.q), Lm = mkLabel(SPEC.moving.m);
   var sLabels = [
-    {{el: sliderWrap.querySelector(".simplex-landmark-qt"), tex: {js_slider_qt}}},
-    {{el: sliderWrap.querySelector(".simplex-landmark-qs"), tex: {js_slider_qs}}},
+    {{el: sliderWrap.querySelector(".simplex-landmark-qt"), tex: {js_slider_qt}, inkTop: {js_qt_inktop}}},
+    {{el: sliderWrap.querySelector(".simplex-landmark-qs"), tex: {js_slider_qs}, inkTop: {js_qs_inktop}}},
     {{el: sliderWrap.querySelector(".simplex-q-label"), tex: {js_slider_q}}}
   ];
-  function measure(L) {{ L.w = L.el.offsetWidth; L.h = L.el.offsetHeight; }}
+  function measure(L) {{ L.w = L.el.offsetWidth; L.h = L.el.offsetHeight;
+    var c = L.el.querySelector("mjx-container");
+    L.fs = c ? parseFloat(getComputedStyle(c).fontSize) : L.spec.size; }}
+  // Ink insets (em, from _INK_INSETS_EM) in CSS px for THIS label's container size.
+  // The ink box is the element box shrunk by {{l,r}} horizontally, {{t,b}} vertically.
+  function inkOff(L) {{ var k = L.spec.ink, f = L.fs || L.spec.size;
+    return k ? {{t: k.t * f, b: k.b * f, l: k.l * f, r: k.r * f}} : {{t: 0, b: 0, l: 0, r: 0}}; }}
   function placeStatic(L, ppu) {{
-    var s = L.spec, ax = pxx(s.xy[0], ppu), ay = pyy(s.xy[1], ppu), tf = "", left, top;
-    if (s.place === "below") {{ left = ax - L.w / 2 + (s.dx || 0); top = ay + RAD + GAP; }}
-    else if (s.place === "outside-right") {{ left = ax - L.w; top = ay - L.h / 2; }}
+    var s = L.spec, ax = pxx(s.xy[0], ppu), ay = pyy(s.xy[1], ppu), tf = "", left, top, io = inkOff(L);
+    if (s.place === "below") {{                    // ink TOP = marker bottom + GAP; ink centred on ax
+      left = ax - L.w / 2 + (io.r - io.l) / 2 + (s.dx || 0);
+      top = ay + RAD + GAP - io.t;
+    }} else if (s.place === "bottomleft") {{        // mirror of "top right": ink top-right corner off the marker, down-left
+      var d = (RAD + GAP) / Math.SQRT2;
+      left = ax - d - L.w + io.r + (s.dx || 0);    // dx (<= 0) shifts further LEFT, away from Q
+      top = ay + d - io.t;
+    }} else if (s.place === "outside-right") {{ left = ax - L.w; top = ay - L.h / 2; }}
     else if (s.place === "vbl") {{ left = ax - L.w; top = ay; }}
     else if (s.place === "vbr") {{ left = ax; top = ay; }}
     else if (s.place === "vtc") {{ left = ax - L.w / 2; top = ay - L.h; }}
@@ -1146,29 +1179,32 @@ def simplex_figure_html(fig: go.Figure) -> str:
   }}
   function mLineY(x) {{ return MSEG[0][1] + (x - MSEG[0][0]) / (MSEG[1][0] - MSEG[0][0]) * (MSEG[1][1] - MSEG[0][1]); }}
   function placeMoving(L, xy, place, ppu, qxy) {{
-    var mx = pxx(xy[0], ppu), my = pyy(xy[1], ppu), left, top;
-    if (place === "undertuck") {{                 // tucked just under M_wstar, lower-left of m
-      var right = mx - RAD - GAP;
-      var xRight = X0 + (right - MARG) / ppu;      // data x at the label's RIGHT edge
-      top = pyy(mLineY(xRight), ppu) + GAP;        // TOP edge GAP below M_wstar there
+    var mx = pxx(xy[0], ppu), my = pyy(xy[1], ppu), left, top, io = inkOff(L);
+    var inkW = L.w - io.l - io.r, inkH = L.h - io.t - io.b;
+    if (place === "undertuck") {{                 // tucked just under M_wstar, lower-left of m (INK box)
+      var ir = mx - RAD - GAP;                     // ink RIGHT edge: GAP left of m's marker
+      var xRight = X0 + (ir - MARG) / ppu;         // data x at the ink right edge
+      var inkTop = pyy(mLineY(xRight), ppu) + GAP; // ink TOP: GAP below M_wstar there
       var qx, qy, haveQ = !!qxy;
       if (haveQ) {{ qx = pxx(qxy[0], ppu); qy = pyy(qxy[1], ppu); }}
-      // The box is left of m's marker by GAP, but near delta_2 q converges onto m,
-      // so also drop below q's marker if the box would otherwise cover it.
-      if (haveQ && qx - RAD - GAP < right && top < qy + RAD + GAP && top + L.h > qy - RAD) top = qy + RAD + GAP;
-      var baseFloor = pyy(0, ppu) - GAP - L.h;     // lowest top keeping GAP above the base
-      if (top > baseFloor) {{ top = baseFloor; L._baseClamped = true; }}
+      // Left of m's marker by GAP, but near delta_2 q converges onto m: drop the
+      // ink below q's marker if it would otherwise cover it.
+      if (haveQ && qx - RAD - GAP < ir && inkTop < qy + RAD + GAP && inkTop + inkH > qy - RAD) inkTop = qy + RAD + GAP;
+      var inkFloor = pyy(0, ppu) - GAP - inkH;     // lowest ink top keeping GAP above the base
+      if (inkTop > inkFloor) {{ inkTop = inkFloor; L._baseClamped = true; }}
       else L._baseClamped = false;
-      left = right - L.w;
       // Base-clamped against the floor we cannot drop below q, so if q's marker
-      // still sits in the box's vertical band and left of m, tuck the box's RIGHT
+      // still sits in the ink's vertical band and left of m, tuck the ink's RIGHT
       // edge left of q's disk too -- the label then clears both markers.
-      if (L._baseClamped && haveQ && qx < mx && top < qy + RAD && top + L.h > qy - RAD && qx - RAD - GAP < right) {{
-        right = qx - RAD - GAP; left = right - L.w;
+      if (L._baseClamped && haveQ && qx < mx && inkTop < qy + RAD && inkTop + inkH > qy - RAD && qx - RAD - GAP < ir) {{
+        ir = qx - RAD - GAP;
       }}
-    }} else {{                                      // "top right": box lower-left corner off the edge
+      left = ir + io.r - L.w;                      // element left from the ink right edge
+      top = inkTop - io.t;                         // element top from the ink top
+    }} else {{                                      // "top right": ink bottom-left corner off the edge
       var d = (RAD + GAP) / Math.SQRT2;
-      left = mx + d; top = my - d - L.h;
+      left = mx + d - io.l;                         // ink bottom-left corner at (mx + d, my - d)
+      top = my - d - L.h + io.b;
     }}
     L.el.style.transform = "translate(" + left + "px, " + top + "px)";
   }}
@@ -1189,6 +1225,11 @@ def simplex_figure_html(fig: go.Figure) -> str:
     }}
     for (var j = 0; j < sLabels.length; j++) if (sLabels[j].el) {{
       sLabels[j].el.replaceChildren(MathJax.tex2chtml(sLabels[j].tex, {{display: false}})); scaleMath(sLabels[j].el);
+      if (sLabels[j].inkTop != null) {{                 // lift by the ink top so the dot-to-label gap == GAP
+        var sc = sLabels[j].el.querySelector("mjx-container");
+        var sf = sc ? parseFloat(getComputedStyle(sc).fontSize) : {_POINT_FONT};
+        sLabels[j].el.style.top = "calc(50% + var(--thumb-d) / 2 + " + (GAP - sLabels[j].inkTop * sf) + "px)";
+      }}
     }}
     MathJax.startup.document.clear(); MathJax.startup.document.updateDocument();
     for (i = 0; i < all.length; i++) measure(all[i]);
@@ -1242,6 +1283,11 @@ def simplex_figure_html(fig: go.Figure) -> str:
     var fr = figWrap.getBoundingClientRect();
     function boxOf(el) {{ var b = el.getBoundingClientRect();
       return {{l: b.left - fr.left, t: b.top - fr.top, r: b.right - fr.left, bo: b.bottom - fr.top}}; }}
+    // Collision box: the INK box for point labels (element box shrunk by the ink
+    // insets), the element box for everything else (lines, vertices, contours).
+    function cbox(L) {{ var b = boxOf(L.el); if (!L.spec.ink) return b;
+      var f = L.fs || L.spec.size, k = L.spec.ink;
+      return {{l: b.l + k.l * f, t: b.t + k.t * f, r: b.r - k.r * f, bo: b.bo - k.b * f}}; }}
     function mk(xy) {{ return {{x: pxx(xy[0], ppu), y: pyy(xy[1], ppu)}}; }}
     function seg(a, b) {{ return [pxx(a[0], ppu), pyy(a[1], ppu), pxx(b[0], ppu), pyy(b[1], ppu)]; }}
     function boxDisk(bx, c) {{ var cx = Math.max(bx.l, Math.min(c.x, bx.r)), cy = Math.max(bx.t, Math.min(c.y, bx.bo));
@@ -1259,12 +1305,21 @@ def simplex_figure_html(fig: go.Figure) -> str:
     var TRI = SPEC.tri, P = SPEC.p, Ln = {{Q: seg(SPEC.qseg[0], SPEC.qseg[1]), M: seg(MSEG[0], MSEG[1]),
       e0: seg(TRI[0], TRI[1]), e1: seg(TRI[1], TRI[2]), e2: seg(TRI[2], TRI[0])}};
     var sMk = SPEC.statics.map(function (s) {{ return mk(s.xy); }});
-    var sBx = STATIC_LABELS.map(function (L) {{ return {{box: boxOf(L.el), key: L.spec.key || L.spec.place}}; }});
-    var hard = [], minDisk = 1e9, tol = {{Q: 0, M: 0, leg: 0, edge: 0, contour: 0}}, baseClamp = [];
+    var sBx = STATIC_LABELS.map(function (L) {{ return {{box: cbox(L), key: L.spec.key || L.spec.place, ink: !!L.spec.ink}}; }});
+    var hard = [], minDisk = 1e9, tol = {{Q: 0, M: 0, leg: 0, edge: 0, contour: 0}}, baseClamp = [], staticLine = [];
+    // Static point labels must NOT touch Q or M_wstar (rev 12, item 4): unlike the
+    // moving pair (whose halo covers a crossing), a fixed label on a line reads as
+    // sitting on it. Statics don't move, so this is checked once.
+    for (var si = 0; si < sBx.length; si++) if (sBx[si].ink) {{
+      if (segBox(Ln.Q, sBx[si].box)) staticLine.push(sBx[si].key + "/Q");
+      if (segBox(Ln.M, sBx[si].box)) staticLine.push(sBx[si].key + "/M");
+    }}
+    for (si = 0; si < staticLine.length; si++)
+      hard.push({{f: "static", t: "label-line", label: staticLine[si]}});
     for (var i = 0; i < N; i++) {{
       placeMoving(Lq, QCO[i], "topright", ppu);
       var mp = mPlace(i); placeMoving(Lm, MCO[i], mp, ppu, QCO[i]);
-      var mv = [{{box: boxOf(Lq.el), key: "q"}}, {{box: boxOf(Lm.el), key: "m"}}];
+      var mv = [{{box: cbox(Lq), key: "q"}}, {{box: cbox(Lm), key: "m"}}];
       var marks = sMk.concat([mk(QCO[i]), mk(MCO[i])]);
       var boxes = sBx.concat(mv);
       for (var a = 0; a < mv.length; a++) {{
@@ -1290,14 +1345,14 @@ def simplex_figure_html(fig: go.Figure) -> str:
     var trFail = null;
     for (var j = 0; j < N; j++) {{
       placeMoving(Lm, MCO[j], "topright", ppu); placeMoving(Lq, QCO[j], "topright", ppu);
-      var mb = boxOf(Lm.el), bad = boxDisk(mb, mk(QCO[j])) < -0.5;
+      var mb = cbox(Lm), bad = boxDisk(mb, mk(QCO[j])) < -0.5;
       for (var s = 0; s < sBx.length && !bad; s++) if (boxBox(mb, sBx[s].box)) bad = true;
-      if (!bad && boxBox(mb, boxOf(Lq.el))) bad = true;
+      if (!bad && boxBox(mb, cbox(Lq))) bad = true;
       if (bad) {{ trFail = j; break; }}
     }}
     frameLabels(roFrame);
     var out = {{width: Math.round(figWrap.clientWidth), hardCount: hard.length, hard: hard.slice(0, 40),
-      minLabelMarkerClearPx: +minDisk.toFixed(2), tolerated: tol,
+      minLabelMarkerClearPx: +minDisk.toFixed(2), tolerated: tol, staticLine: staticLine,
       toprightFmax: trFail === null ? 1.0 : +(trFail / (N - 1)).toFixed(4), toprightFirstFail: trFail,
       baseClamp: baseClamp.length ? (baseClamp[0] + ".." + baseClamp[baseClamp.length - 1] + " (" + baseClamp.length + ")") : "none"}};
     window.__SIMPLEX_AUDIT__ = out; console.log("SIMPLEX-AUDIT " + JSON.stringify(out));
@@ -1575,12 +1630,23 @@ def _check_labels() -> None:
     assert not fig.layout.annotations, "Plotly annotations must be empty (labels are overlay)"
     assert not any(tr.mode and "text" in tr.mode for tr in fig.data), "a trace still carries text"
 
+    # (4) Every point label (the four statics + the moving pair) carries ink insets
+    # (rev 12, item 1), and q~ is placed below-left with no rightward nudge (item 2).
+    point_specs = list(spec["statics"]) + [spec["moving"]["q"], spec["moving"]["m"]]
+    for s in point_specs:
+        assert set(s["ink"]) == {"t", "b", "l", "r"}, f"{s.get('key')} missing ink insets"
+    qt = next(s for s in spec["statics"] if s["key"] == "qtilde")
+    assert qt["place"] == "bottomleft", "q~ must be placed below-left (away from Q)"
+    assert qt.get("dx", 0.0) <= 0.0, "q~ must never be nudged right (toward Q)"
+    assert _QTILDE_LEFT_PX <= 8.0, "q~ left shift exceeds the 8 px contract cap"
+
     print(f"  flip rule: m 'topright' frames 0..{flip - 1}, 'undertuck' {flip}..{n - 1} "
           f"(fraction {flip / (n - 1):.4f} vs _M_FLIP {_M_FLIP}).")
     print(f"  per-frame q/m coords match the frame markers to {worst:.1e}; label classes "
           f"{counts}; no Plotly annotations or marker text remain.")
-    print(f"  gap {spec['gap']} px, marker radius {spec['radius']} px, q* nudge "
-          f"{_QSTAR_NUDGE_PX} px. Authoritative collision check: open with ?simplex-audit.")
+    print(f"  ink insets on all 6 point labels; q~ placed 'bottomleft', left shift "
+          f"{_QTILDE_LEFT_PX} px; q* nudge {_QSTAR_NUDGE_PX} px, gap {spec['gap']} px, "
+          f"radius {spec['radius']} px. Authoritative collision check: ?simplex-audit.")
 
 
 if __name__ == "__main__":
