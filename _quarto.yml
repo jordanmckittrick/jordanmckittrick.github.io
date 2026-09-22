@@ -20,7 +20,7 @@ website:
       # - href: index.qmd
       #   text: Home
       - href: blog.qmd
-        text: Blog
+        text: Essays # Blog
       - href: recommendations.qmd
         text: Recommendations
       - href: about.qmd

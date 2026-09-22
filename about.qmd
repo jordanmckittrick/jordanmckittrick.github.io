@@ -18,7 +18,7 @@ about:
     #   href: mailto:you@yourfullname.dev
 ---
 
-I'm an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems. This blog is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. I make no claims to novelty, though I'd be surprised if I don't occasionally stumble into it. Needless to say, nothing I write on the subject of investing should be taken as financial advice. Feel free to borrow material as you see fit, though I'd be grateful if you would adequately cite this blog. Please reach out to me on LinkedIn if you find any mistakes, have any questions, or think this site can be improved.
+I'm an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems. This website is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. I make no claims to novelty, though I'd be surprised if I don't occasionally stumble into it. Needless to say, nothing I write on the subject of investing should be taken as financial advice. Feel free to borrow material as you see fit, though I'd be grateful if you would adequately cite this blog. Please reach out to me on LinkedIn if you find any mistakes, have any questions, or think this site can be improved.
 
 
 ## Education
