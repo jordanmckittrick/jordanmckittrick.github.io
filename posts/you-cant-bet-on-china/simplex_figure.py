@@ -294,13 +294,16 @@ _CONTOUR_TANGENT = with_alpha(_CONTOUR, 0.70)
 _CONTOUR_LABEL = with_alpha(_CONTOUR, 0.60)
 _CONTOUR_LABEL_TANGENT = with_alpha(_CONTOUR, 0.85)
 
-# Font sizes, all named here: the figure renders ~750 px wide, so these are
-# sized for that, not for the ~300 px draft they were first chosen at. (The
-# readout is no longer here -- it is an HTML/MathJax overlay sized in the CSS.)
-_LINE_FONT = 17                        # line labels Q, M_wstar
-_VERTEX_FONT = 17                      # vertex labels delta_i
-_POINT_FONT = 17                       # the six point labels
-_CONTOUR_FONT = 13                     # contour value labels
+# Overlay-label font sizes (px). One scale, three tiers: 19 for every symbol the
+# reader reads (point labels, the two line labels, the three slider labels and
+# the readout), 17 for the grey vertex reference labels, 14 for the contour
+# values. Each label's math is scaled by the body-math percentage in the browser,
+# so N px renders exactly as body math would at N px, regardless of container.
+_READOUT_FONT = 19                     # the boxed decomposition readout
+_LINE_FONT = 19                        # line labels Q, M_wstar
+_POINT_FONT = 19                       # the six point labels
+_VERTEX_FONT = 17                      # vertex labels delta_i (grey reference)
+_CONTOUR_FONT = 14                     # contour value labels
 
 _MARKER_SIZE = 11                      # one size for all six points; colour carries meaning
 # Slider dots match the simplex markers exactly. Plotly centres the white outline
@@ -363,24 +366,36 @@ def _furthest_index(cand_xy: np.ndarray, avoid_xy: np.ndarray) -> int:
 _LABEL_GAP_PX = 3.0
 # q sits just right of q* along Q, and the superscript star of q*'s label sits up
 # and to the right -- directly in q's path. Shift q*'s label LEFT by this many px
-# so the star clears q's marker disk in every frame (item 3; verified live).
+# so the star clears q's marker disk in every frame (item 4c). Re-derived at the
+# 19 px sizes on the FAITHFUL probe (labels scaled by MathJax's 90.5 % body match):
+# the floor that first clears is 6 px (~0.18 px of air at both widths), so 8 px is
+# used -- ~1.4 px of clearance at both widths, still below the old 11 px.
 _QSTAR_NUDGE_PX = 8.0
+# m's moving "top right" label sweeps across q~'s static label at the narrow
+# render around frames 325..336. Shift q~'s label RIGHT by this many px -- the
+# smallest value that removes every m-vs-q~ overlap at BOTH widths (item 4b),
+# derived on the faithful (body-matched) probe. The narrow width binds (its smaller
+# ppu packs the moving m and static q~ closer, and the fixed-px labels loom larger);
+# the wide width needs no shift at all. The floor is 17 px (~0.07 px of air), so
+# 18 px is used (~1.1 px). It never reaches the Q line -- the audit's Q-crossing
+# count stays 0 at both widths -- so q~'s label does not touch Q.
+_QTILDE_NUDGE_PX = 18.0
 
 
 # ---- The fixed flip rule for m (item 2/4) -----------------------------------
 # Static points (p, q*, q~, m~) label BELOW; the moving pair label ABOVE, so
 # "below vs above" reads as "fixed vs moving". q is ALWAYS "top right". m is
-# "top right" until the slider's index fraction reaches _M_FLIP, then it moves to
-# the LEFT of its marker, into the wedge between M_wstar and the base (item 4).
-# The switch happens once, at a fixed frame, so nothing flickers. _M_FLIP = 0.74
-# was verified in Stage 1 (m's "top right" first collides near the delta_2 corner
-# at frame 401 = fraction 0.744; rounded down). The browser sweep re-verifies.
+# "top right" until the slider's index fraction reaches _M_FLIP, then it tucks
+# just UNDER M_wstar, lower-left of its marker ("undertuck", item 4a). The switch
+# happens once, at a fixed frame, so nothing flickers. _M_FLIP is re-verified at
+# the current 19 px sizes by the browser audit (item 5): the largest fraction for
+# which "top right" is collision-free before it is >= 0.74, so 0.74 stands.
 _M_FLIP = 0.74
 
 
 def _m_place(index_fraction: float) -> str:
-    """m's overlay placement: 'topright' before the flip, 'leftwedge' after."""
-    return "topright" if index_fraction < _M_FLIP else "leftwedge"
+    """m's overlay placement: 'topright' before the flip, 'undertuck' after."""
+    return "topright" if index_fraction < _M_FLIP else "undertuck"
 
 
 # --------------------------------------------------------------------------- #
@@ -589,7 +604,18 @@ def build_simplex_figure(
         np.array([tilted_measure(q_of_s(s), f_star, r, gamma) for s in np.linspace(0, 1, 24)]))
     tri_v = barycentric_to_cartesian(np.eye(3))
     markers_xy = np.vstack([xy_p, xy_qstar, xy_qtilde, xy_mtilde])
-    base_avoid = np.vstack([markers_xy, q_samples, m_samples, tri_v, readout_avoid])
+    # Contour labels must dodge the OTHER labels' boxes, not just the markers, now
+    # that all labels are 19 px. Approximate each point label's footprint by a
+    # point offset from its marker/path: static labels sit below their markers,
+    # the moving pair's "top right" labels sit up-and-right of their paths.
+    _ppu_ref = (_REF_WIDTH - 2 * _MARGIN_PX) / _X_SPAN
+    _off_below = (_DOT_D_PX / 2 + _LABEL_GAP_PX + _POINT_FONT * 0.55) / _ppu_ref
+    _off_diag = (_DOT_D_PX / 2 + _LABEL_GAP_PX + _POINT_FONT * 0.45) / _ppu_ref
+    _static_lab = markers_xy - np.array([0.0, _off_below])
+    _q_lab = q_samples + np.array([_off_diag, _off_diag])
+    _m_lab = m_samples + np.array([_off_diag, _off_diag])
+    _label_avoid = np.vstack([markers_xy, _static_lab, q_samples, _q_lab, m_samples, _m_lab])
+    base_avoid = np.vstack([_label_avoid, tri_v, readout_avoid])
 
     # (10)/(5) Contour and line labels are now HTML/MathJax overlay elements
     # (Stage 2), but their PLACES are still chosen here. Contours: the same
@@ -598,14 +624,18 @@ def build_simplex_figure(
     # the angle carries over unchanged. Line labels: just outside the upper-left
     # edge (the A end after the orientation swap), right-aligned so the text runs
     # away from the triangle.
-    _TANGENT_CLEAR = 0.05   # min clearance (data units) the tangent label keeps
+    # Min clearance (data units) the tangent label keeps from every avoid point.
+    # It must dodge the OTHER contour labels too (they are placed first, into
+    # ``placed``); 0.08 data-units ~= a full contour-label box at the narrow ppu,
+    # so the tangent cannot land on top of the 0.06 label near q*.
+    _TANGENT_CLEAR = 0.08
     contour_labels = []
     placed = []
     for mult in [m for m in contour_mults if m != 1.0] + [1.0]:   # tangent last
         curve = contour_curves[mult]
         open_curve = curve[:-1]
         if mult == 1.0:
-            avoid_pts = np.vstack([markers_xy, q_samples, m_samples])
+            avoid_pts = np.vstack([_label_avoid] + ([np.array(placed)] if placed else []))
             clear = np.sqrt(((open_curve[:, None, :] - avoid_pts[None, :, :]) ** 2)
                             .sum(-1)).min(axis=1)
             ok = (open_curve[:, 0] >= xy_p[0]) & (clear >= _TANGENT_CLEAR)
@@ -674,7 +704,7 @@ def build_simplex_figure(
 
     # ------------------------------------------------------------------ #
     #  Overlay label specs -- static point labels (below), the moving pair
-    #  (above, q "top right"; m "top right" then "leftwedge"), and the vertex
+    #  (above, q "top right"; m "top right" then "undertuck"), and the vertex
     #  labels at their current anchors/alignments. All positioned in the browser
     #  from their MEASURED boxes; the fallback strings render before MathJax.
     # ------------------------------------------------------------------ #
@@ -683,9 +713,10 @@ def build_simplex_figure(
              place="below", size=_POINT_FONT, color=INK),
         dict(key="qstar", tex="q^{*}", fb="<i>q</i><sup>*</sup>",
              xy=[float(v) for v in xy_qstar], place="below", size=_POINT_FONT,
-             color=INK, nudge=_QSTAR_NUDGE_PX),
+             color=INK, dx=-_QSTAR_NUDGE_PX),                       # nudged LEFT off q's path
         dict(key="qtilde", tex=r"\tilde{q}", fb="<i>q&#771;</i>",
-             xy=[float(v) for v in xy_qtilde], place="below", size=_POINT_FONT, color=INK),
+             xy=[float(v) for v in xy_qtilde], place="below", size=_POINT_FONT,
+             color=INK, dx=_QTILDE_NUDGE_PX),                       # nudged RIGHT off m's label
         dict(key="mtilde", tex=r"\tilde{m}", fb="<i>m&#771;</i>",
              xy=[float(v) for v in xy_mtilde], place="below", size=_POINT_FONT, color=INK),
     ]
@@ -833,14 +864,19 @@ def simplex_figure_html(fig: go.Figure) -> str:
     js_slider_qt = json.dumps(r"\tilde{q}")
     js_slider_qs = json.dumps(r"q^{*}")
     js_slider_q = json.dumps(r"\mathcal{Q}")
-    # \underset puts each number centred under its symbol while the = and + keep
-    # the SAME inline spacing the post body uses -- unlike an array, whose column
-    # padding (which MathJax's ignored @{...}/\arraycolsep will not shrink) made
-    # the operators about twice as wide as the prose (item 6). \textstyle keeps the
-    # numbers full size (the under-arg is scriptstyle by default).
-    js_us_a = json.dumps(r"\underset{\textstyle ")
-    js_us_b = json.dumps(r"}{D(p \| q)} = \underset{\textstyle ")
-    js_us_c = json.dumps(r"}{D(p \| q^{*})} + \underset{\textstyle ")
+    # \underset stacks each number (and each operator) under its symbol while the
+    # = and + keep the SAME inline spacing the prose uses -- unlike an array, whose
+    # column padding (MathJax ignores @{...}/\arraycolsep) doubled it. The number
+    # row now carries its own = and +, wrapped in \mathrel/\mathbin so the stacked
+    # operator keeps the prose spacing class. \textstyle keeps everything full
+    # size; the \rule strut opens ~half a line between the rows (all five
+    # under-args share it, so the rows stay level).
+    strut = r"\rule{0pt}{1.35em}"
+    js_us_a = json.dumps(r"\underset{\textstyle " + strut + " ")
+    js_us_b = json.dumps(r"}{D(p \| q)} \mathrel{\underset{\textstyle " + strut
+                         + r" =}{=}} \underset{\textstyle " + strut + " ")
+    js_us_c = json.dumps(r"}{D(p \| q^{*})} \mathbin{\underset{\textstyle " + strut
+                         + r" +}{+}} \underset{\textstyle " + strut + " ")
     js_us_d = json.dumps(r"}{D(p \| m)}")
     d0, m0 = (values[start] if start < len(values) else ("0.0000", "0.0000"))
     # Plain-HTML readout shown until MathJax is ready (or if it never loads).
@@ -904,6 +940,9 @@ def simplex_figure_html(fig: go.Figure) -> str:
     -1.1px -1.1px var(--sx-paper, #fff), 1.1px -1.1px var(--sx-paper, #fff),
     -1.1px 1.1px var(--sx-paper, #fff), 1.1px 1.1px var(--sx-paper, #fff); }}
 .simplex-olabel mjx-container {{ margin: 0 !important; }}
+/* Contour labels sit ON their curve: a solid PAPER background (rotates with the
+   label) cuts a clean gap in the line; no halo (the background does its job). */
+.simplex-contour-label {{ background: {PAPER}; padding: 2px; text-shadow: none; }}
 /* The readout box: a real CSS border in the triangle-outline colour/width, PAPER
    fill, INK text set explicitly (the site has a dark mode; the figure stays a
    white card, but text would otherwise inherit a light page colour). Font size
@@ -911,7 +950,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
    fit()/roPlace(); block mode drops it into normal flow above the figure. */
 .simplex-readout {{ box-sizing: border-box; white-space: nowrap;
   border: 1.2px solid {_SCAFFOLD}; background: {PAPER}; color: {INK};
-  padding: {_READOUT_PAD_PX:.0f}px; font-size: 1rem; line-height: 1; }}
+  padding: {_READOUT_PAD_PX:.0f}px; font-size: {_READOUT_FONT}px; line-height: 1; }}
 .simplex-readout mjx-container {{ margin: 0 !important; }}
 .simplex-readout .ro-fallback {{ display: inline-block; text-align: left; font-style: normal; }}
 .simplex-readout.ro-block {{ position: static; display: table; margin: 0 auto .6rem; }}
@@ -947,10 +986,10 @@ def simplex_figure_html(fig: go.Figure) -> str:
    dot (item 1d). Horizontal centring stays with the calc()-set left. */
 .simplex-landmark {{ position: absolute;
   top: calc(50% + var(--thumb-d) / 2 + {_LABEL_GAP_PX}px); transform: translate(-50%, 0);
-  font-size: 15px; font-style: italic; color: var(--bs-body-color, #1f2328);
+  font-size: {_POINT_FONT}px; font-style: italic; color: var(--bs-body-color, #1f2328);
   pointer-events: none; white-space: nowrap; }}
 .simplex-q-label {{ position: absolute; right: 100%; top: 50%; transform: translateY(-50%);
-  margin-right: 12px; font-size: 17px;
+  margin-right: 12px; font-size: {_LINE_FONT}px;
   color: var(--bs-body-color, #1f2328); pointer-events: none; }}
 </style>
 <script>
@@ -975,6 +1014,12 @@ def simplex_figure_html(fig: go.Figure) -> str:
   var VALUES = {values_json};
   var DSTAR = {js_dstar}, US_A = {js_us_a}, US_B = {js_us_b}, US_C = {js_us_c}, US_D = {js_us_d};
   var mjReady = false, roCache = {{}}, roFrame = {start}, coldMs = null, warmed = false;
+  // Every label (and the readout) is set at N px in the CSS/spec, then its math is
+  // scaled by the body-math percentage (MathJax's matchFontHeight, e.g. "90.5%"),
+  // so N px renders exactly as body math would at N px, whatever the container
+  // inherits. Captured once MathJax is ready.
+  var bodyPct = null;
+  function scaleMath(el) {{ if (!bodyPct) return; var c = el.querySelector("mjx-container"); if (c) c.style.fontSize = bodyPct; }}
   function roTex(i) {{
     var v = VALUES[i] || ["", ""];
     return US_A + v[0] + US_B + DSTAR + US_C + v[1] + US_D;
@@ -983,6 +1028,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
     if (roCache[i]) return roCache[i];
     var t0 = performance.now();
     var node = MathJax.tex2chtml(roTex(i), {{display: false}});
+    if (bodyPct) node.style.fontSize = bodyPct;
     if (coldMs === null) coldMs = performance.now() - t0;
     roCache[i] = node;
     return node;
@@ -1032,12 +1078,10 @@ def simplex_figure_html(fig: go.Figure) -> str:
   }}
   whenMathJax(function () {{
     mjReady = true;
-    // Match the body math's size: MathJax gives in-place body math an inline
-    // font-size (matchFontHeight, e.g. "90.5%") that a detached tex2chtml node
-    // does not get. Copy it onto the readout container so its math is the same
-    // size as the prose's -- and small enough to keep overlay mode at desktop.
+    // The percentage MathJax puts on in-text math (matchFontHeight); applied to
+    // every label's mjx-container so each renders at its N px as body math would.
     var bodyC = document.querySelector("p mjx-container, .cell mjx-container, li mjx-container");
-    if (bodyC && bodyC.style.fontSize) readout.style.fontSize = bodyC.style.fontSize;
+    bodyPct = (bodyC && bodyC.style.fontSize) ? bodyC.style.fontSize : null;
     roRenderMath(roFrame);
     typesetLabels();                       // swap every label's fallback for typeset math
     positionStatics(); frameLabels(roFrame);
@@ -1071,7 +1115,11 @@ def simplex_figure_html(fig: go.Figure) -> str:
   function pyy(y, ppu) {{ return MARG + (Y1 - y) * ppu; }}
   function mkLabel(spec) {{
     var el = document.createElement("div");
-    el.className = "simplex-olabel";
+    // Contour labels sit ON their curve, so they get a solid PAPER background
+    // that cuts a clean gap in the line (a halo only clears each glyph's strokes,
+    // letting the curve show through the gaps between characters); every other
+    // label gets a halo, for lines that merely pass behind it.
+    el.className = "simplex-olabel" + (spec.place === "rotated" ? " simplex-contour-label" : "");
     el.style.fontSize = spec.size + "px";
     el.style.color = spec.color;
     el.innerHTML = spec.fb;                    // fallback until MathJax is ready
@@ -1088,7 +1136,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
   function measure(L) {{ L.w = L.el.offsetWidth; L.h = L.el.offsetHeight; }}
   function placeStatic(L, ppu) {{
     var s = L.spec, ax = pxx(s.xy[0], ppu), ay = pyy(s.xy[1], ppu), tf = "", left, top;
-    if (s.place === "below") {{ left = ax - L.w / 2 - (s.nudge || 0); top = ay + RAD + GAP; }}
+    if (s.place === "below") {{ left = ax - L.w / 2 + (s.dx || 0); top = ay + RAD + GAP; }}
     else if (s.place === "outside-right") {{ left = ax - L.w; top = ay - L.h / 2; }}
     else if (s.place === "vbl") {{ left = ax - L.w; top = ay; }}
     else if (s.place === "vbr") {{ left = ax; top = ay; }}
@@ -1097,23 +1145,38 @@ def simplex_figure_html(fig: go.Figure) -> str:
     L.el.style.left = left + "px"; L.el.style.top = top + "px"; L.el.style.transform = tf;
   }}
   function mLineY(x) {{ return MSEG[0][1] + (x - MSEG[0][0]) / (MSEG[1][0] - MSEG[0][0]) * (MSEG[1][1] - MSEG[0][1]); }}
-  function placeMoving(L, xy, place, ppu) {{
+  function placeMoving(L, xy, place, ppu, qxy) {{
     var mx = pxx(xy[0], ppu), my = pyy(xy[1], ppu), left, top;
-    if (place === "leftwedge") {{                 // left of the marker, in the M_wstar/base wedge
-      left = mx - RAD - GAP - L.w;
-      var xc = X0 + (left + L.w / 2 - MARG) / ppu;
-      top = pyy(mLineY(xc) / 2, ppu) - L.h / 2;   // base y = 0
+    if (place === "undertuck") {{                 // tucked just under M_wstar, lower-left of m
+      var right = mx - RAD - GAP;
+      var xRight = X0 + (right - MARG) / ppu;      // data x at the label's RIGHT edge
+      top = pyy(mLineY(xRight), ppu) + GAP;        // TOP edge GAP below M_wstar there
+      var qx, qy, haveQ = !!qxy;
+      if (haveQ) {{ qx = pxx(qxy[0], ppu); qy = pyy(qxy[1], ppu); }}
+      // The box is left of m's marker by GAP, but near delta_2 q converges onto m,
+      // so also drop below q's marker if the box would otherwise cover it.
+      if (haveQ && qx - RAD - GAP < right && top < qy + RAD + GAP && top + L.h > qy - RAD) top = qy + RAD + GAP;
+      var baseFloor = pyy(0, ppu) - GAP - L.h;     // lowest top keeping GAP above the base
+      if (top > baseFloor) {{ top = baseFloor; L._baseClamped = true; }}
+      else L._baseClamped = false;
+      left = right - L.w;
+      // Base-clamped against the floor we cannot drop below q, so if q's marker
+      // still sits in the box's vertical band and left of m, tuck the box's RIGHT
+      // edge left of q's disk too -- the label then clears both markers.
+      if (L._baseClamped && haveQ && qx < mx && top < qy + RAD && top + L.h > qy - RAD && qx - RAD - GAP < right) {{
+        right = qx - RAD - GAP; left = right - L.w;
+      }}
     }} else {{                                      // "top right": box lower-left corner off the edge
       var d = (RAD + GAP) / Math.SQRT2;
       left = mx + d; top = my - d - L.h;
     }}
     L.el.style.transform = "translate(" + left + "px, " + top + "px)";
   }}
-  function mPlace(i) {{ return (i / (N - 1) < MFLIP) ? "topright" : "leftwedge"; }}
+  function mPlace(i) {{ return (i / (N - 1) < MFLIP) ? "topright" : "undertuck"; }}
   function frameLabels(i) {{
     var ppu = ppuNow(); if (ppu <= 0) return;
     placeMoving(Lq, QCO[i], "topright", ppu);
-    placeMoving(Lm, MCO[i], mPlace(i), ppu);
+    placeMoving(Lm, MCO[i], mPlace(i), ppu, QCO[i]);
   }}
   function positionStatics() {{
     var ppu = ppuNow(); if (ppu <= 0) return;
@@ -1121,8 +1184,12 @@ def simplex_figure_html(fig: go.Figure) -> str:
   }}
   function typesetLabels() {{
     var all = STATIC_LABELS.concat([Lq, Lm]);
-    for (var i = 0; i < all.length; i++) all[i].el.replaceChildren(MathJax.tex2chtml(all[i].spec.tex, {{display: false}}));
-    for (var j = 0; j < sLabels.length; j++) if (sLabels[j].el) sLabels[j].el.replaceChildren(MathJax.tex2chtml(sLabels[j].tex, {{display: false}}));
+    for (var i = 0; i < all.length; i++) {{
+      all[i].el.replaceChildren(MathJax.tex2chtml(all[i].spec.tex, {{display: false}})); scaleMath(all[i].el);
+    }}
+    for (var j = 0; j < sLabels.length; j++) if (sLabels[j].el) {{
+      sLabels[j].el.replaceChildren(MathJax.tex2chtml(sLabels[j].tex, {{display: false}})); scaleMath(sLabels[j].el);
+    }}
     MathJax.startup.document.clear(); MathJax.startup.document.updateDocument();
     for (i = 0; i < all.length; i++) measure(all[i]);
   }}
@@ -1193,10 +1260,10 @@ def simplex_figure_html(fig: go.Figure) -> str:
       e0: seg(TRI[0], TRI[1]), e1: seg(TRI[1], TRI[2]), e2: seg(TRI[2], TRI[0])}};
     var sMk = SPEC.statics.map(function (s) {{ return mk(s.xy); }});
     var sBx = STATIC_LABELS.map(function (L) {{ return {{box: boxOf(L.el), key: L.spec.key || L.spec.place}}; }});
-    var hard = [], minDisk = 1e9, tol = {{Q: 0, M: 0, leg: 0, edge: 0, contour: 0}}, wedgeShort = [];
+    var hard = [], minDisk = 1e9, tol = {{Q: 0, M: 0, leg: 0, edge: 0, contour: 0}}, baseClamp = [];
     for (var i = 0; i < N; i++) {{
       placeMoving(Lq, QCO[i], "topright", ppu);
-      var mp = mPlace(i); placeMoving(Lm, MCO[i], mp, ppu);
+      var mp = mPlace(i); placeMoving(Lm, MCO[i], mp, ppu, QCO[i]);
       var mv = [{{box: boxOf(Lq.el), key: "q"}}, {{box: boxOf(Lm.el), key: "m"}}];
       var marks = sMk.concat([mk(QCO[i]), mk(MCO[i])]);
       var boxes = sBx.concat(mv);
@@ -1213,15 +1280,26 @@ def simplex_figure_html(fig: go.Figure) -> str:
         if (segBox(Ln.e0, bx) || segBox(Ln.e1, bx) || segBox(Ln.e2, bx)) tol.edge++;
         if (contourBox(bx)) tol.contour++;
       }}
-      if (mp === "leftwedge") {{ var xc = X0 + (mv[1].box.l + (mv[1].box.r - mv[1].box.l) / 2 - MARG) / ppu;
-        if ((mv[1].box.bo - mv[1].box.t) > (pyy(0, ppu) - pyy(mLineY(xc), ppu))) wedgeShort.push(i); }}
+      if (mp === "undertuck" && Lm._baseClamped) baseClamp.push(i);
     }}
     for (a = 0; a < sBx.length; a++) for (b = a + 1; b < sBx.length; b++)
       if (boxBox(sBx[a].box, sBx[b].box)) hard.push({{f: "static", t: "label-label", a: sBx[a].key, b: sBx[b].key}});
+    // Re-derive f_max for m's "top right": the first frame where FORCED top right
+    // has a HARD violation (q marker, any static label, or q's box). _M_FLIP must
+    // not exceed this fraction.
+    var trFail = null;
+    for (var j = 0; j < N; j++) {{
+      placeMoving(Lm, MCO[j], "topright", ppu); placeMoving(Lq, QCO[j], "topright", ppu);
+      var mb = boxOf(Lm.el), bad = boxDisk(mb, mk(QCO[j])) < -0.5;
+      for (var s = 0; s < sBx.length && !bad; s++) if (boxBox(mb, sBx[s].box)) bad = true;
+      if (!bad && boxBox(mb, boxOf(Lq.el))) bad = true;
+      if (bad) {{ trFail = j; break; }}
+    }}
     frameLabels(roFrame);
     var out = {{width: Math.round(figWrap.clientWidth), hardCount: hard.length, hard: hard.slice(0, 40),
       minLabelMarkerClearPx: +minDisk.toFixed(2), tolerated: tol,
-      wedgeShort: wedgeShort.length ? (wedgeShort[0] + ".." + wedgeShort[wedgeShort.length - 1] + " (" + wedgeShort.length + ")") : "none"}};
+      toprightFmax: trFail === null ? 1.0 : +(trFail / (N - 1)).toFixed(4), toprightFirstFail: trFail,
+      baseClamp: baseClamp.length ? (baseClamp[0] + ".." + baseClamp[baseClamp.length - 1] + " (" + baseClamp.length + ")") : "none"}};
     window.__SIMPLEX_AUDIT__ = out; console.log("SIMPLEX-AUDIT " + JSON.stringify(out));
     return out;
   }}
@@ -1474,11 +1552,11 @@ def _check_labels() -> None:
     spec = dict(mt["label_spec"])
     q_pos, m_pos = int(mt["q_frame_pos"]), int(mt["m_frame_pos"])
 
-    # (1) The flip rule: 'topright' below _M_FLIP, 'leftwedge' at/above -- once.
+    # (1) The flip rule: 'topright' below _M_FLIP, 'undertuck' at/above -- once.
     places = [_m_place(i / (n - 1)) for i in range(n)]
-    flip = places.index("leftwedge")
+    flip = places.index("undertuck")
     assert all(pl == "topright" for pl in places[:flip]), "m flips before _M_FLIP"
-    assert all(pl == "leftwedge" for pl in places[flip:]), "m flips more than once"
+    assert all(pl == "undertuck" for pl in places[flip:]), "m flips more than once"
     assert abs(flip / (n - 1) - _M_FLIP) <= 1.0 / (n - 1) + 1e-9, "flip frame off _M_FLIP"
 
     # (2) The per-frame q/m coordinates sent to JS match the moving markers.
@@ -1497,7 +1575,7 @@ def _check_labels() -> None:
     assert not fig.layout.annotations, "Plotly annotations must be empty (labels are overlay)"
     assert not any(tr.mode and "text" in tr.mode for tr in fig.data), "a trace still carries text"
 
-    print(f"  flip rule: m 'topright' frames 0..{flip - 1}, 'leftwedge' {flip}..{n - 1} "
+    print(f"  flip rule: m 'topright' frames 0..{flip - 1}, 'undertuck' {flip}..{n - 1} "
           f"(fraction {flip / (n - 1):.4f} vs _M_FLIP {_M_FLIP}).")
     print(f"  per-frame q/m coords match the frame markers to {worst:.1e}; label classes "
           f"{counts}; no Plotly annotations or marker text remain.")
