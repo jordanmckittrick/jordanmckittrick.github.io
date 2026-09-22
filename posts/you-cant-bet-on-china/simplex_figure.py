@@ -364,6 +364,12 @@ def _furthest_index(cand_xy: np.ndarray, avoid_xy: np.ndarray) -> int:
 # the gap from a marker's OUTER edge (radius _DOT_D_PX / 2) to its label, in CSS
 # px; one constant for every point label and the slider labels (item 1b/1d).
 _LABEL_GAP_PX = 3.0
+# The slider's landmark labels sit under a dot the thumb can park on, and the
+# input paints above them (z-index 2), so any overlap hides the label. q*'s
+# asterisk is the highest-riding ink in the set, so the simplex's 3 px gap is too
+# tight there. BOTH landmark labels drop by this much, equally, so they stay
+# level; the thumb label above the track uses it as extra clearance too (rev 13).
+_SLIDER_LABEL_EXTRA_PX = 3.0
 # INK BOXES (rev 12, item 1). A MathJax label's element box is a line box: it
 # reserves ascent/descent the glyphs may not use (p, q, m have no ascender, so the
 # empty band above their x-height made "below" labels sit visibly low). Each point
@@ -885,6 +891,10 @@ def simplex_figure_html(fig: go.Figure) -> str:
     # top so the GAP is measured to the ink, not the reserved font ascent.
     js_qt_inktop = _INK_INSETS_EM["qtilde"]["t"]
     js_qs_inktop = _INK_INSETS_EM["qstar"]["t"]
+    # The thumb label "q" above the track (rev 13, item 2): its TeX and q's ink
+    # insets (its ink BOTTOM anchors it above the dot, like the moving q label).
+    js_thumb_q = json.dumps("q")
+    js_q_ink = json.dumps(_INK_INSETS_EM["q"], separators=(",", ":"))
     # \underset stacks each number (and each operator) under its symbol while the
     # = and + keep the SAME inline spacing the prose uses -- unlike an array, whose
     # column padding (MathJax ignores @{...}/\arraycolsep) doubled it. The number
@@ -935,6 +945,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
   <span class="simplex-tick simplex-tick-qs" style="left: {left_qs};"></span>
   <span class="simplex-landmark simplex-landmark-qt" style="left: {left_qt};">q&#771;</span>
   <span class="simplex-landmark simplex-landmark-qs" style="left: {left_qs};">q<sup>*</sup></span>
+  <span class="simplex-thumb-label">q</span>
 </div>
 <style>
 /* The delta_1 / delta_2 corner labels are drawn with cliponaxis=False and, being
@@ -955,7 +966,7 @@ def simplex_figure_html(fig: go.Figure) -> str:
 .simplex-label-layer {{ position: absolute; inset: 0; pointer-events: none; overflow: visible; }}
 .simplex-olabel {{ position: absolute; left: 0; top: 0; line-height: 1; white-space: nowrap;
   will-change: transform; }}
-.simplex-olabel, .simplex-landmark, .simplex-q-label {{
+.simplex-olabel, .simplex-landmark, .simplex-q-label, .simplex-thumb-label {{
   text-shadow: -1.5px 0 var(--sx-paper, #fff), 1.5px 0 var(--sx-paper, #fff),
     0 -1.5px var(--sx-paper, #fff), 0 1.5px var(--sx-paper, #fff),
     -1.1px -1.1px var(--sx-paper, #fff), 1.1px -1.1px var(--sx-paper, #fff),
@@ -1001,14 +1012,21 @@ def simplex_figure_html(fig: go.Figure) -> str:
   z-index: 1; pointer-events: none; }}
 .simplex-tick-qt {{ background: #84cc16; }}
 .simplex-tick-qs {{ background: #7575f7; }}
-/* Top = dot bottom + _LABEL_GAP_PX, so the label's TOP (its accent/superscript,
-   the tallest part of the measured MathJax box) sits the same gap below the dot
-   as a simplex label below its marker -- fixes the star/tilde hiding behind the
-   dot (item 1d). Horizontal centring stays with the calc()-set left. */
+/* Top = dot bottom + _LABEL_GAP_PX + _SLIDER_LABEL_EXTRA_PX. The extra clearance
+   keeps q*'s high-riding asterisk out from under the thumb (which paints above the
+   labels); both landmarks drop equally so they stay level. This is the pre-MathJax
+   fallback; typesetLabels overrides `top` with the same total once the ink box is
+   measured. Horizontal centring stays with the calc()-set left. */
 .simplex-landmark {{ position: absolute;
-  top: calc(50% + var(--thumb-d) / 2 + {_LABEL_GAP_PX}px); transform: translate(-50%, 0);
+  top: calc(50% + var(--thumb-d) / 2 + {_LABEL_GAP_PX + _SLIDER_LABEL_EXTRA_PX}px); transform: translate(-50%, 0);
   font-size: {_POINT_FONT}px; font-style: italic; color: var(--bs-body-color, #1f2328);
   pointer-events: none; white-space: nowrap; }}
+/* The thumb IS q (the track is a straightened Q), so it carries a "q" label ABOVE
+   the track -- MathJax, ink colour, halo -- driven per frame by the same rAF that
+   moves the readout and the simplex q/m labels. */
+.simplex-thumb-label {{ position: absolute; left: 0; top: 0; line-height: 1; white-space: nowrap;
+  will-change: transform; font-size: {_POINT_FONT}px; font-style: italic; color: {INK};
+  pointer-events: none; }}
 .simplex-q-label {{ position: absolute; right: 100%; top: 50%; transform: translateY(-50%);
   margin-right: 12px; font-size: {_LINE_FONT}px;
   color: var(--bs-body-color, #1f2328); pointer-events: none; }}
@@ -1154,6 +1172,9 @@ def simplex_figure_html(fig: go.Figure) -> str:
     {{el: sliderWrap.querySelector(".simplex-landmark-qs"), tex: {js_slider_qs}, inkTop: {js_qs_inktop}}},
     {{el: sliderWrap.querySelector(".simplex-q-label"), tex: {js_slider_q}}}
   ];
+  // The thumb label "q" above the track (rev 13): positioned per frame in JS.
+  var Lqt = {{el: sliderWrap.querySelector(".simplex-thumb-label"),
+             spec: {{ink: {js_q_ink}, size: {_POINT_FONT}}}, w: 0, h: 0, fs: {_POINT_FONT}}};
   function measure(L) {{ L.w = L.el.offsetWidth; L.h = L.el.offsetHeight;
     var c = L.el.querySelector("mjx-container");
     L.fs = c ? parseFloat(getComputedStyle(c).fontSize) : L.spec.size; }}
@@ -1209,7 +1230,22 @@ def simplex_figure_html(fig: go.Figure) -> str:
     L.el.style.transform = "translate(" + left + "px, " + top + "px)";
   }}
   function mPlace(i) {{ return (i / (N - 1) < MFLIP) ? "topright" : "undertuck"; }}
+  // The thumb label sits ABOVE the track, centred on the thumb by the ticks' own
+  // travel formula (centre = d/2 + F*(track - d)); vertically its ink BOTTOM sits
+  // GAP + _SLIDER_LABEL_EXTRA_PX above the dot's TOP edge (mirror of the landmarks).
+  function thumbTop() {{ var tf = Lqt.fs || {_POINT_FONT};
+    return (sliderWrap.clientHeight / 2 - {_DOT_D_PX} / 2) - (GAP + {_SLIDER_LABEL_EXTRA_PX})
+      + Lqt.spec.ink.b * tf - Lqt.h; }}
+  function placeThumb(i) {{
+    if (!Lqt.el || !Lqt.w) return;
+    var F = i / (N - 1), centre = {_DOT_D_PX} / 2 + F * (sliderWrap.clientWidth - {_DOT_D_PX});
+    Lqt.el.style.transform = "translate(" + (centre - Lqt.w / 2) + "px," + thumbTop() + "px)";
+  }}
+  // Grow the wrap's TOP margin so the label (above the track) clears the figure by
+  // ~8 px; derived from the measured label height via thumbTop(). Bottom stays.
+  function thumbMargin() {{ if (Lqt.el && Lqt.h) sliderWrap.style.marginTop = Math.ceil(8 - thumbTop()) + "px"; }}
   function frameLabels(i) {{
+    placeThumb(i);
     var ppu = ppuNow(); if (ppu <= 0) return;
     placeMoving(Lq, QCO[i], "topright", ppu);
     placeMoving(Lm, MCO[i], mPlace(i), ppu, QCO[i]);
@@ -1225,17 +1261,20 @@ def simplex_figure_html(fig: go.Figure) -> str:
     }}
     for (var j = 0; j < sLabels.length; j++) if (sLabels[j].el) {{
       sLabels[j].el.replaceChildren(MathJax.tex2chtml(sLabels[j].tex, {{display: false}})); scaleMath(sLabels[j].el);
-      if (sLabels[j].inkTop != null) {{                 // lift by the ink top so the dot-to-label gap == GAP
+      if (sLabels[j].inkTop != null) {{                 // ink top GAP + EXTRA below the dot (same total as the CSS fallback)
         var sc = sLabels[j].el.querySelector("mjx-container");
         var sf = sc ? parseFloat(getComputedStyle(sc).fontSize) : {_POINT_FONT};
-        sLabels[j].el.style.top = "calc(50% + var(--thumb-d) / 2 + " + (GAP - sLabels[j].inkTop * sf) + "px)";
+        sLabels[j].el.style.top = "calc(50% + var(--thumb-d) / 2 + " + (GAP + {_SLIDER_LABEL_EXTRA_PX} - sLabels[j].inkTop * sf) + "px)";
       }}
     }}
+    if (Lqt.el) {{ Lqt.el.replaceChildren(MathJax.tex2chtml({js_thumb_q}, {{display: false}})); scaleMath(Lqt.el); }}
     MathJax.startup.document.clear(); MathJax.startup.document.updateDocument();
     for (i = 0; i < all.length; i++) measure(all[i]);
+    if (Lqt.el) {{ measure(Lqt); thumbMargin(); }}
   }}
   for (var _li = 0; _li < STATIC_LABELS.length; _li++) measure(STATIC_LABELS[_li]);
   measure(Lq); measure(Lm);                    // fallback dimensions until MathJax swaps in
+  if (Lqt.el) {{ measure(Lqt); thumbMargin(); }}
 
   // ---- Slider ----
   input.addEventListener("input", function () {{ animate(input.value); roSchedule(+input.value); }});
@@ -1350,9 +1389,28 @@ def simplex_figure_html(fig: go.Figure) -> str:
       if (!bad && boxBox(mb, cbox(Lq))) bad = true;
       if (bad) {{ trFail = j; break; }}
     }}
+    // Thumb label clearances (rev 13, item 2): across the full range, the min gap
+    // from the "q" thumb label to the delta_2 vertex label (approached at far
+    // right) and to the Q track label (approached at far left). Viewport coords --
+    // these live in different containers. Negative == overlap.
+    function gapRect(a, b) {{
+      var dx = Math.max(b.left - a.right, a.left - b.right), dy = Math.max(b.top - a.bottom, a.top - b.bottom);
+      if (dx < 0 && dy < 0) return Math.max(dx, dy);
+      return (dx < 0) ? dy : (dy < 0) ? dx : Math.hypot(dx, dy);
+    }}
+    var d2L = STATIC_LABELS.filter(function (L) {{ return (L.spec.tex || "").indexOf("delta_{{2}}") >= 0; }})[0];
+    var qTrackEl = sliderWrap.querySelector(".simplex-q-label");
+    var d2R = d2L ? d2L.el.getBoundingClientRect() : null, qTR = qTrackEl ? qTrackEl.getBoundingClientRect() : null;
+    var thumbToDelta2 = 1e9, thumbToQ = 1e9;
+    if (Lqt.el && Lqt.w) for (var ti = 0; ti < N; ti++) {{
+      placeThumb(ti); var tR = Lqt.el.getBoundingClientRect();
+      if (d2R) thumbToDelta2 = Math.min(thumbToDelta2, gapRect(tR, d2R));
+      if (qTR) thumbToQ = Math.min(thumbToQ, gapRect(tR, qTR));
+    }}
     frameLabels(roFrame);
     var out = {{width: Math.round(figWrap.clientWidth), hardCount: hard.length, hard: hard.slice(0, 40),
       minLabelMarkerClearPx: +minDisk.toFixed(2), tolerated: tol, staticLine: staticLine,
+      thumbToDelta2: +thumbToDelta2.toFixed(2), thumbToQlabel: +thumbToQ.toFixed(2),
       toprightFmax: trFail === null ? 1.0 : +(trFail / (N - 1)).toFixed(4), toprightFirstFail: trFail,
       baseClamp: baseClamp.length ? (baseClamp[0] + ".." + baseClamp[baseClamp.length - 1] + " (" + baseClamp.length + ")") : "none"}};
     window.__SIMPLEX_AUDIT__ = out; console.log("SIMPLEX-AUDIT " + JSON.stringify(out));
