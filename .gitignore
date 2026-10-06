@@ -18,6 +18,10 @@ __pycache__/
 
 *.quarto_ipynb*
 
+# MSCI data: licensed, do not redistribute
+msci_*.csv
+msci_*.xls
+msci_*.xlsx
 
 .env
 
