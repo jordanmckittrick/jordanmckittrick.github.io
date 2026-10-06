@@ -10,11 +10,41 @@
   object-fit: cover;
 }
 
-/* Center figure captions. Covers plain markdown images, code-cell output, and
-   crossref'd floats; table captions are left alone. */
-figure > figcaption,
-figcaption.figure-caption {
-  text-align: center;
+/* Figure captions: left-aligned, and no wider than the image above them.
+   Scoped to figures Quarto generates (the .quarto-figure wrapper): plain
+   markdown images, crossref'd floats, and code-cell output. Hand-built figures
+   such as the homepage hero keep their own styling. Table captions keep
+   Quarto's own centering (its selector is more specific). */
+.quarto-figure > figure > figcaption {
+  text-align: left;
+  line-height: 1.475;   /* a touch tighter than body text (1.65) */
+}
+
+/* Captions under images: the script in _quarto.yml sets each one's width to
+   its image's rendered width (and adds .fig-cap-fit); the margins below line
+   the caption up under the image for each fig-align. min-width is a floor so a
+   caption under a very narrow image doesn't collapse into a ribbon a few words
+   wide; delete it to hold captions to exactly the image's width. Code-cell
+   captions are held to the plot's width by the grid rule further down. */
+.quarto-figure > figure > figcaption.fig-cap-fit {
+  max-width: 100%;
+  min-width: min(20rem, 100%);
+}
+.quarto-figure-center > figure > figcaption.fig-cap-fit { margin-inline: auto; }
+.quarto-figure-right > figure > figcaption.fig-cap-fit { margin-left: auto; }
+
+/* Two-part captions: identifying line first, then commentary on its own line.
+   Usage: ![Artist, *Title*, date. Collection. [Commentary ...]{.caption-note}](img.jpg)
+   margin-top sets the gap between the two parts. */
+.quarto-figure figcaption .caption-note {
+  display: block;
+  margin-top: 0.6em;
+}
+
+/* On phones, show every figure image full-width: a 40%-wide painting is a
+   thumbnail on a 390px screen, and its caption a ribbon a few words wide. */
+@media (max-width: 575.98px) {
+  .quarto-figure img.figure-img { width: 100% !important; }
 }
 
 /* Plotly writes an explicit pixel width onto its own div (e.g. 841px), narrower
