@@ -59,7 +59,8 @@ format:
       body-width: 920px
     # Figure-caption helpers (styled in styles.css). Quarto 1.9 has no option
     # for either, so they run in the browser:
-    #  1. bold the "Figure N:" prefix, which Quarto emits as bare text;
+    #  1. bold the "Figure N:" prefix, and the "(a)"-style label on each
+    #     subfigure caption, both of which Quarto emits as bare text;
     #  2. size each image's caption to the image's rendered width, and keep it
     #     in sync as the image loads or the window is resized.
     include-after-body:
@@ -73,6 +74,17 @@ format:
             if (!m) return;
             var b = document.createElement("strong");
             b.className = "fig-label";
+            b.textContent = m[2];
+            t.nodeValue = t.nodeValue.slice(m[0].length);
+            cap.insertBefore(b, t);
+          });
+          document.querySelectorAll("figcaption.quarto-subfloat-caption").forEach(function (cap) {
+            var t = cap.firstChild;
+            if (!t || t.nodeType !== Node.TEXT_NODE) return;
+            var m = t.nodeValue.match(/^(\s*)(\([^\s)]+\))/);
+            if (!m) return;
+            var b = document.createElement("strong");
+            b.className = "subfig-label";
             b.textContent = m[2];
             t.nodeValue = t.nodeValue.slice(m[0].length);
             cap.insertBefore(b, t);
