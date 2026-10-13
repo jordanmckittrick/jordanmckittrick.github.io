@@ -41,6 +41,51 @@
   margin-top: 0.6em;
 }
 
+/* Subfigure captions -- the (a)/(b) lines in a layout-ncol figure -- upright
+   and flush left, like the main captions. Quarto's built-in stylesheet
+   italicises and centres them with exactly these two selectors; repeating them
+   here undoes both, and wins on load order since styles.css comes after the
+   theme. Explicit *emphasis* in a subcaption still renders italic: <em> sets
+   its own font-style. The "(a)" label is bolded by the script in _quarto.yml. */
+.quarto-layout-cell-subref figcaption,
+figure .quarto-layout-row figure figcaption {
+  font-style: normal;
+  text-align: left;
+}
+
+/* Multi-panel figures: the gap from the lowest (a)/(b) subcaption down to the
+   shared "Figure N:" caption, matched to the 0.6em gap before a .caption-note.
+   Quarto stacks up ~30px there: the subcaption's 0.5em bottom margin collapses
+   into its wrapper's 1em (.quarto-figure), and the layout cell, a flex item,
+   holds that 1em in rather than letting it collapse further; then 10pt more on
+   top of the shared caption. Zero the first two in the bottom row and set the
+   last to 0.6em. The shared caption sits in a .quarto-layout-panel, not a
+   .quarto-figure, so the line-height rule above misses it and it inherits the
+   body's 1.65; set it here to match. Below 768px Quarto stacks the cells in a
+   column, so only the last cell loses its margin: the others keep the 1em
+   between a subcaption and the next image. */
+.quarto-layout-panel > figure > figcaption {
+  line-height: 1.475;
+  margin-top: 0.6em;
+}
+.quarto-layout-cell > .quarto-figure > figure > figcaption {
+  margin-bottom: 0;
+}
+.quarto-layout-row:last-child > .quarto-layout-cell:last-child > .quarto-figure {
+  margin-bottom: 0;
+}
+@media (min-width: 768px) {   /* side by side: every cell in the bottom row */
+  .quarto-layout-row:last-child > .quarto-layout-cell > .quarto-figure {
+    margin-bottom: 0;
+  }
+}
+
+/* Keep a run of text on one line, so a line can only break between spans.
+   Usage: [first clause，]{.nowrap}[second clause]{.nowrap} */
+.nowrap {
+  white-space: nowrap;
+}
+
 /* On phones, show every figure image full-width: a 40%-wide painting is a
    thumbnail on a 390px screen, and its caption a ribbon a few words wide. */
 @media (max-width: 575.98px) {
