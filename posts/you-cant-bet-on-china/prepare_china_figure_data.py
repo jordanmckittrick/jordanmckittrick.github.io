@@ -18,7 +18,7 @@ exists for licensing:
   its first month, from which neither index level can be recovered. That file
   is committed, so the site renders on a machine that has no raw data at all.
 
-The two series it writes:
+The series it writes:
 
     gdp     ln(X_t / USA_t) for EVERY entity X in the World Bank file (countries
             and the Bank's regional and income-group aggregates alike), GDP per
@@ -28,11 +28,23 @@ The two series it writes:
             same file can anchor any country at any year (the peer-country
             lines planned for the top panel need exactly that).
 
+    gdp_level  ln(USA_t): America's own GDP per capita, same units, so that any
+            entity's own level (and so its own growth, which the figure's
+            narration quotes) can be had by adding it back to a ratio.
+
     stocks  s(t) = ln(C_t / U_t) - ln(C_0 / U_0)
             MSCI China and MSCI USA, total return in USD, month-end levels;
             C_0 and U_0 are the levels at the first month-end the two files
             share. The figure re-bases the series at whatever anchor it is
             given (a log ratio re-bases by subtraction).
+
+    usa_return  ln(U_trough / U_anchor): MSCI USA's own return from a possible
+            stock anchor to the month at which the ratio above bottoms. The
+            narration says how far each market had fallen by then, and the
+            ratio alone cannot say that. One number per anchor, and only for
+            the few anchors the figure may be given: the file's first month
+            and each December after it, up to the bottom. That is all of
+            either index, taken alone, that the derived file holds.
 
 Return variants. An MSCI total return index comes net or gross of withholding
 tax. Both files must be of the SAME variant, the one asked for with
@@ -67,8 +79,8 @@ DERIVED_PATH = _HERE / "china_vs_us_log_ratios.csv"
 _DECIMALS = 6
 
 
-def gdp_log_ratios() -> tuple[pd.DataFrame, str]:
-    """``ln(X_t / USA_t)`` by year (rows) and entity code (columns).
+def gdp_log_ratios() -> tuple[pd.DataFrame, pd.Series, str]:
+    """``ln(X_t / USA_t)`` by year (rows) and entity code (columns), and ``ln(USA_t)`` by year.
 
     Also returns the World Bank's "last updated" date for the file. Entities
     with no data at all are dropped, as is the USA column (identically zero).
@@ -90,7 +102,7 @@ def gdp_log_ratios() -> tuple[pd.DataFrame, str]:
     assert not levels[["CHN", "USA"]].isna().any().any(), "a missing GDP observation for China or the USA"
 
     ratios = np.log(levels.div(levels["USA"], axis=0))
-    return ratios.drop(columns="USA").dropna(axis=1, how="all"), updated
+    return ratios.drop(columns="USA").dropna(axis=1, how="all"), np.log(levels["USA"]), updated
 
 
 def _msci_cells(path: Path) -> pd.DataFrame:
@@ -139,14 +151,25 @@ def _msci_levels(path: Path, variant: str) -> pd.Series:
     return levels
 
 
-def stock_log_ratio(china_path: Path = _MSCI_CHINA, usa_path: Path = _MSCI_USA, variant: str = "net") -> pd.Series:
-    """``s(t)`` at each month-end the two files share, zero at the first of them."""
+def stock_log_ratio(china_path: Path = _MSCI_CHINA, usa_path: Path = _MSCI_USA,
+                    variant: str = "net") -> tuple[pd.Series, pd.DataFrame]:
+    """``s(t)`` at each month-end the two files share, zero at the first of them; and MSCI USA's returns to the bottom.
+
+    The second is one row per possible anchor (the first month, and each
+    December before the ratio's early bottom): the anchor, the month of the
+    bottom (the ratio's low before its peak, as the figure finds it), and
+    ``ln(U_bottom / U_anchor)``.
+    """
     china, usa = _msci_levels(china_path, variant), _msci_levels(usa_path, variant)
     start, end = max(china.index[0], usa.index[0]), min(china.index[-1], usa.index[-1])
     china, usa = china[start:end], usa[start:end]
     assert len(china) > 12 and china.index.equals(usa.index), "the two MSCI files do not share their month-ends"
     ratio = np.log(china / usa)
-    return ratio - ratio.iloc[0]
+    bottom = ratio[:ratio.idxmax()].idxmin()
+    anchors = [d for n, d in enumerate(ratio.index) if (n == 0 or d.month == 12) and d < bottom]
+    to_bottom = pd.DataFrame({"anchor": anchors, "bottom": bottom,
+                              "log_return": [float(np.log(usa[bottom] / usa[a])) for a in anchors]})
+    return ratio - ratio.iloc[0], to_bottom
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -158,8 +181,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--out", type=Path, default=DERIVED_PATH, help="where to write the derived file")
     args = parser.parse_args(argv)
 
-    gdp, gdp_updated = gdp_log_ratios()
-    s = stock_log_ratio(args.china, args.usa, args.variant)
+    gdp, usa_gdp, gdp_updated = gdp_log_ratios()
+    s, to_bottom = stock_log_ratio(args.china, args.usa, args.variant)
 
     long = (gdp.rename_axis(index="year", columns="entity").stack().rename("log_ratio")
             .dropna().reset_index())                    # one row per observation, gaps left out
@@ -167,9 +190,16 @@ def main(argv: list[str] | None = None) -> None:
         pd.DataFrame({"series": "gdp", "entity": long["entity"],
                       "date": long["year"].astype(str) + "-07-01",
                       "log_ratio": long["log_ratio"]}).sort_values(["entity", "date"]),
+        pd.DataFrame({"series": "gdp_level", "entity": "USA",
+                      "date": usa_gdp.index.astype(str) + "-07-01",
+                      "log_ratio": usa_gdp.to_numpy()}),
         pd.DataFrame({"series": "stocks", "entity": "CHN",
                       "date": s.index.strftime("%Y-%m-%d"),
                       "log_ratio": s.to_numpy()}),
+        # The "entity" of one of these rows is the anchor it starts from; its date is the bottom.
+        pd.DataFrame({"series": "usa_return", "entity": to_bottom["anchor"].dt.strftime("%Y-%m-%d"),
+                      "date": to_bottom["bottom"].dt.strftime("%Y-%m-%d"),
+                      "log_ratio": to_bottom["log_return"]}),
     ])
     # "+ 0.0" turns the first month's -0.0 into 0.0, so it prints without a sign.
     rows["log_ratio"] = rows["log_ratio"].round(_DECIMALS) + 0.0
@@ -182,9 +212,12 @@ def main(argv: list[str] | None = None) -> None:
 #         (ISO3 country codes, plus the Bank's own codes for its regional and income-group aggregates).
 #         One point per year, dated July 1. NOT re-based: subtract an entity's value in the anchor year.
 #         Source: World Bank, World Development Indicators, NY.GDP.PCAP.KD (CC BY 4.0), last updated {gdp_updated}.
+# gdp_level: ln(USA_t), the same series for the United States itself: add it to a ratio for that entity's own level.
 # stocks: s(t) = ln(C_t / U_t) - ln(C_0 / U_0), MSCI China (C) and MSCI USA (U), {args.variant} total return in USD.
 #         Month-end. Zero at its first month; the figure re-bases it at its own anchor.
 #         Source: MSCI. Only this re-based log ratio is stored; the index levels are licensed and are not redistributed.
+# usa_return: ln(U_bottom / U_anchor), MSCI USA's own return from a possible anchor (in the entity column) to the
+#         month the ratio bottoms (the date): {len(to_bottom)} numbers, for the narration. No level, and no series.
 # stocks_variant: {args.variant}
 # stocks_start: {s.index[0]:%Y-%m-%d}
 """
@@ -194,7 +227,9 @@ def main(argv: list[str] | None = None) -> None:
 
     print(f"wrote {args.out.name}: {gdp.shape[1]} GDP entities ({gdp.index[0]}-{gdp.index[-1]}, "
           f"{int(gdp.notna().sum().sum())} points), "
-          f"{len(s)} stock points ({s.index[0]:%Y-%m-%d} to {s.index[-1]:%Y-%m-%d}, {args.variant}).")
+          f"{len(usa_gdp)} US GDP levels, "
+          f"{len(s)} stock points ({s.index[0]:%Y-%m-%d} to {s.index[-1]:%Y-%m-%d}, {args.variant}), "
+          f"{len(to_bottom)} MSCI USA returns to the bottom of {to_bottom['bottom'].iloc[0]:%b %Y}.")
 
 
 if __name__ == "__main__":

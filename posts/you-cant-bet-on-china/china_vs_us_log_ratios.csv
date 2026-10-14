@@ -4,9 +4,14 @@
 #         (ISO3 country codes, plus the Bank's own codes for its regional and income-group aggregates).
 #         One point per year, dated July 1. NOT re-based: subtract an entity's value in the anchor year.
 #         Source: World Bank, World Development Indicators, NY.GDP.PCAP.KD (CC BY 4.0), last updated 2026-07-13.
+# gdp_level: ln(USA_t), the same series for the United States itself: add it to a ratio for that entity's own level.
 # stocks: s(t) = ln(C_t / U_t) - ln(C_0 / U_0), MSCI China (C) and MSCI USA (U), net total return in USD.
-#         Month-end. Zero on 1998-12-31.
+#         Month-end. Zero at its first month; the figure re-bases it at its own anchor.
 #         Source: MSCI. Only this re-based log ratio is stored; the index levels are licensed and are not redistributed.
+# usa_return: ln(U_bottom / U_anchor), MSCI USA's own return from a possible anchor (in the entity column) to the
+#         month the ratio bottoms (the date): 4 numbers, for the narration. No level, and no series.
+# stocks_variant: net
+# stocks_start: 1998-12-31
 series,entity,date,log_ratio
 gdp,ABW,1986-07-01,-0.795845
 gdp,ABW,1987-07-01,-0.658808
@@ -14437,6 +14442,72 @@ gdp,ZWE,2022-07-01,-3.849680
 gdp,ZWE,2023-07-01,-3.835021
 gdp,ZWE,2024-07-01,-3.854147
 gdp,ZWE,2025-07-01,-3.811201
+gdp_level,USA,1960-07-01,9.851749
+gdp_level,USA,1961-07-01,9.857911
+gdp_level,USA,1962-07-01,9.901743
+gdp_level,USA,1963-07-01,9.930411
+gdp_level,USA,1964-07-01,9.972901
+gdp_level,USA,1965-07-01,10.022435
+gdp_level,USA,1966-07-01,10.073860
+gdp_level,USA,1967-07-01,10.087664
+gdp_level,USA,1968-07-01,10.124563
+gdp_level,USA,1969-07-01,10.145320
+gdp_level,USA,1970-07-01,10.135834
+gdp_level,USA,1971-07-01,10.155587
+gdp_level,USA,1972-07-01,10.196102
+gdp_level,USA,1973-07-01,10.241478
+gdp_level,USA,1974-07-01,10.226922
+gdp_level,USA,1975-07-01,10.215003
+gdp_level,USA,1976-07-01,10.257980
+gdp_level,USA,1977-07-01,10.293127
+gdp_level,USA,1978-07-01,10.336406
+gdp_level,USA,1979-07-01,10.356539
+gdp_level,USA,1980-07-01,10.344372
+gdp_level,USA,1981-07-01,10.359618
+gdp_level,USA,1982-07-01,10.331890
+gdp_level,USA,1983-07-01,10.367565
+gdp_level,USA,1984-07-01,10.428773
+gdp_level,USA,1985-07-01,10.460761
+gdp_level,USA,1986-07-01,10.485560
+gdp_level,USA,1987-07-01,10.510585
+gdp_level,USA,1988-07-01,10.542426
+gdp_level,USA,1989-07-01,10.569046
+gdp_level,USA,1990-07-01,10.576434
+gdp_level,USA,1991-07-01,10.561987
+gdp_level,USA,1992-07-01,10.582737
+gdp_level,USA,1993-07-01,10.596697
+gdp_level,USA,1994-07-01,10.623933
+gdp_level,USA,1995-07-01,10.638516
+gdp_level,USA,1996-07-01,10.663915
+gdp_level,USA,1997-07-01,10.695386
+gdp_level,USA,1998-07-01,10.727585
+gdp_level,USA,1999-07-01,10.762874
+gdp_level,USA,2000-07-01,10.791713
+gdp_level,USA,2001-07-01,10.791326
+gdp_level,USA,2002-07-01,10.798909
+gdp_level,USA,2003-07-01,10.817887
+gdp_level,USA,2004-07-01,10.846388
+gdp_level,USA,2005-07-01,10.871413
+gdp_level,USA,2006-07-01,10.889236
+gdp_level,USA,2007-07-01,10.899565
+gdp_level,USA,2008-07-01,10.891242
+gdp_level,USA,2009-07-01,10.856373
+gdp_level,USA,2010-07-01,10.874507
+gdp_level,USA,2011-07-01,10.882106
+gdp_level,USA,2012-07-01,10.896755
+gdp_level,USA,2013-07-01,10.910146
+gdp_level,USA,2014-07-01,10.927111
+gdp_level,USA,2015-07-01,10.948162
+gdp_level,USA,2016-07-01,10.958337
+gdp_level,USA,2017-07-01,10.975687
+gdp_level,USA,2018-07-01,10.999056
+gdp_level,USA,2019-07-01,11.019415
+gdp_level,USA,2020-07-01,10.994296
+gdp_level,USA,2021-07-01,11.052425
+gdp_level,USA,2022-07-01,11.071661
+gdp_level,USA,2023-07-01,11.092356
+gdp_level,USA,2024-07-01,11.110304
+gdp_level,USA,2025-07-01,11.126463
 stocks,CHN,1998-12-31,0.000000
 stocks,CHN,1999-01-29,-0.247408
 stocks,CHN,1999-02-26,-0.262242
@@ -14771,3 +14842,7 @@ stocks,CHN,2026-06-30,-0.642538
 stocks,CHN,2026-07-31,-0.555618
 stocks,CHN,2026-08-31,-0.585945
 stocks,CHN,2026-09-30,-0.628830
+usa_return,1998-12-31,2002-01-31,-0.086299
+usa_return,1999-12-31,2002-01-31,-0.284460
+usa_return,2000-12-29,2002-01-31,-0.146811
+usa_return,2001-12-31,2002-01-31,-0.014516
