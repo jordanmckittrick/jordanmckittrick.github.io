@@ -1,7 +1,8 @@
 # Derived data for china_figure.py. Written by prepare_china_figure_data.py; do not edit by hand.
 #
 # gdp:    ln(X_t / USA_t), GDP per capita in constant 2015 US$, for every entity X in the World Bank file
-#         (ISO3 country codes, plus the Bank's own codes for its regional and income-group aggregates).
+#         (ISO3 country codes, plus the Bank's own codes for its regional and income-group aggregates,
+#         which the "aggregates" line below lists).
 #         One point per year, dated July 1. NOT re-based: subtract an entity's value in the anchor year.
 #         Source: World Bank, World Development Indicators, NY.GDP.PCAP.KD (CC BY 4.0), last updated 2026-07-13.
 # gdp_level: ln(USA_t), the same series for the United States itself: add it to a ratio for that entity's own level.
@@ -12,6 +13,7 @@
 #         month the ratio bottoms (the date): 4 numbers, for the narration. No level, and no series.
 # stocks_variant: net
 # stocks_start: 1998-12-31
+# aggregates: AFE AFW ARB CEB CSS EAP EAR EAS ECA ECS EMU EUU HIC HPC IBD IBT IDA IDB IDX LAC LCN LDC LIC LMC LMY LTE MEA MIC MNA NAC OED OSS PRE PSS PST SAS SSA SSF SST TEA TEC TLA TMN TSA TSS UMC WLD
 series,entity,date,log_ratio
 gdp,ABW,1986-07-01,-0.795845
 gdp,ABW,1987-07-01,-0.658808

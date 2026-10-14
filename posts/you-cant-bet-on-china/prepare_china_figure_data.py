@@ -68,6 +68,9 @@ _GDP_DIR = _HERE / "gdp_per_capita_2015_usd"
 # The World Bank stamps each download with a version suffix (..._v2_445765.csv),
 # so match on the indicator code rather than pinning the full file name.
 _GDP_GLOB = "API_NY.GDP.PCAP.KD_*.csv"
+# Its companion file says which codes are countries: an aggregate (a region, an income group, the
+# world) has no region of its own.
+_GDP_META_GLOB = "Metadata_Country_API_NY.GDP.PCAP.KD_*.csv"
 _MSCI_CHINA = _HERE / "msci_china_index_monthly.csv"
 _MSCI_USA = _HERE / "msci_usa_index_monthly.csv"
 VARIANTS = ("net", "gross")
@@ -103,6 +106,13 @@ def gdp_log_ratios() -> tuple[pd.DataFrame, pd.Series, str]:
 
     ratios = np.log(levels.div(levels["USA"], axis=0))
     return ratios.drop(columns="USA").dropna(axis=1, how="all"), np.log(levels["USA"]), updated
+
+
+def gdp_aggregates() -> list[str]:
+    """The World Bank's codes for its aggregates (regions, income groups, the world): those with no region."""
+    (path,) = _GDP_DIR.glob(_GDP_META_GLOB)
+    meta = pd.read_csv(path, encoding="utf-8-sig")
+    return sorted(meta.loc[meta["Region"].isna(), "Country Code"])
 
 
 def _msci_cells(path: Path) -> pd.DataFrame:
@@ -182,6 +192,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
 
     gdp, usa_gdp, gdp_updated = gdp_log_ratios()
+    aggregates = [code for code in gdp_aggregates() if code in gdp.columns]
     s, to_bottom = stock_log_ratio(args.china, args.usa, args.variant)
 
     long = (gdp.rename_axis(index="year", columns="entity").stack().rename("log_ratio")
@@ -204,12 +215,13 @@ def main(argv: list[str] | None = None) -> None:
     # "+ 0.0" turns the first month's -0.0 into 0.0, so it prints without a sign.
     rows["log_ratio"] = rows["log_ratio"].round(_DECIMALS) + 0.0
 
-    # The two "key: value" lines are read back by china_figure.derived_info().
+    # The three "key: value" lines are read back by china_figure.derived_info().
     header = f"""\
 # Derived data for china_figure.py. Written by prepare_china_figure_data.py; do not edit by hand.
 #
 # gdp:    ln(X_t / USA_t), GDP per capita in constant 2015 US$, for every entity X in the World Bank file
-#         (ISO3 country codes, plus the Bank's own codes for its regional and income-group aggregates).
+#         (ISO3 country codes, plus the Bank's own codes for its regional and income-group aggregates,
+#         which the "aggregates" line below lists).
 #         One point per year, dated July 1. NOT re-based: subtract an entity's value in the anchor year.
 #         Source: World Bank, World Development Indicators, NY.GDP.PCAP.KD (CC BY 4.0), last updated {gdp_updated}.
 # gdp_level: ln(USA_t), the same series for the United States itself: add it to a ratio for that entity's own level.
@@ -220,6 +232,7 @@ def main(argv: list[str] | None = None) -> None:
 #         month the ratio bottoms (the date): {len(to_bottom)} numbers, for the narration. No level, and no series.
 # stocks_variant: {args.variant}
 # stocks_start: {s.index[0]:%Y-%m-%d}
+# aggregates: {" ".join(aggregates)}
 """
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         f.write(header)
