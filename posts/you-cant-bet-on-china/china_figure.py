@@ -89,11 +89,16 @@ and :func:`pacing_chart` draws the whole tempo for review. A box stands in the
 empty space nearest the playhead, clear of the playhead, the data and every
 label (on a phone, where the plot is too small for that, directly under the
 plot). Every number a box quotes is computed from the data
-(:func:`narration_numbers`), never typed in; so is what the box about the
-1962-66 recovery draws on the data while it is up (an arrow along the
-recovery and its rate). The next labelled event in each strip waits as a
-GHOST, faint and already in place, and a thin playhead with a pill marks the
-date: the year, and while a box is up the month and the year.
+(:func:`narration_numbers`), never typed in. A box that quotes a rate comes
+up as the playhead reaches the last point of the span it is over, and a RATE
+ARROW draws itself over that span, tail to head (with an earlier span's
+arrow, faint, beside it where a comparison is the point); its numbers are
+computed too (:func:`rate_arrow`). Two of the arrowed annotations are beats of
+their own: playback slows as the playhead reaches each point, and the point
+pulses once. The next labelled event in each strip waits as a GHOST, faint
+and already in place, and a thin playhead with a pill marks the date: the
+year, and while a box is up the month and the year. Playback starts at 1.5x
+(``DEFAULT_SPEED``); the toggle cycles through ``SPEEDS``.
 
 The ending, in the bottom panel: a dashed CHORD is drawn from the anchor to
 each series' last point, and the average rate it stands for (the final value
@@ -142,8 +147,8 @@ page, so the figure follows the site's dark mode (with a lighter navy there).
 Run the checks with ``uv run python china_figure.py``; the browser-side audit
 (one scale, strip heights, text collisions at rest and at every stage of the
 play, one x-range per part, one ghost per strip, title cards, every box and
-picture card in its place and on its date, the pill, the anchors' markers, the
-two overlays, the ending step by step, arrow tips, labels that stay put, hover
+picture card in its place (its own panel) and on its date, the pill, the
+anchors' markers, the rate arrows and the annotation beats, the ending step by step, arrow tips, labels that stay put, hover
 and its highlight) runs when the page URL carries ``?china-audit``, at whatever
 width the page has.
 
@@ -179,19 +184,20 @@ START_YEAR = 1960        # first GDP year drawn; playback starts here
 SHOW_MULTIPLE = True     # hover: append the multiple 2^x after each value, e.g. "+2.31 bits (×4.96)"
 
 # ---- Playback (tune these; _run_checks prints what they add up to). Every duration is at 1x. ----
-SPEEDS = (1, 2)                  # what the speed toggle steps through
+SPEEDS = (1, 1.5, 2)             # what the speed toggle steps through ...
+DEFAULT_SPEED = 1.5              # ... and where it starts
 EVENT_SLOWDOWN = 0.7             # passing a labelled event, the speed dips to this share of its act's base speed ...
 EVENT_WINDOW_YEARS = 0.25        # ... eased down and back up over this long either side of the event
 BOX_SLOWDOWN = 0.2               # while a text box is up, playback runs at this share of base speed ...
-BOX_SECONDS = (1.5, 0.3)         # ... for this long: so much, plus so much a word
+BOX_SECONDS = (1.2, 0.27)        # ... for this long: so much, plus so much a word (a beat may trim it: Beat.trim)
 PICTURE_SLOWDOWN = 0.1           # a picture card: slower ...
-PICTURE_SECONDS = (2.5, 0.3)     # ... and longer
-LAST_BOX_EXTRA = 1.5             # the box that closes the ending stays up this much longer than its words need
-SYNC_DAYS = 31                   # a box comes up at its date, and never more than this many days from it:
+PICTURE_SECONDS = (2.2, 0.27)    # ... and longer
+LAST_BOX_EXTRA = 0.5             # the box that closes the ending stays up this much longer than its words need
+SYNC_DAYS = 45                   # a box comes up at its date, and never more than this many days from it:
 CROWD_SHARE = 0.05               # boxes whose dates crowd together run slower to keep to their dates, down to this
                                  # share; past that a box waits for the one before it (no more than SYNC_DAYS) ...
 MIN_SHARE = 0.003                # ... and the boxes before it slow on down to this share (all but a stop)
-MAX_BASE = 1.0                   # the fastest a part's base speed may be, in years a second (about round 7's pace)
+MAX_BASE = 1.3                   # the fastest a part's base speed may be, in years a second
 BOX_RAMP_YEARS = 0.3             # the easing into and out of a box's slow stretch, in years of travel
 STOP_YEARS = 0.6                 # an act starts from rest, and comes to rest, over this long
 SLOW_LIMIT = (0.6, 1.5)          # the tempo rule: never under this share of base speed for longer than this (s) with no box up
@@ -205,12 +211,20 @@ ENDING = dict(chord=1.4, label=0.4, pause=0.8, arrow=0.7, pullback=1.8)
 # At the end of Part II, before its break: an arrow is drawn up the economy's line from its 1978
 # level, and a box says what it measures.
 INTERLUDE = dict(arrow=0.7, pause=0.3)
+# A RATE ARROW, for a box that quotes a rate: drawn tail to head over ``draw`` seconds as the box
+# comes up, ``lift`` px clear above the line, ``width`` px; a reference arrow (an earlier span, for
+# comparison) at ``reference`` of the strength, its label at ``reference_label``.
+RATE_ARROW = dict(draw=0.6, lift=7, width=1.5, reference=0.35, reference_label=0.6)
+# The two annotations that are beats: playback slows to a text box's speed for this long as the
+# playhead reaches each point, the annotation fades in, and the point pulses once (``pulse`` s).
+NOTE_BEAT = dict(seconds=3.0, pulse=0.9)
 GHOST_OPACITY = 0.3              # the next labelled event in each strip, until the playhead reaches it
 REVEAL_SECONDS = 0.5             # how long a mark takes to come to full strength once reached
 CARD_FADE_SECONDS = 0.4          # how long a box or card takes to fade in or out
 SCRIM_OPACITY = 0.62             # how far the figure is dimmed behind an act's title card
 WINDOW_MARGIN = 0.02             # room right of an act's end, as a fraction of its x-range
-PICTURE_MAX_PX = 560             # a picture is embedded no wider than this (twice its largest size on the page)
+PICTURE_MAX_PX = 600             # a picture is embedded no larger than this on its long side ...
+PICTURE_QUALITY = 82             # ... as a JPEG of this quality (the files beside the module are left as they are)
 
 # ---- Space at the full column (hard limits) ----
 TITLE_ROW_MAX_PX = 28
@@ -679,11 +693,11 @@ class Act:
 
 
 ACTS = [
-    Act("I", PART_TITLES[0], "Mao", "1978-12-18", 75.0),
-    Act("II", PART_TITLES[1], "Deng", "1992-02-21", 90.0),
+    Act("I", PART_TITLES[0], "Mao", "1978-12-18", 55.0),
+    Act("II", PART_TITLES[1], "Deng", "1992-02-21", 70.0),
     # Framed on the years in which there is something to invest in: from just
     # before the Shanghai exchange opens (the start of the plain access band).
-    Act("III", PART_TITLES[2], "Investable", None, 100.0, panel="stocks", view_from="1990-07-01"),
+    Act("III", PART_TITLES[2], "Investable", None, 73.0, panel="stocks", view_from="1990-07-01"),
 ]
 
 
@@ -709,9 +723,14 @@ PICTURES = dict(
         "[Criticize the old world and build a new world with Mao Zedong Thought as a weapon], 1966. "
         "IISH, BG E15/699. Image: chineseposters.net.",
         "IISH / chineseposters.net"),
-    # No picture yet: drop a file of this name beside the module and give it a credit, and the
-    # 1979 box becomes a picture card.
-    coke_1979=Picture("coke_1979.jpg", None, None),
+    # From the file's page on Wikimedia Commons: the signing ceremony of January 31, 1979, by Karl H.
+    # Schumacher (National Archives NAID 183286). (The brief had the arrival ceremony of January 29.)
+    deng_carter_1979=Picture(
+        "deng_carter_1979.jpg",
+        "Deng Xiaoping and Jimmy Carter, Sino-American signing ceremony, Jan 31, 1979. Photo: Karl H. Schumacher, "
+        "White House Photographic Office. Public domain, via the U.S. National Archives (NAID 183286) and Wikimedia "
+        "Commons (https://commons.wikimedia.org/wiki/File:Carter_DengXiaoping.jpg)",
+        "Photo: White House / public domain"),
     time_1985=Picture("time_1985.jpg", "TIME, cover, Jan 6, 1986.", "TIME, cover, Jan 6, 1986"),
     hkex_2007=Picture(
         "hkex_2007.jpg",
@@ -719,6 +738,14 @@ PICTURES = dict(
         "(https://creativecommons.org/licenses/by-sa/3.0/), via Wikimedia Commons "
         "(https://commons.wikimedia.org/wiki/File:Hong_Kong_Exchange_Trade_Lobby_2007.jpg)",
         "Photo: WiNG, CC BY-SA 3.0"),
+    # From the file's page on Wikimedia Commons: Davos, January 24, 2018; licensed CC BY 2.0 (not
+    # BY-NC-SA, as the brief had it). The file there is a crop of the Flickr original, hence "cropped".
+    jack_ma=Picture(
+        "jack_ma.jpg",
+        "Jack Ma, World Economic Forum Annual Meeting, Davos, 2018. Photo: World Economic Forum / Ciaran McCrickard, "
+        "CC BY 2.0 (https://creativecommons.org/licenses/by/2.0/), via Flickr "
+        "(https://flickr.com/photos/49344088@N04/39008130265); cropped",
+        "Photo: World Economic Forum, CC BY 2.0"),
 )
 
 
@@ -732,9 +759,19 @@ class Beat:
     comes up: always within ``SYNC_DAYS`` of it (boxes whose dates crowd
     together run slower to keep it so). ``after`` dates a beat from the data
     instead ("trough": a month after the stock ratio's early low). ``panel``
-    overrides its act's choice of panel for the box, ``event`` picks a
-    labelled event out while the box is up, and ``overlay`` draws something
-    on the data meanwhile ("recovery": the arrow along the 1962-66 recovery).
+    says which panel the box goes in: its part's, unless it says otherwise
+    (economy boxes in the top panel, market boxes in the bottom one; the other
+    panel only if there is no room). ``event`` picks a labelled event out while
+    the box is up, and ``trim`` takes seconds off (or adds them to) its reading
+    time.
+
+    RATE ARROWS. A box that quotes a rate has ``rate``, the span of the
+    economy's annual points it is over (first year, last year): an arrow is
+    drawn over the span as the box comes up, and the box's ``date`` is the
+    span's last point (Jul 1 of its last year), so that both come up as the
+    playhead reaches it. ``reference`` is an earlier span, drawn faint beside
+    it for comparison; ``rate_note`` is a sentence added to the arrow's hover
+    text. The rates and their hover text are computed (:func:`rate_arrow`).
 
     NUMBERS. A number that comes from the figure's data is never typed into
     ``lead`` or ``text``: it is a ``{placeholder}``, filled in by
@@ -749,12 +786,15 @@ class Beat:
     panel: str | None = None
     event: str | None = None
     after: str | None = None
-    overlay: str | None = None
+    rate: tuple[int, int] | None = None
+    reference: tuple[int, int] | None = None
+    rate_note: str | None = None
+    trim: float = 0.0
 
 
 # The spans of years that the narration's own-growth numbers are taken over.
 NARRATION_SPANS = dict(famine=(1960, 1962), factions=(1966, 1968), rebound=(1968, 1970), y1976=(1975, 1976),
-                       since_reform=(1978, 1985), austerity=(1988, 1990), recovery=(1962, 1966), fdi=(1993, 1997))
+                       since_reform=(1978, 1985), austerity=(1988, 1990), fdi=(1993, 1997))
 
 BEATS = [
     # ---- Part I ----
@@ -764,36 +804,35 @@ BEATS = [
     Beat("1962-01-30", "Jan–Feb 1962",
          "At a conference of 7,000 Party officials, Liu Shaoqi blames the famine “30% on nature, 70% on people.” "
          "Mao admits mistakes and steps back from day-to-day work."),
-    Beat("1963-06-30", "1962–66",
+    Beat("1965-07-01", "1962–65",
          "Liu and Deng steer a recovery, tolerating private plots and household farming. “It doesn't matter "
-         "whether a cat is yellow or black,” says Deng, “as long as it catches mice.”", overlay="recovery"),
+         "whether a cat is yellow or black,” says Deng, “as long as it catches mice.”",
+         rate=(1962, 1965), rate_note="Part of any recovery is a mechanical rebound from the collapse."),
     Beat("1966-05-16", "May 16, 1966",
          "The “May 16 Notification” launches the Cultural Revolution. Red Guards wave Mao's Little Red Book.",
          picture="cr_1966"),
-    Beat("1967-01-13", "1966–69",
-         "Mao's “Bombard the Headquarters” poster (Aug 1966) targets Liu and Deng. By 1967 both are stripped "
-         "of power and under house arrest; Liu is expelled in 1968 and dies in custody in 1969."),
-    Beat("1968-03-31", "1967–68",
-         "Fighting between Red Guard factions disrupts production. Output per person falls {factions_fall}%."),
-    Beat("1969-06-30", "1968–70",
+    Beat("1968-07-01", "1966–68",
+         "Mao's “Bombard the Headquarters” poster (Aug 1966) targets Liu and Deng; by 1967 both are under house "
+         "arrest, and Liu dies in custody in 1969. Red Guard factions fight; output per person falls "
+         "{factions_fall}%.", rate=(1966, 1968)),
+    Beat("1970-07-01", "1968–70",
          "The army restores order, and millions of Red Guards and urban youths are sent to the countryside. "
-         "Output per person rebounds {rebound_rise}%."),
-    Beat("1976-09-09", "Sep 9, 1976",
-         "Mao dies, six weeks after the Tangshan earthquake. In October the Gang of Four, the Cultural "
-         "Revolution's radical leaders, are arrested. Output per person falls {y1976_fall}% that year."),
-    Beat("1977-12-31", "1977",
-         "Deng is rehabilitated. University entrance exams resume after an eleven-year gap."),
+         "Output per person rebounds {rebound_rise}%.", rate=(1968, 1970)),
+    Beat("1977-07-01", "1976–77",
+         "Mao dies six weeks after the Tangshan earthquake, and the Gang of Four, the Cultural Revolution's "
+         "radical leaders, are arrested; output per person falls {y1976_fall}% in 1976. In 1977 Deng is "
+         "rehabilitated, and university entrance exams return after eleven years."),
     # ---- Part II ----
     Beat("1978-12-22", "Dec 1978",
          "At the Third Plenum, Deng emerges as paramount leader and the Party turns from class struggle to "
-         "growth. Markets and commerce begin to return, and China starts {catch_up_claim}."),
+         "growth. Markets and commerce begin to return, and China starts {catch_up_claim}.", trim=-1.0),
     Beat("1979-01-15", "1978–84",
          "Xiaogang's farmers secretly split their collective's land. Beijing makes it national policy, the "
          "Household Responsibility System; by 1984 nearly every farm uses it."),
     # Deng at the rodeo in Simonton, Texas, February 2, 1979.
     Beat("1979-02-02", "1979",
          "Deng tours America and dons a cowboy hat at a Texas rodeo. Coca-Cola goes the other way: the first "
-         "American consumer brand sold in China in 30 years.", picture="coke_1979"),
+         "American consumer brand sold in China in 30 years.", picture="deng_carter_1979"),
     Beat("1980-08-26", "1980",
          "China joins the International Monetary Fund and the World Bank. Four special economic zones open "
          "to foreign capital."),
@@ -803,55 +842,71 @@ BEATS = [
     Beat("1988-08-15", "1988",
          "China's dual-track prices, state and market side by side, breed corruption. Deng pushes to free "
          "prices in one leap; panic buying and inflation near 20% follow. The leap is abandoned within months, "
-         "but by 1993 markets set most prices."),
+         "but by 1993 markets set most prices.", trim=-1.0),
     Beat("1989-05-15", "Spring 1989",
          "Protests over inflation, corruption and the lack of political freedom fill Tiananmen Square. On "
          "June 4 the army clears it; estimates of the dead range from hundreds to thousands. On June 5, "
          "“Tank Man” faces down a column of tanks."),
-    Beat("1990-03-31", "1989–91",
+    Beat("1990-07-01", "1989–91",
          "Credit is tightened, reformist Party chief Zhao Ziyang is purged, and conservatives try to roll back "
-         "market reforms. Growth per person falls to {austerity_growth}% a year; the catch-up stalls."),
+         "market reforms. Growth per person falls to {austerity_growth}% a year; the catch-up stalls.",
+         rate=(1988, 1990), reference=(1978, 1988)),
+    # A market box, in Part II: in the bottom panel.
     Beat(_EXCHANGE_OPENS, "{exchange_month}",
          "Shanghai's stock exchange opens; Shenzhen's follows in {shenzhen_month}. Their shares (A-shares) are "
-         "for Chinese citizens only: foreigners still cannot invest."),
+         "for Chinese citizens only: foreigners still cannot invest.", panel="stocks"),
     Beat("1992-01-18", "Jan–Feb 1992",
          "Deng, 87 and officially retired, tours the south demanding faster market reform: “Development is the "
          "only hard truth.” The conservatives retreat, and markets are back to stay."),
-    # ---- Part III ----
+    # ---- Part III (market boxes in the bottom panel, economy boxes in the top one) ----
     # A week into the act: the listing itself (February 21) is the moment the act opens on.
     Beat("1992-02-28", "{bshares_month}",
          "Foreigners can buy Chinese shares for the first time: B-shares, a separate class priced in US or Hong "
          "Kong dollars. The market stays small, illiquid and opaque; by 2001 it is so moribund that it is opened "
          "to Chinese citizens."),
     Beat("1993-07-15", "{hshares_month}",
-         "Tsingtao Brewery becomes the first mainland company to list in Hong Kong: the first “H-share.”",
+         "Tsingtao Brewery becomes the first mainland company to list in Hong Kong: the first “H-share.” Hong "
+         "Kong's open, dollar-pegged market makes H-shares far easier for foreigners to buy than B-shares.",
          event="First H-shares"),
-    Beat("1995-06-30", "1993–97",
+    # It quotes a rate, so it has an arrow, and comes up at the span's end (the brief's table left it out).
+    Beat("1997-07-01", "1993–97",
          "Foreign direct investment surges, from about $4 billion in 1991 to over $40 billion a year by 1996, "
          "more than any other developing country. Against America, output per person climbs {fdi_rate} bits a "
-         "year."),
+         "year.", panel="economy", rate=(1993, 1997)),
     Beat("1998-06-30", "1994–2003",
          "Zhu Rongji, vice premier then premier, centralizes taxation, sells off thousands of small state firms, "
          "ends state-allocated housing and halves the central ministries' staff. Tens of millions of state "
-         "workers lose their jobs; growth softens."),
+         "workers lose their jobs; growth softens.", panel="economy"),
     Beat(None, "{wto_month}",
          "China joins the World Trade Organization. {trough_lag} its stocks bottom: {trough_falls}.",
          after="trough"),
+    Beat("2002-12-01", "{qfii_month}",
+         "QFII, the Qualified Foreign Institutional Investor scheme, lets licensed foreign institutions buy "
+         "A-shares for the first time, within quotas.", event="QFII"),
     Beat("2006-10-27", "2005–{peak_yy}",
          "China's biggest state banks list in Hong Kong; the Industrial and Commercial Bank of China's "
          "{icbc_year} initial public offering is then the world's largest. The boom peaks in {peak_month}.",
          picture="hkex_2007"),
-    Beat("2010-06-30", "{hu_from}–{hu_to_yy}",
+    Beat("2012-07-01", "{hu_from}–{hu_to_yy}",
          "Under Hu Jintao, China carries out its WTO commitments, unpegs the renminbi from the dollar, lists its "
          "big banks and abolishes the farm tax. It gains on America faster than ever: {hu_rate} bits a year "
-         "(about {hu_pct}%).", panel="economy"),
-    Beat("2019-01-31", "2018",
-         "Xi abolishes presidential term limits, and the state's grip on the economy tightens. Since he took "
-         "office in {xi_from}, China's catch-up with America has {xi_change}.", panel="economy"),
+         "(about {hu_pct}%).", panel="economy", rate=(2002, 2012)),
+    Beat("2018-06-01", "2014–18",
+         "Stock Connect lets anyone with a Hong Kong brokerage account buy mainland A-shares (Shanghai 2014, "
+         "Shenzhen 2016). In 2018 MSCI begins adding A-shares to its indexes. Access is no longer the obstacle.",
+         event="A-shares join MSCI"),
+    Beat("2019-07-01", "{xi_from}–{xi_to_yy}",
+         "Under Xi Jinping, who abolishes presidential term limits in 2018, the state's grip on the economy "
+         "tightens and China's catch-up with America {xi_change}.", panel="economy", rate=(2012, 2019),
+         reference=(2002, 2012)),
     Beat("2020-11-03", "2020–21",
-         "Beijing halts Ant Group's initial public offering and turns on tech, tutoring and property firms.",
-         event="Chinese tech crackdown"),
+         "Days after Jack Ma criticizes regulators, Beijing halts Ant Group's initial public offering, and Ma "
+         "vanishes from public view for nearly three months. The crackdown spreads to tech, tutoring and "
+         "property firms.", picture="jack_ma", event="Chinese tech crackdown"),
 ]
+# The two annotations that are beats of their own (NOTE_BEAT): the stocks falling behind the
+# economy for good, and behind US stocks for good. The other two keep a labelled event's gentle dip.
+NOTE_BEATS = ("arrow_economy", "arrow_parity")
 # The year the comparison in the Xi box runs to: the year of that beat.
 _XI_COMPARED_TO = 2019
 # The part at whose end playback stops for the arrow up the economy's line and the box that says what it measures.
@@ -872,9 +927,11 @@ FINAL_BOX = Beat(None, "{since} – {end_month}",
 # the derived file has no MSCI USA return for the anchor in use.
 _TROUGH_FALLS = "down {trough_china}% since {since}, against {trough_usa}% for US stocks through the dot-com bust"
 _TROUGH_FALLS_UNKNOWN = "at ×{trough_x} of US stocks' value since {since}"
-# The overlay along the 1962-66 recovery: what its label's hover says.
-RECOVERY_HOVER = ("**{recovery_from}–{recovery_to_yy}**: Against America, output per person rose {recovery_bits} bits. "
-                  "Part of any recovery is a mechanical rebound from the collapse.")
+# A rate arrow's hover text (the change over its span), and its label: its rate, sign and all; a
+# reference arrow's label says it is the rate before.
+RATE_HOVER = "**{lead}**: Against America, output per person {verb} {change} bits."
+RATE_LABEL = "{rate} bits/yr"
+REFERENCE_LABEL = "({rate} before)"
 
 
 # --------------------------------------------------------------------------- #
@@ -1136,12 +1193,7 @@ def narration_numbers(gdp: pd.DataFrame, usa: pd.Series, s: pd.Series, e: pd.Ser
     v["austerity_growth"] = growth(*NARRATION_SPANS["austerity"])
     w["austerity_growth"] = f"{v['austerity_growth']:.1f}"
 
-    # The recovery of 1962-66 (the arrow along it, and its hover text), and the climb of 1993-97.
-    a, b = NARRATION_SPANS["recovery"]
-    v["recovery_bits"] = ratio[b] - ratio[a]
-    v["recovery_rate"] = v["recovery_bits"] / (b - a)
-    w["recovery_from"], w["recovery_to_yy"] = str(a), f"{b % 100:02d}"
-    w["recovery_bits"], w["recovery_rate"] = f"{v['recovery_bits']:.2f}", signed(v["recovery_rate"], 2)
+    # The climb of 1993-97. (Every rate a box quotes has an arrow, whose numbers are rate_arrow()'s.)
     v["fdi_rate"] = catch_up(*NARRATION_SPANS["fdi"])
     w["fdi_rate"] = f"{v['fdi_rate']:.2f}"
 
@@ -1182,7 +1234,8 @@ def narration_numbers(gdp: pd.DataFrame, usa: pd.Series, s: pd.Series, e: pd.Ser
     # The two exchanges: the day each opened, for the hover text, and the month, for the box.
     w["exchange_month"], w["exchange_day"] = _month(pd.Timestamp(_EXCHANGE_OPENS)), _day(_EXCHANGE_OPENS)
     w["shenzhen_month"], w["shenzhen_day"] = _month_name(_SHENZHEN_OPENS), _day(_SHENZHEN_OPENS)
-    for name, label in (("bshares", "First B-shares"), ("hshares", "First H-shares"), ("wto", "Joins WTO")):
+    for name, label in (("bshares", "First B-shares"), ("hshares", "First H-shares"), ("wto", "Joins WTO"),
+                        ("qfii", "QFII")):
         w[f"{name}_month"] = _month(event(label))
     w["icbc_year"] = str(event("ICBC IPO").year)
 
@@ -1227,8 +1280,8 @@ def narration_numbers(gdp: pd.DataFrame, usa: pd.Series, s: pd.Series, e: pd.Ser
     w["xi_to_yy"] = f"{_XI_COMPARED_TO % 100:02d}"
     w["hu_rate"] = f"{v['hu_rate']:.2f}"
     w["hu_pct"] = f"{100.0 * (2.0 ** v['hu_rate'] - 1.0):.0f}"
-    w["xi_change"] = ("roughly halved" if 0.4 <= v["xi_share"] <= 0.6
-                      else f"slowed to {v['xi_share']:.0%} of its pace under Hu")
+    w["xi_change"] = ("roughly halves" if 0.4 <= v["xi_share"] <= 0.6
+                      else f"slows to {v['xi_share']:.0%} of its pace under Hu")
 
     # The ending.
     v["economy_end"], v["stocks_end"] = float(e.iloc[-1]), float(s.iloc[-1])
@@ -1243,6 +1296,44 @@ def narration_numbers(gdp: pd.DataFrame, usa: pd.Series, s: pd.Series, e: pd.Ser
     return w, v
 
 
+def rate_arrow(g: pd.Series, span: tuple[int, int], note: str | None = None, reference: bool = False) -> dict:
+    """A rate arrow over a span of the economy's annual points: where it runs, what it says.
+
+    ``g`` is the economy's ratio (rebased or not: only differences count) at
+    its July points; ``span`` is the first and last year. The arrow runs from
+    above the first point to above the last (``start``, ``end``; ``y0``,
+    ``y1`` the points themselves), parallel to the chord between them; the
+    script lifts it clear of the line by ``dev`` (how far the highest point
+    between rises above the chord, in bits) and ``RATE_ARROW["lift"]`` px. Its
+    label is the rate, its hover text the change (``note`` added); a
+    ``reference`` arrow's label says it is the rate before.
+    """
+    a, b = span
+    (t_a, y_a), (t_b, y_b) = ((g.index[g.index.year == y][0], float(g[g.index.year == y].iloc[0])) for y in (a, b))
+    between = g[(g.index > t_a) & (g.index < t_b)]
+    chord = y_a + (_days(between.index) - _days(t_a)[0]) / (_days(t_b)[0] - _days(t_a)[0]) * (y_b - y_a)
+    change, rate = y_b - y_a, (y_b - y_a) / (b - a)
+    lead = f"{a}–{b % 100:02d}"
+    shown = round(rate, 2) + 0.0
+    sign = "+" if shown >= 0 else "−"
+    label = (REFERENCE_LABEL.format(rate=("" if shown >= 0 else "−") + f"{abs(shown):.2f}") if reference
+             else RATE_LABEL.format(rate=f"{sign}{abs(shown):.2f}"))
+    hover = RATE_HOVER.format(lead=lead, verb="rose" if change >= 0 else "fell", change=f"{abs(change):.2f}")
+    return dict(span=[a, b], lead=lead, start=_iso(t_a), end=_iso(t_b), y0=y_a, y1=y_b,
+                dev=round(max(0.0, float((between.to_numpy() - chord).max())) if len(between) else 0.0, 6),
+                change=round(change, 6), rate=round(rate, 6), text=label, reference=reference,
+                hover=hover + (f" {note}" if note else ""))
+
+
+def annotated_points(s: pd.Series, e: pd.Series) -> dict:
+    """The four points the arrowed annotations end on: the stock ratio's early low and its peak, and
+    where the stock line falls for good below the economy's and below zero."""
+    peak = s.idxmax()
+    trough = s[:peak].idxmin()
+    return dict(arrow_trough=(trough, float(s[trough])), arrow_peak=(peak, float(s[peak])),
+                arrow_economy=final_crossing(s, e), arrow_parity=final_crossing(s, 0.0))
+
+
 def has_picture(beat: Beat) -> bool:
     """Is this beat a picture card whose picture is there to show, and credited?"""
     if not beat.picture:
@@ -1254,11 +1345,12 @@ def has_picture(beat: Beat) -> bool:
 def box_seconds(beat: Beat, words: dict) -> float:
     """How long a beat's box is up to be read at 1x (not counting its fades): so much, plus so much a word.
 
-    A text box takes ``BOX_SECONDS``, a picture card ``PICTURE_SECONDS``.
+    A text box takes ``BOX_SECONDS``, a picture card ``PICTURE_SECONDS``; and
+    the beat's own ``trim`` on top.
     """
     said = f"{beat.lead} {beat.text}".format(**words)
     start, per_word = PICTURE_SECONDS if has_picture(beat) else BOX_SECONDS
-    return start + per_word * len(said.split())
+    return start + per_word * len(said.split()) + beat.trim
 
 
 def interlude_seconds(words: dict) -> float:
@@ -1474,21 +1566,28 @@ def act_schedule(start: pd.Timestamp, end: pd.Timestamp, seconds: float,
 
 
 def playback_plan(starts: list, ends: list, dips: list, beats: list[Beat], words: dict,
-                  trough: pd.Timestamp) -> list[dict]:
+                  trough: pd.Timestamp, notes: list[tuple[str, pd.Timestamp]] = ()) -> list[dict]:
     """Each part's beats and the schedule they make: what the builder, the checks and the pacing chart share.
 
     One dict per part: the ``act``, its ``start`` and ``end``, its ``beats`` in
     date order with the ``dates`` they fall on and what each ``says`` (lead and
     text, numbers filled in), its ``boxes`` (date, reading time, nominal
-    share) and the ``table`` from :func:`act_schedule`.
+    share) and the ``table`` from :func:`act_schedule`. ``notes`` are the
+    annotations that are beats (a role and the date its point is reached):
+    each slows playback to a text box's speed for ``NOTE_BEAT["seconds"]``
+    with no box; they come after the beats in ``boxes`` and in the table's
+    lists, and a part lists its own as ``notes``.
     """
     dated = sorted(((beat_date(b, trough), b) for b in beats), key=lambda pair: pair[0])
     plan = []
     for n, act in enumerate(ACTS):
         mine = [(when, b) for when, b in dated if starts[n] < when <= ends[n]]
         boxes = [(when, box_seconds(b, words), PICTURE_SLOWDOWN if has_picture(b) else BOX_SLOWDOWN) for when, b in mine]
+        own = [(role, when) for role, when in notes if starts[n] < when <= ends[n]]
+        boxes += [(when, NOTE_BEAT["seconds"] - 2 * CARD_FADE_SECONDS, BOX_SLOWDOWN) for _, when in own]
         plan.append(dict(act=act, start=starts[n], end=ends[n], beats=[b for _, b in mine], dates=[d for d, _ in mine],
                          says=[(b.lead.format(**words), b.text.format(**words)) for _, b in mine], boxes=boxes,
+                         notes=own,
                          table=act_schedule(starts[n], ends[n], act.seconds, [(d, EVENT_SLOWDOWN) for d in dips], boxes)))
     assert sum(len(part["beats"]) for part in plan) == len(beats), "a beat lies outside every part"
     return plan
@@ -1522,9 +1621,11 @@ def unexplained_slow_stretches(table: dict) -> list[tuple[float, float]]:
 def picture_data(key: str) -> dict | None:
     """A picture, ready for the page: None, with a warning, if its file is missing.
 
-    The page carries the image itself (a data URI, scaled down to
-    ``PICTURE_MAX_PX`` wide), so nothing has to be copied alongside it. Also
-    its shape (width over height) and the short credit its card shows.
+    The page carries the image itself (a data URI: scaled down to
+    ``PICTURE_MAX_PX`` on its long side, a JPEG of ``PICTURE_QUALITY``; the
+    file is left as it is), so nothing has to be copied alongside it. Also its
+    shape (width over height), the short credit its card shows, and its size
+    as embedded (``kb``, the JPEG's) against the file's (``file_kb``).
     """
     picture = PICTURES[key]
     path = _HERE / picture.file
@@ -1545,12 +1646,20 @@ def picture_data(key: str) -> dict | None:
         image = image.convert("RGBA")
         flat = Image.new("RGB", image.size, "white")
         flat.paste(image, mask=image.split()[-1])
-        if flat.width > PICTURE_MAX_PX:
-            flat = flat.resize((PICTURE_MAX_PX, round(flat.height * PICTURE_MAX_PX / flat.width)), Image.LANCZOS)
+        scale = PICTURE_MAX_PX / max(flat.size)
+        if scale < 1:
+            flat = flat.resize((round(flat.width * scale), round(flat.height * scale)), Image.LANCZOS)
         held = io.BytesIO()
-        flat.save(held, "JPEG", quality=82, optimize=True)
-    return dict(src="data:image/jpeg;base64," + base64.b64encode(held.getvalue()).decode("ascii"),
-                aspect=round(flat.width / flat.height, 4), credit=picture.short)
+        flat.save(held, "JPEG", quality=PICTURE_QUALITY, optimize=True)
+        jpeg = held.getvalue()
+        # A JPEG small enough already, and smaller as it is: as it is.
+        if scale >= 1 and image.format in (None, "JPEG") and path.suffix.lower() in (".jpg", ".jpeg") \
+                and path.stat().st_size < len(jpeg):
+            jpeg = path.read_bytes()
+    return dict(src="data:image/jpeg;base64," + base64.b64encode(jpeg).decode("ascii"),
+                aspect=round(flat.width / flat.height, 4), credit=picture.short,
+                size=[flat.width, flat.height], kb=round(len(jpeg) / 1024, 1),
+                file_kb=round(path.stat().st_size / 1024, 1))
 
 
 def picture_credits(beats: list[Beat] | None = None) -> str:
@@ -1575,7 +1684,11 @@ def default_plan() -> tuple[list[dict], list[pd.Timestamp], dict, dict]:
     starts = [g.index[0]] + ends[:-1]
     first = pd.Timestamp(year=START_YEAR, month=1, day=1)
     marks = [pd.Timestamp(ev.date) for ev in EVENTS if ev.tier == "label" and first <= pd.Timestamp(ev.date) <= cutoff]
-    return playback_plan(starts, ends, marks, BEATS, words, numbers["trough"]), marks, words, numbers
+    # The annotations: two are beats of their own; the other two dip gently, as a labelled event does.
+    points = annotated_points(s, e)
+    notes = [(role, pd.Timestamp(points[role][0])) for role in NOTE_BEATS]
+    dips = marks + [pd.Timestamp(when) for role, (when, _) in points.items() if role not in NOTE_BEATS]
+    return playback_plan(starts, ends, dips, BEATS, words, numbers["trough"], notes), marks, words, numbers
 
 
 def pacing_chart(path: str | Path | None = None):
@@ -1585,7 +1698,8 @@ def pacing_chart(path: str | Path | None = None):
     a fraction of a percent of base speed). Each part's base speed and the line
     60% of the way up to it (the tempo rule's threshold) are drawn in; boxes
     are shaded for as long as they are up (text boxes grey, picture cards
-    amber) and named by their lead-in and their date; a tick along the foot
+    amber, the annotations that are beats blue) and named by their lead-in and
+    their date; a tick along the foot
     marks each labelled event; the part breaks are the heavy verticals. Saved
     to ``path`` if given; returns the matplotlib figure.
     """
@@ -1609,10 +1723,15 @@ def pacing_chart(path: str | Path | None = None):
             ax.axvspan(x0 + lo, x0 + hi, color="#f59e0b" if picture else "#6b7280", alpha=0.28 if picture else 0.2, lw=0, zorder=1)
             ax.text(x0 + (lo + hi) / 2, top * 0.9, f"{lead} ({when:%b %-d, %Y})", rotation=90, ha="center", va="top",
                     fontsize=7, zorder=4)
+        for (role, when), (lo, hi, share) in zip(part["notes"], table["stretches"][len(part["beats"]):]):
+            ax.axvspan(x0 + lo, x0 + hi, color="#2563eb", alpha=0.22, lw=0, zorder=1)
+            ax.text(x0 + (lo + hi) / 2, top * 0.9, f"annotation ({when:%b %-d, %Y})", rotation=90, ha="center",
+                    va="top", fontsize=7, zorder=4)
         ax.axvline(x1, color="black", lw=1.6, zorder=5)
         took = float(table["tau"][-1])
-        ax.text((x0 + x1) / 2, top * 1.15, f"Part {part['act'].numeral} · {part['act'].title}\n{took:.1f} s at 1x · "
-                f"base {base:.2f} yr/s", ha="center", va="bottom", fontsize=8.5, weight="bold", linespacing=1.35)
+        ax.text((x0 + x1) / 2, top * 1.15, f"Part {part['act'].numeral} · {part['act'].title}\n{took:.1f} s at 1x, "
+                f"{took / DEFAULT_SPEED:.1f} s at {DEFAULT_SPEED}x · base {base:.2f} yr/s", ha="center", va="bottom",
+                fontsize=8.5, weight="bold", linespacing=1.35)
     stop = year(plan[_INTERLUDE_ACT]["end"])
     ax.text(stop + 0.15, floor * 1.6, f"then {interlude_seconds(words):.1f} s at rest:\nthe arrow and its box",
             fontsize=7.5, ha="left", va="bottom", zorder=6)
@@ -1632,9 +1751,10 @@ def pacing_chart(path: str | Path | None = None):
             plt.Line2D([], [], color="#b91c1c", lw=0.7, ls="--", label=f"{SLOW_LIMIT[0]:.0%} of base (the tempo rule)"),
             plt.Rectangle((0, 0), 1, 1, color="#6b7280", alpha=0.2, label="text box up"),
             plt.Rectangle((0, 0), 1, 1, color="#f59e0b", alpha=0.28, label="picture card up"),
+            plt.Rectangle((0, 0), 1, 1, color="#2563eb", alpha=0.22, label="annotation beat"),
             plt.Line2D([], [], color="black", lw=1.0, marker="|", ls="", label="labelled event (tick at the foot)"),
             plt.Line2D([], [], color="black", lw=1.6, label="part break (full stop, title card)")]
-    ax.legend(handles=keys, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=7, frameon=False, fontsize=8.5)
+    ax.legend(handles=keys, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=8, frameon=False, fontsize=8.5)
     chart.subplots_adjust(left=0.05, right=0.99, top=0.86, bottom=0.18)
     if path is not None:
         chart.savefig(path)
@@ -1891,9 +2011,10 @@ def build_china_figure(
     side of them, the leaders' segments and the era bars with their labels, one
     dashed line per labelled event with a label of its own or one shared with its
     group, one short mark per tick, the arrowed annotations and the labels by
-    the fills, the playhead, the arrow along the 1962-66 recovery and its rate,
-    the arrow at the end of Part II, and what closes the animation: the two
-    chords, their rates, and the arrow that measures the gap between the lines' ends.
+    the fills, the playhead, each box's rate arrow (and reference arrow) with
+    its label, the arrow at the end of Part II, and what closes the animation:
+    the two chords, their rates, and the arrow that measures the gap between
+    the lines' ends.
     ``layout.meta`` lists them all, and carries the acts, the beats (text boxes
     and picture cards, pictures included) and the schedule playback follows. No annotation has a background:
     each carries a halo (``font.shadow``) in the colour behind it. (The title,
@@ -2196,24 +2317,8 @@ def build_china_figure(
                    yanchor="middle", align="left", xshift=beside["label"], text=gap_text.replace(" (", "<br>("),
                    size=wide["rate_font"], color=ink("rate")))
 
-    # Along the recovery of 1962-66, while the box about it is up: a solid arrow in ink, parallel to
-    # the straight line from the economy's 1962 point to its 1966 point and just above the line
-    # itself (the script lifts it clear of every point between, by however many px that takes), and
-    # the rate it stands for. The arrow at the end of Part II: from the economy's 1978 level (zero)
-    # up to where its line stands at the playhead, double-headed, while the playhead rests there.
-    a, b = NARRATION_SPANS["recovery"]
-    (t_a, y_a), (t_b, y_b) = ((g.index[g.index.year == y][0], float(g[g.index.year == y].iloc[0])) for y in (a, b))
-    between = g[(g.index > t_a) & (g.index < t_b)]
-    chord = y_a + (_days(between.index) - _days(t_a)[0]) / (_days(t_b)[0] - _days(t_a)[0]) * (y_b - y_a)
-    recovery = dict(
-        start=_iso(t_a), end=_iso(t_b), y0=y_a, y1=y_b, dev=round(max(0.0, float((between.to_numpy() - chord).max())), 6),
-        text=f"{words['recovery_rate']} bits/yr", hover=RECOVERY_HOVER.format(**words),
-        arrow=note("recovery_arrow", xref="x", yref="y", x=_iso(t_b), y=y_b, ax=_iso(t_a), ay=y_a, axref="x", ayref="y",
-                   showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=1.4, arrowcolor=ink("arrow"), standoff=0,
-                   text="", visible=False, size=wide["rate_font"], color=ink("arrow")),
-        label=note("recovery_label", xref="x", yref="y", x=_iso(t_a + (t_b - t_a) / 2), y=(y_a + y_b) / 2,
-                   xanchor="center", yanchor="bottom", text=f"{words['recovery_rate']} bits/yr", visible=False,
-                   size=wide["rate_font"], color=ink("arrow")))
+    # The arrow at the end of Part II: from the economy's 1978 level (zero) up to where its line
+    # stands at the playhead, double-headed, while the playhead rests there.
     stop = pd.Timestamp(ACTS[_INTERLUDE_ACT].end)
     interlude = dict(
         act=_INTERLUDE_ACT, date=_iso(stop), value=round(numbers["part2_bits"], 6),
@@ -2309,14 +2414,31 @@ def build_china_figure(
             entry["stalk"] = shape(y0=1, y1=1 + (2 + row * pitch[panel]) / height, **dashed)
             events.append(entry)
 
+    def rate_marks(span, note_=None, reference=False) -> dict:
+        """A rate arrow and its label, as the figure carries them (hidden: the script shows them with their box)."""
+        spec = rate_arrow(g, span, note_, reference)
+        spec["arrow"] = note(xref="x", yref="y", x=spec["end"], y=spec["y1"], ax=spec["start"], ay=spec["y0"],
+                             axref="x", ayref="y", showarrow=True, arrowhead=2, arrowsize=1,
+                             arrowwidth=RATE_ARROW["width"], arrowcolor=ink("arrow"), text="",
+                             # (Plotly's head reaches 1.3 widths past the point it is given: this puts its tip on it.)
+                             standoff=round(1.3 * RATE_ARROW["width"], 2),
+                             visible=False, size=wide["rate_font"], color=ink("arrow"))
+        spec["label"] = note(xref="x", yref="y", x=spec["start"], y=(spec["y0"] + spec["y1"]) / 2, xanchor="center",
+                             yanchor="bottom", text=spec["text"], visible=False, size=wide["rate_font"],
+                             color=ink("arrow"))
+        return spec
+
     # ---- Playback: the acts, the beats, and the schedule they add up to ----
     # Every labelled event is a gentle beat; every text box and picture card a
     # deep one. Within each act the schedule turns them into a table of playback
     # time against date (:func:`act_schedule`).
     script = BEATS if beats is None else beats
     marks = [pd.Timestamp(ev.date) for ev in drawn if ev.tier != "tick"]
-    plan = playback_plan(starts, ends, marks, script, words, trough)
-    acts, shown = [], []
+    # Two of the arrowed annotations are beats of their own (NOTE_BEATS); the other two dip gently.
+    notes_at = [(role, pd.Timestamp(points[role][0])) for role in NOTE_BEATS]
+    dips = marks + [pd.Timestamp(points[role][0]) for role in points if role not in NOTE_BEATS]
+    plan = playback_plan(starts, ends, dips, script, words, trough, notes_at)
+    acts, shown, noted = [], [], []
     for n, part in enumerate(plan):
         act, table = part["act"], part["table"]
         acts.append(dict(
@@ -2330,11 +2452,18 @@ def build_china_figure(
             picked = [i for i, ev in enumerate(events) if beat.event and ev["label"] == beat.event]
             assert bool(beat.event) == bool(picked), f"the beat of {when:%Y-%m-%d} picks out an event that is not drawn"
             picture = picture_data(beat.picture) if beat.picture else None
+            if picture:                          # (its sizes in KB are for the report, not the page)
+                picture = {k: v for k, v in picture.items() if k not in ("kb", "file_kb")}
             shown.append(dict(
                 date=_iso(when), act=n, kind="picture" if picture else "text", lead=lead, text=text,
                 seconds=round(seconds, 3), share=round(float(share), 4), since=stamp(opens), until=stamp(closes),
-                picture=picture, event=picked[0] if picked else None,
-                panel=beat.panel or act.panel, overlay=beat.overlay))
+                picture=picture, event=picked[0] if picked else None, panel=beat.panel or act.panel,
+                rate=rate_marks(beat.rate, beat.rate_note) if beat.rate else None,
+                reference=rate_marks(beat.reference, reference=True) if beat.reference else None))
+        # The annotations that are beats: when each is reached, and for how long playback slows.
+        for (noted_role, when), (opens, closes, share) in zip(part["notes"], table["windows"][len(part["beats"]):]):
+            noted.append(dict(role=noted_role, act=n, date=stamp(when), since=stamp(opens), until=stamp(closes),
+                              share=round(float(share), 4)))
     final = dict(lead=FINAL_BOX.lead.format(**words), text=FINAL_BOX.text.format(**words), panel="economy",
                  seconds=round(final_seconds(words), 3))
 
@@ -2369,7 +2498,7 @@ def build_china_figure(
         shapes=shapes, annotations=annotations,
         meta=dict(
             trace=trace, ann=role, zero=zero, playhead=playhead, events=events, eras=eras, leaders=leaders,
-            bands=bands, arrows=arrows, fills=fills, chords=chords, gap=gap_end, anchor=anchor, recovery=recovery,
+            bands=bands, arrows=arrows, fills=fills, chords=chords, gap=gap_end, anchor=anchor,
             anchors=[dict(trace="anchor_top", panel="economy", date=gdp_anchor, text=f"{GDP_ANCHOR_YEAR} = 0"),
                      dict(trace="anchor_bottom", panel="stocks", date=anchor, text=f"{since} = 0")],
             key=dict(zero=f"Zero line: above it Chinese stocks are ahead since {since}, below it American ones."),
@@ -2382,7 +2511,8 @@ def build_china_figure(
                 economy=[f"Economy compared to {since}: {_bits(v, show_multiple)}" for v in economy_y],
             ),
             # Playback opens on a single dot, the first data point, and runs act by act.
-            play=dict(start=_iso(data_start), end=_iso(cutoff), speeds=list(SPEEDS), acts=acts, beats=shown,
+            play=dict(start=_iso(data_start), end=_iso(cutoff), speeds=list(SPEEDS), speed=DEFAULT_SPEED, acts=acts,
+                      beats=shown, notes=noted, note=NOTE_BEAT, rate=RATE_ARROW, sync=SYNC_DAYS,
                       final=final, interlude=interlude, transition=TRANSITION, ending=ENDING, reveal=REVEAL_SECONDS,
                       ghost=GHOST_OPACITY, card_fade=CARD_FADE_SECONDS, scrim=SCRIM_OPACITY),
             view=dict(x=x_range, y=y_top, y2=y_bottom),
@@ -2406,7 +2536,7 @@ __FIG__
 <div class="china-title">__TITLE__</div>
 <div class="china-head china-head-top">Economy</div>
 <div class="china-head china-head-bottom">Stocks</div>
-<div class="china-hots" aria-hidden="true"></div>
+<div class="china-hots" aria-hidden="true"><div class="china-pulse"></div><div class="china-pulse-dot"></div></div>
 <div class="china-scrim" aria-hidden="true"></div>
 <div class="china-beat" title="Click to dismiss"><div class="china-beat-in"><img class="china-beat-img" alt="">
   <div class="china-beat-body"><span class="china-beat-lead"></span> <span class="china-beat-text"></span>
@@ -2496,6 +2626,11 @@ _STYLE = """<style>
    the plot, under the boxes and cards. */
 .china-hots { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .china-hot { position: absolute; left: 0; top: 0; display: none; }
+/* An annotation that is a beat: its point, and one ring that spreads from it and fades. */
+.china-pulse { position: absolute; left: 0; top: 0; display: none; box-sizing: border-box; border-radius: 50%;
+  border: 1.5px solid currentColor; }
+.china-pulse-dot { position: absolute; left: 0; top: 0; width: 7px; height: 7px; display: none; border-radius: 50%;
+  background: currentColor; }
 /* The year, on the x-axis under the playhead. */
 .china-pill { position: absolute; left: 0; top: 0; display: none; padding: 1px 6px; border-radius: 9px;
   line-height: 1.35; white-space: nowrap; font-variant-numeric: tabular-nums lining-nums;
@@ -2603,8 +2738,8 @@ _SCRIPT = r"""<script>
   var dotEl = {gdp: $(".china-dot-gdp"), stock: $(".china-dot-stock"), economy: $(".china-dot-economy")};
   var DAY = 86400000, YEAR = 31557600000, HOUR = 3600000;          // ms
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  var hotBox = $(".china-hots");
-  var PL, M, TR, AN, G, S, PEERS, EV, ERAS, LEADERS, BANDS, ARROWS, FILLS, CHORDS, GAP, ANCHORS, ACTS, VIEWS, BEATS, FINAL, INTER, TL, END;
+  var hotBox = $(".china-hots"), pulseRing = $(".china-pulse"), pulseDot = $(".china-pulse-dot");
+  var PL, M, TR, AN, G, S, PEERS, EV, ERAS, LEADERS, BANDS, ARROWS, FILLS, CHORDS, GAP, ANCHORS, ACTS, VIEWS, BEATS, FINAL, INTER, NOTES, TL, END;
   var T0, T1, TA, TB, TG, X0, X1, FONT;
   var L = null, GEO = null, P = null, FIT = null, STATE = null, lastW = 0, sent = {};
   var clock = 0, want = 0, playhead = 0, playing = false, played = false, raf = 0, busy = false, pending = null, speed = 1;
@@ -2771,7 +2906,7 @@ _SCRIPT = r"""<script>
     var s = c - seg.c0, k = seg.act, last = ACTS.length - 1, whole = VIEWS.length - 1;
     var st = {clock: c, kind: seg.kind, act: k, done: c >= END, card: -1, cardAlpha: 0, newAct: k, newAlpha: 1,
               va: k, vb: k, vu: 0, chords: [0, 0], rates: [0, 0], arrow: 0, gap: 0, last: 0, beat: null, beatAlpha: 0,
-              inter: 0, interAlpha: 0};
+              inter: 0, interAlpha: 0, note: null, noteAlpha: 0, pulse: 0};
     if (st.done) {
       st.kind = "done"; st.T = T1; st.act = st.newAct = last; st.va = st.vb = whole;
       st.chords = [1, 1]; st.rates = [1, 1]; st.arrow = st.gap = 1;
@@ -2810,6 +2945,12 @@ _SCRIPT = r"""<script>
     if (!st.done && seg.kind !== "end" && seg.kind !== "pull") BEATS.forEach(function (b) {
       var a = Math.min(clamp((c - b.c0) / fade, 0, 1), clamp((b.c1 - c) / fade + 1, 0, 1));
       if (a > st.beatAlpha) { st.beatAlpha = a; st.beat = b; }
+    });
+    // An annotation that is a beat: playback slows for it (the schedule), its point is marked, and one
+    // ring spreads from it as the playhead arrives.
+    if (seg.kind === "play") NOTES.forEach(function (n) {
+      var a = Math.min(clamp((c - n.c0) / fade, 0, 1), clamp((n.c1 - c) / fade + 1, 0, 1));
+      if (a > st.noteAlpha) { st.note = n; st.noteAlpha = a; st.pulse = clamp((c - n.c0) / M.play.note.pulse, 0, 1); }
     });
     return st;
   }
@@ -3196,18 +3337,20 @@ _SCRIPT = r"""<script>
     return null;
   }
 
-  // ---- The recovery's arrow ---------------------------------------------------------
-  // Parallel to the straight line between the economy's 1962 and 1966 points, lifted 6 px clear of
-  // the highest point between them; its rate over its middle, lifted by the arrow's rise across half
-  // the label's width and 6 px more, so that the two never touch.
-  // And where the zero line would run through the rate, the rate stands just above the zero line instead.
-  function recoveryGeometry(plotW) {
-    var R = M.recovery, sz = textSize(R.text, L.rate_font), t0 = toMs(R.start), t1 = toMs(R.end);
-    var slope = Math.abs(R.y1 - R.y0) * GEO.ppb / ((t1 - t0) * scaleIn(0, plotW)), lift = R.dev + 6 / GEO.ppb;
+  // ---- Rate arrows ------------------------------------------------------------------
+  // Over a span of the economy's points, from above its first to above its last: parallel to the
+  // straight line between them, lifted M.play.rate.lift px clear of the highest point between; its
+  // rate over its middle, lifted by the arrow's rise across half the label's width and 6 px more,
+  // so that the two never touch. And where the zero line would run through the rate, the rate
+  // stands just above the zero line instead. (In the view v of the box's act.)
+  function rateGeometry(R, v, plotW) {
+    var sz = textSize(R.text, L.rate_font), t0 = toMs(R.start), t1 = toMs(R.end);
+    var slope = Math.abs(R.y1 - R.y0) * GEO.ppb / ((t1 - t0) * scaleIn(v, plotW)), lift = R.dev + M.play.rate.lift / GEO.ppb;
     var yshift = 6 + slope * sz.w / 2, base = ((R.y0 + R.y1) / 2 + lift) * GEO.ppb;      // px above the zero line
     if (base + yshift < 4 && base + yshift + sz.h > -4) yshift = 4 - base;
     return {t0: t0, t1: t1, y0: R.y0, y1: R.y1, lift: lift, w: sz.w, h: sz.h, yshift: yshift};
   }
+  function ratesOf(b) { return [b.rate, b.reference].filter(function (R) { return R; }); }
 
   // ---- The ending's chords, and the boxes of narration --------------------------------
   // The two chords, as px down from the top of the bottom panel at a px column
@@ -3272,13 +3415,13 @@ _SCRIPT = r"""<script>
     ANCHORS.forEach(function (a) {
       if (a.t <= b.until) rects.push({a: X(a.t) - 8, b: X(a.t) + 8, top: zero[a.panel === "economy" ? 0 : 1] - 8, bottom: zero[a.panel === "economy" ? 0 : 1] + 8});
     });
-    // The recovery's arrow and its rate, which are up with this box.
-    if (b.overlay === "recovery") {
-      var R = recoveryGeometry(plotW), Y = function (y) { return zero[0] - y * GEO.ppb; };
+    // The box's rate arrows and their rates, which are up with it.
+    ratesOf(b).forEach(function (spec) {
+      var R = rateGeometry(spec, v, plotW), Y = function (y) { return zero[0] - y * GEO.ppb; };
       var ya = Y(R.y0 + R.lift), yb = Y(R.y1 + R.lift), mx = X((R.t0 + R.t1) / 2), my = Y((R.y0 + R.y1) / 2 + R.lift);
       rects.push({a: X(R.t0) - 4, b: X(R.t1) + 4, top: Math.min(ya, yb) - 4, bottom: Math.max(Y(R.y0), Y(R.y1)) + 4});
       rects.push({a: mx - R.w / 2 - 3, b: mx + R.w / 2 + 3, top: my - R.yshift - R.h - 2, bottom: my});
-    }
+    });
     // The labels in the strip between the panels: those reached by then, and the ghost of the next.
     var ahead = EV.filter(function (e) { return e.panel === "stocks" && !e.tick && e.on && e.t > b.until && e.act === b.act; })
       .sort(function (p, q) { return p.t - q.t; })[0];
@@ -3317,28 +3460,37 @@ _SCRIPT = r"""<script>
   // off the playhead itself for as long as it is up (the stretch of the axis
   // the playhead covers meanwhile), off the data and the dots, and off every
   // label and annotation showing by then. Of the places left it takes the one
-  // nearest the playhead, in the panel the beat prefers (its act's, unless it
-  // names one) and towards the top of that panel, and near where the box
-  // before it in the act stood, so that boxes do not jump about. A text box
-  // stays inside one panel; a picture card may run from one into the other.
-  // The beat's ways of being set are tried in turn until one has a place near
-  // enough. Returns the place (a, top: px from the plot's top-left) and the
-  // way, or null.
+  // nearest the playhead, in the beat's own panel (economy boxes in the top
+  // one, market boxes in the bottom one: its act's, unless it names one; the
+  // other panel, or across both, only if there is no room in its own) and
+  // towards the top of that panel, and near where the box before it in the
+  // act stood, so that boxes do not jump about. A text box stays inside one
+  // panel; a picture card may run from one into the other. The beat's ways of
+  // being set are tried in turn until one has a place near enough. Returns
+  // the place (a, top: px from the plot's top-left; `fallback` if it is not in
+  // its own panel) and the way, or null.
   function placeBox(b, plotW, before) {
     var v = b.act, sc = scaleIn(v, plotW), y1 = GEO.topH + GEO.gap, prefer = b.panel === "economy" ? 0 : 1;
     var panels = [{y0: 0, y1: GEO.topH}, {y0: y1, y1: GEO.plotH}], right = plotW + L.margin.r - 6;
     // The playhead's sweep while the box is up. (The last box has no playhead to keep off: it keeps left of the ending.)
     var s0 = b.last ? pxIn(v, T1, plotW) - 14 : pxIn(v, b.since, plotW) - 12, s1 = b.last ? Infinity : pxIn(v, b.until, plotW) + 12;
-    var way = inTheWay(b, plotW), best = null;
+    var way = inTheWay(b, plotW);
     if (L.card.below && !b.picture) return under(b);
-    ways(b, plotW).some(function (how, rank) {
+    // (A picture card keeps its picture if it can, in the other panel if need be, before it is set as words.)
+    var best = null, rounds = b.picture ? [[true, true], [false, true], [true, false], [false, false]] : [[true, false], [false, false]];
+    rounds.some(function (r) { best = search(r[0], r[1]); if (best && !r[0]) best.fallback = true; return !!best; });
+    return best || (L.card.below ? under(b) : null);
+    function search(own, pictured) {
+    var best = null;
+    ways(b, plotW).filter(function (how) { return (how.kind !== "text") === pictured; }).some(function (how, rank) {
       dress(b, how);
       var W = beatCard.offsetWidth, H = beatCard.offsetHeight, tries = [];
       if (H > 0.72 * GEO.plotH) return false;
       panels.forEach(function (pn, k) {
+        if (own && k !== prefer) return;
         var lo = pn.y0 + L.tick.down + 3, hi = pn.y1 - 4 - H, spans = false;
         if (hi < lo) {                       // too tall for the panel: a picture card may run into the other one
-          if (how.kind === "text") return;
+          if (how.kind === "text" || own) return;
           spans = true; lo = k ? Math.max(4, GEO.plotH - 4 - H - 60) : L.tick.down + 3; hi = k ? GEO.plotH - 4 - H : Math.min(GEO.plotH - 4 - H, lo + 60);
           if (hi < lo) return;
         }
@@ -3365,7 +3517,8 @@ _SCRIPT = r"""<script>
       // Good enough: near the playhead, in a way that keeps the picture if there is one.
       return !!best && best.cost < 170 + 45 * rank;
     });
-    return best || (L.card.below ? under(b) : null);
+    return best;
+    }
   }
 
   // ---- Everything in the layout that depends on the moment and the window ---------
@@ -3510,11 +3663,21 @@ _SCRIPT = r"""<script>
     var grown = Math.max(st.arrow, 0.04), gl = FIT.ends ? st.gap : 0;
     A(GAP.arrow, {visible: st.arrow > 0, ay: GAP.top + grown * (GAP.bottom - GAP.top)});
     A(GAP.label, {visible: gl > 0, opacity: gl});
-    // The arrow along the 1962-66 recovery and its rate, while the box about it is up (and goes
-    // with it); the arrow at the end of the interlude's act, drawn up from the 1978 level.
-    var rb = !done && st.beat && st.beat.overlay === "recovery" && !dismissed[st.beat.id] ? st.beatAlpha : 0;
-    A(AN.recovery_arrow, {visible: rb > 0, opacity: rb});
-    A(AN.recovery_label, {visible: rb > 0, opacity: rb});
+    // A box's rate arrow: drawn tail to head as the box comes up (the playhead at the span's last
+    // point), its rate once it is drawn, both going with the box; its reference arrow, faint, with it.
+    BEATS.forEach(function (b) {
+      if (!b.rate) return;
+      var on = !done && st.beat === b && !dismissed[b.id] ? st.beatAlpha : 0;
+      var f = on ? clamp((st.clock - b.c0) / M.play.rate.draw, 0, 1) : 0;
+      ratesOf(b).forEach(function (R) {
+        var g_ = R.geo, ref = R.reference, a = ref ? on * M.play.rate.reference : on, grow = ref ? 1 : Math.max(f, 0.02);
+        A(R.arrow, {visible: a > 0 && (ref || f > 0), opacity: a, x: iso(g_.t0 + grow * (g_.t1 - g_.t0)),
+                    y: g_.y0 + g_.lift + grow * (g_.y1 - g_.y0)});
+        var la = ref ? on * M.play.rate.reference_label : on * clamp(2 * f - 1, 0, 1);
+        A(R.label, {visible: la > 0, opacity: la});
+      });
+    });
+    // The arrow at the end of the interlude's act, drawn up from the 1978 level.
     var ia = done ? 0 : st.interAlpha;
     A(AN.inter_arrow, {visible: ia > 0 && st.inter > 0, opacity: ia, y: Math.max(st.inter, 0.04) * M.play.interlude.value});
     return p;
@@ -3660,6 +3823,19 @@ _SCRIPT = r"""<script>
       beatCard.style.opacity = alpha;
       beatCard.style.transform = "translate(" + (L.margin.l + b.box.a) + "px," + (GEO.t + b.box.top) + "px)";
     } else beatCard.style.display = "none";
+    // An annotation that is a beat: a dot on its point while playback slows for it, and one ring spreading from it.
+    var n = st.note;
+    if (n && !done && GEO && st.noteAlpha > 0) {
+      var x = L.margin.l + pxIn(st.va, n.t, GEO.plotW), y = GEO.t + GEO.topH + GEO.gap + (M.view.y2[1] - n.y) * GEO.ppb;
+      var d = 6 + 22 * st.pulse;
+      pulseRing.style.color = pulseDot.style.color = P.ink;
+      pulseRing.style.display = st.pulse < 1 ? "block" : "none";
+      pulseRing.style.width = pulseRing.style.height = d + "px";
+      pulseRing.style.opacity = (1 - st.pulse) * 0.9 * st.noteAlpha;
+      pulseRing.style.transform = "translate(" + (x - d / 2) + "px," + (y - d / 2) + "px)";
+      pulseDot.style.display = "block"; pulseDot.style.opacity = st.noteAlpha;
+      pulseDot.style.transform = "translate(" + (x - 3.5) + "px," + (y - 3.5) + "px)";
+    } else pulseRing.style.display = pulseDot.style.display = "none";
   }
   // The year pill, on the x-axis under the playhead: placed after each draw, from the axis as
   // drawn, so it is right under a reader's own zoom as well (and gone if the playhead is out of
@@ -3965,11 +4141,15 @@ _SCRIPT = r"""<script>
       if (FIT.ends) A(i, {text: it.wraps[textSize(it.wraps[0], L.rate_font).w + 2 <= gutter ? 0 : 1], xshift: L.end.label, "font.size": L.rate_font});
     });
     A(GAP.arrow, {xshift: L.end.arrow});
-    // The recovery's arrow, 6 px clear of the line (and of every point between its ends); its rate
-    // just above its middle, clear of the arrow's slope.
-    var R = recoveryGeometry(plotW);
-    A(AN.recovery_arrow, {y: R.y1 + R.lift, ay: R.y0 + R.lift});
-    A(AN.recovery_label, {y: (R.y0 + R.y1) / 2 + R.lift, yshift: R.yshift, "font.size": L.rate_font});
+    // Each rate arrow, clear of the line (and of every point between its ends); its rate just above
+    // its middle, clear of the arrow's slope.
+    BEATS.forEach(function (b) {
+      ratesOf(b).forEach(function (R) {
+        var g_ = R.geo = rateGeometry(R, b.act, plotW);
+        A(R.arrow, {ax: iso(g_.t0), ay: g_.y0 + g_.lift, "arrowwidth": M.play.rate.width});
+        A(R.label, {x: iso((g_.t0 + g_.t1) / 2), y: (g_.y0 + g_.y1) / 2 + g_.lift, yshift: g_.yshift, "font.size": L.rate_font});
+      });
+    });
 
     // The key under the plot: whatever could not be labelled directly.
     var keyed = false;
@@ -4121,10 +4301,15 @@ _SCRIPT = r"""<script>
     A(GAP.label, P.text("rate"), P.paper);
     A(GAP.arrow, P.text("arrow"), P.paper);
     layout["annotations[" + GAP.arrow + "].arrowcolor"] = P.text("arrow");
-    // The recovery's arrow and its rate, and the interlude's arrow: in ink, the page's own in dark mode.
-    ["recovery_arrow", "recovery_label", "inter_arrow"].forEach(function (r) { A(AN[r], P.text("arrow"), P.paper); });
-    layout["annotations[" + AN.recovery_arrow + "].arrowcolor"] = P.text("arrow");
+    // The rate arrows and their rates, and the interlude's arrow: in ink, the page's own in dark mode.
+    A(AN.inter_arrow, P.text("arrow"), P.paper);
     layout["annotations[" + AN.inter_arrow + "].arrowcolor"] = P.text("arrow");
+    BEATS.forEach(function (b) {
+      ratesOf(b).forEach(function (R) {
+        A(R.arrow, P.text("arrow"), P.paper); A(R.label, P.text("arrow"), P.paper);
+        layout["annotations[" + R.arrow + "].arrowcolor"] = P.text("arrow");
+      });
+    });
     // One restyle per attribute group: a null in a per-trace list would unset it.
     send(layout);
     PL.restyle(gd, {fillcolor: P.behind}, [TR.fill_behind]);
@@ -4193,10 +4378,11 @@ _SCRIPT = r"""<script>
       var ax = a.panel === "economy" ? ya : y2;
       if (playhead >= a.t && Math.hypot(xa.l2p(a.t) - px, ax._offset + ax.l2p(0) - py) <= 8) out.push(a.text);
     });
-    // The recovery's rate, while it is up, says what it measures.
+    // A rate, while it is up, says what it measures.
     var rb = STATE.beat;
-    if (!done && rb && rb.overlay === "recovery" && STATE.beatAlpha > 0 && !dismissed[rb.id] &&
-        inside(label(AN.recovery_label), cx, cy)) out.push(M.recovery.hover);
+    if (!done && rb && STATE.beatAlpha > 0 && !dismissed[rb.id]) ratesOf(rb).forEach(function (R) {
+      if (inside(label(R.label), cx, cy)) out.push(R.hover);
+    });
     if (py >= y2._offset && py <= y2._offset + y2._length) BANDS.forEach(function (bd) {
       if (!bd.span || px < bd.span[0] || px > bd.span[1]) return;
       out.push(bd.early && xa.p2l(px) < bd.early.t1 ? bd.early.description : bd.description);
@@ -4332,6 +4518,7 @@ _SCRIPT = r"""<script>
       var gap = !q ? null : b.last ? pxIn(b.act, T1, GEO.plotW) - q.b : q.a > sweep[1] ? q.a - sweep[1] : sweep[0] - q.b;
       return (b.last ? "last box" : iso(b.t).slice(0, 7)) + " [" + (q ? q.how.kind + (q.how.img ? " " + q.how.img : "") + ", " + Math.round(q.w) + "×" + Math.round(q.h)
         + (q.below ? ", under the plot" : " at " + Math.round(q.a) + "," + Math.round(q.top) + (q.spans ? ", across the panels" : q.k ? ", bottom panel" : ", top panel")
+        + (q.fallback ? " (no room in its own)" : "")
         + ", " + Math.round(gap) + " px " + (b.last || q.side < 0 ? "left" : "right") + " of the playhead") : "NO PLACE") + "]"; });
     out.bandLabels = BANDS.map(function (bd) {
       return plain(bd.wraps[0]) + ": " + bd.spots.map(function (s) { return s ? plain(s.text) : "none"; }).join(" / "); });
@@ -4367,6 +4554,16 @@ _SCRIPT = r"""<script>
           fail(tag + ": the " + a.text + " marker is not drawn, though its date is in view");
       });
     }
+    // A rate arrow as drawn: the x of its line's two ends, in px from the plot's left edge.
+    // (The line and its head together: Plotly stops the line short of the tip, under the head.)
+    function arrowEnds(i) {
+      var els = gd.querySelectorAll('.annotation[data-index="' + i + '"] .annotation-arrow-g path'), fl_ = gd._fullLayout;
+      if (!els.length) return null;
+      var r = gd.getBoundingClientRect(), lo = Infinity, hi = -Infinity;
+      Array.prototype.forEach.call(els, function (el) { var b = el.getBoundingClientRect(); lo = Math.min(lo, b.left); hi = Math.max(hi, b.right); });
+      return [lo - r.left - fl_.xaxis._offset, hi - r.left - fl_.xaxis._offset];
+    }
+    var BOX_SHARE = Math.max.apply(null, M.play.notes.map(function (n) { return n.share; }));
     function monthOf(T) { var d = new Date(T); return MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear(); }
     function unbold(text) { return String(text).replace(/\*\*/g, ""); }
     // What each label is. `over`: text inside a panel that may lie over a band,
@@ -4383,6 +4580,7 @@ _SCRIPT = r"""<script>
     FILLS.forEach(function (f) { who[AN[f.role]] = {name: f.role, kind: "fill", over: true, infill: f.kind === "behind"}; });
     CHORDS.forEach(function (ch) { who[ch.annotation] = {name: "rate: " + ch.key, kind: "rate", over: true}; });
     who[GAP.label] = {name: "the gap's label", kind: "rate", over: true};
+    BEATS.forEach(function (b) { ratesOf(b).forEach(function (R) { who[R.label] = {name: "rate: " + R.text, kind: "rate", over: true}; }); });
 
     // Every visible text box against every other, the bars, the event lines and
     // the data; that each bar's label is still at the bar's start; and how tall
@@ -4586,10 +4784,17 @@ _SCRIPT = r"""<script>
           seen[b.i] = {act: k, at: now};
         });
         anchorsDrawn(tag);
-        // The recovery's arrow is up only with its box; the interlude's only at rest at its act's end.
-        var rec = fl.annotations[AN.recovery_arrow], ia = fl.annotations[AN.inter_arrow];
-        var recWanted = st.beat && st.beat.overlay === "recovery" && st.beatAlpha > 0 && !dismissed[st.beat.id];
-        if ((rec.visible !== false) !== !!recWanted) fail(tag + ": the recovery's arrow is " + (recWanted ? "missing" : "up without its box"));
+        // A rate arrow is up only with its box, and only once the playhead is at its span's last point;
+        // the interlude's only at rest at its act's end.
+        var ia = fl.annotations[AN.inter_arrow];
+        BEATS.forEach(function (b) {
+          ratesOf(b).forEach(function (R) {
+            var up = fl.annotations[R.arrow].visible !== false;
+            var wanted = st.beat === b && st.beatAlpha > 0 && !dismissed[b.id] && (R.reference || st.clock > b.c0);
+            if (up !== !!wanted) fail(tag + ": the rate arrow " + R.lead + " is " + (wanted ? "missing" : "up without its box"));
+            if (up && !R.reference && st.T < toMs(R.end) - DAY) fail(tag + ": the rate arrow " + R.lead + " is drawn before the playhead reaches its end");
+          });
+        });
         var interWanted = (seg.kind === "inter" && s > 0) || (seg.kind === "break" && seg.act === M.play.interlude.act && s < tr.card_in);
         if ((ia.visible !== false) !== interWanted) fail(tag + ": the interlude's arrow is " + (interWanted ? "missing" : "up where it should not be"));
         out.frames[tag] = {texts: cl.texts, minGapText: cl.minGapText, minGapData: cl.minGapData,
@@ -4788,15 +4993,22 @@ _SCRIPT = r"""<script>
           : !Array.prototype.some.call(keyBox.children, function (row) { return !row.hidden && row.textContent.indexOf(gapSays) >= 0; }))
         fail("the gap's label is neither beside its arrow nor in the key");
       M.playhead.forEach(function (i) { if (fl5.shapes[i].visible !== false) fail("the playhead is drawn on the finished chart"); });
+      BEATS.forEach(function (b) { ratesOf(b).forEach(function (R) {
+        if (fl5.annotations[R.arrow].visible !== false || fl5.annotations[R.label].visible !== false) fail("a rate arrow is on the finished chart: " + R.lead);
+      }); });
+      if (pulseRing.style.display !== "none" || pulseDot.style.display !== "none") fail("a pulse is on the finished chart");
       if (pill.style.display !== "none") fail("the year pill is showing on the finished chart");
       if (actCard.style.display !== "none" || beatCard.style.display !== "none" || scrim.style.display !== "none") fail("a card, a box or the scrim is showing on the finished chart");
       if (playBtn.classList.contains("is-done") || playBtn.classList.contains("is-playing")) fail("the play button does not say play when the page opens");
       // The speed toggle, and the labels at the ends of the scrubber.
-      speedBtn.click();
-      out.controls = {speed: speedBtn.textContent + " after one click", start: startOut.textContent, end: endOut.textContent};
-      if (speed !== M.play.speeds[1] || speedBtn.textContent !== M.play.speeds[1] + "×") fail("the speed toggle did not switch");
-      speedBtn.click();
-      if (speed !== M.play.speeds[0]) fail("the speed toggle did not switch back");
+      // It starts at the default speed, shows the speed it is at, and cycles through the rest.
+      var cycle = [speedBtn.textContent];
+      if (speed !== M.play.speed || speedBtn.textContent !== M.play.speed + "×") fail("the speed toggle does not start at " + M.play.speed + "×");
+      M.play.speeds.forEach(function () { speedBtn.click(); cycle.push(speedBtn.textContent); });
+      out.controls = {speeds: cycle.join(" → "), start: startOut.textContent, end: endOut.textContent};
+      var at_ = M.play.speeds.indexOf(M.play.speed), want_ = M.play.speeds.slice(at_).concat(M.play.speeds.slice(0, at_), [M.play.speed]);
+      if (cycle.join() !== want_.map(function (v) { return v + "×"; }).join()) fail("the speed toggle does not cycle " + want_.join(", "));
+      if (speed !== M.play.speed) fail("the speed toggle did not come back round");
       if (startOut.textContent !== String(new Date(T0).getUTCFullYear()) || endOut.textContent !== String(new Date(T1).getUTCFullYear()))
         fail("the scrubber's ends are not labelled with the first and last years");
       // The scrubber's segments: one label per act, in order, each over its own stretch of the track.
@@ -4849,6 +5061,28 @@ _SCRIPT = r"""<script>
           then("opening: ghost", seg.c0 + held + tr.ghost);
         } else if (seg.kind === "play") {
           [0.004, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.996].forEach(function (f) { then(name + " " + (100 * f).toFixed(1) + "%", seg.c0 + f * seg.dur); });
+          // The annotations that are beats: playback slows to a text box's speed, the annotation fades
+          // in, its point is marked and pulses once.
+          NOTES.filter(function (n) { return n.act === seg.act; }).forEach(function (n) {
+            then("annotation beat " + n.role + ": pulse", n.c0 + 0.3 * M.play.note.pulse, function () {
+              var pace = paceAt(n.c0 + 0.5), q = pulseRing.getBoundingClientRect(), dt = pulseDot.getBoundingClientRect();
+              var fl = gd._fullLayout, r = gd.getBoundingClientRect();
+              var px = r.left + fl.xaxis._offset + fl.xaxis.l2p(n.t), py = r.top + fl.yaxis2._offset + fl.yaxis2.l2p(n.y);
+              if (!pace || pace.now > 1.05 * BOX_SHARE * pace.base) fail("annotation beat " + n.role + ": playback does not slow to a text box's speed");
+              if (pulseRing.style.display === "none" || pulseDot.style.display === "none") fail("annotation beat " + n.role + ": its point does not pulse");
+              else if (Math.hypot((q.left + q.right) / 2 - px, (q.top + q.bottom) / 2 - py) > 2 || Math.hypot((dt.left + dt.right) / 2 - px, (dt.top + dt.bottom) / 2 - py) > 2)
+                fail("annotation beat " + n.role + ": the pulse is not on its point");
+              if (beatCard.style.display !== "none" && STATE.beat && STATE.beatAlpha > 0.5) fail("annotation beat " + n.role + ": a box is up");
+              out.notes8 = (out.notes8 || []).concat([n.role + " at " + iso(n.t).slice(0, 10) + ": " + (n.c1 - n.c0 + M.play.card_fade).toFixed(2) + " s slow"]);
+            });
+            then("annotation beat " + n.role + ": annotation", n.c0 + M.play.reveal + 0.2, function () {
+              var a = gd._fullLayout.annotations[AN[n.role]];
+              if (FIT.arrows && (a.visible === false || !(a.opacity > 0.9))) fail("annotation beat " + n.role + ": the annotation has not faded in");
+            });
+            then("annotation beat " + n.role + ": after", n.c1 + M.play.card_fade + 0.05, function () {
+              if (pulseRing.style.display !== "none" || pulseDot.style.display !== "none") fail("annotation beat " + n.role + ": the pulse stays");
+            });
+          });
         } else if (seg.kind === "inter") {
           // At rest at the act's end: the arrow drawn up from the 1978 level to the line, then its box.
           var IL = M.play.interlude;
@@ -4962,10 +5196,14 @@ _SCRIPT = r"""<script>
             if (has && (img.getAttribute("src") !== b.picture.src || credit !== b.picture.credit || +getComputedStyle(img).opacity < 1)) fail(tag + ": the picture or its credit is wrong");
             var side_ = Math.max(img.getBoundingClientRect().width, img.getBoundingClientRect().height);   // its longer side
             if (has && !L.card.below && (side_ < 165 || side_ > 285)) fail(tag + ": the picture is not a sensible size");
-            if (!has && !L.card.below) fail(tag + ": the picture was dropped at a width that should have room for it");
+            if (!has && !L.card.below) out.picturesDropped = (out.picturesDropped || []).concat([tag]);
           } else if (has || credit) fail(tag + ": a text box shows a picture or a credit");
           if (b.event !== null && gd._fullLayout.shapes[EV[b.event].shape].opacity < 0.8) fail(tag + ": the box's event is not picked out");
           out.frames[tag].box = [Math.round(q.left - r.left), Math.round(q.top - r.top), Math.round(q.width), Math.round(q.height)];
+          // In its own panel (economy boxes in the top one, market boxes in the bottom one), unless there is no room there.
+          if (!b.box.below && !b.box.fallback && (b.box.spans || b.box.k !== (b.panel === "economy" ? 0 : 1)))
+            fail(tag + ": the box is not in its own panel");
+          if (b.box.fallback) { out.fallbacks = out.fallbacks || []; out.fallbacks.push(iso(b.t).slice(0, 10)); }
           // Up for its reading time, and its fades.
           // (Longer only where playback comes to rest at its part's end meanwhile.)
           var held_ = b.c1 - b.c0 - M.play.card_fade;
@@ -4975,28 +5213,48 @@ _SCRIPT = r"""<script>
           var appear = stateAt(b.c0).T, off = (appear - b.t) / DAY, pre = stateAt(b.c0 - 0.02), post = stateAt(b.c0 + 0.05);
           out.sync = out.sync || [];
           out.sync.push(iso(b.t).slice(0, 10) + ": " + (off >= 0 ? "+" : "") + off.toFixed(1) + " d");
-          if (Math.abs(off) > 31) fail(tag + ": the box comes up " + off.toFixed(1) + " days from its date");
+          if (Math.abs(off) > M.play.sync) fail(tag + ": the box comes up " + off.toFixed(1) + " days from its date");
           if (b !== INTER && ((pre.beat === b && pre.beatAlpha > 0) || post.beat !== b || !(post.beatAlpha > 0))) fail(tag + ": the box does not come up at its moment");
-          // The recovery's arrow: parallel to the chord from 1962 to 1966, clear above the line, in ink, with its rate.
-          if (b.overlay === "recovery") {
-            var ra = fl.annotations[AN.recovery_arrow], rl = fl.annotations[AN.recovery_label], R = M.recovery;
-            var slopeA = (ra.y - ra.ay) / (toMs(ra.x) - toMs(ra.ax)), slopeC = (R.y1 - R.y0) / (toMs(R.end) - toMs(R.start));
-            if (ra.visible === false || rl.visible === false) fail(tag + ": the recovery's arrow is not up");
-            if (Math.abs(slopeA / slopeC - 1) > 1e-6 || toMs(ra.ax) !== toMs(R.start) || toMs(ra.x) !== toMs(R.end)) fail(tag + ": the recovery's arrow is not parallel to the 1962-66 chord");
-            if (ra.arrowcolor !== P.text("arrow") || rl.font.color !== P.text("arrow")) fail(tag + ": the recovery's arrow is not in ink");
-            var clear = Infinity;
-            G.t.forEach(function (tt, i) {
-              if (tt < toMs(R.start) || tt > toMs(R.end)) return;
-              clear = Math.min(clear, (ra.ay + slopeA * (tt - toMs(ra.ax)) - G.y[i]) * GEO.ppb);
+          // Its rate arrows: tail and head over the span's two points, parallel to the chord between
+          // them, clear above the line, in ink, with its rate and what that measures; the reference faint.
+          if (b.rate) {
+            out.rateArrows = out.rateArrows || {};
+            ratesOf(b).forEach(function (R) {
+              var ra = fl.annotations[R.arrow], rl = fl.annotations[R.label], xa = fl.xaxis;
+              var slopeA = (ra.y - ra.ay) / (toMs(ra.x) - toMs(ra.ax)), slopeC = (R.y1 - R.y0) / (toMs(R.end) - toMs(R.start));
+              if (ra.visible === false || rl.visible === false) return fail(tag + ": the rate arrow " + R.lead + " is not up");
+              if (Math.abs(slopeA / slopeC - 1) > 1e-6 || toMs(ra.ax) !== toMs(R.start) || Math.abs(toMs(ra.x) - toMs(R.end)) > 1000)
+                fail(tag + ": the rate arrow " + R.lead + " is not parallel to its chord, over its span");
+              var ends = arrowEnds(R.arrow), want = [xa.l2p(toMs(R.start)), xa.l2p(toMs(R.end))];
+              var off = ends ? Math.max(Math.abs(ends[0] - want[0]), Math.abs(ends[1] - want[1])) : Infinity;
+              if (off > 2) fail(tag + ": the rate arrow " + R.lead + "'s ends are " + off.toFixed(1) + " px from its points");
+              if (ra.arrowcolor !== P.text("arrow") || rl.font.color !== P.text("arrow") || Math.abs(ra.arrowwidth - M.play.rate.width) > 1e-9)
+                fail(tag + ": the rate arrow " + R.lead + " is not in ink, " + M.play.rate.width + " px");
+              var clear = Infinity;
+              G.t.forEach(function (tt, i) {
+                if (tt < toMs(R.start) || tt > toMs(R.end)) return;
+                clear = Math.min(clear, (ra.ay + slopeA * (tt - toMs(ra.ax)) - G.y[i]) * GEO.ppb);
+              });
+              if (clear < 6) fail(tag + ": the rate arrow " + R.lead + " is not clear above the line (" + clear.toFixed(1) + " px)");
+              if (rl.text !== R.text) fail(tag + ": the rate arrow " + R.lead + " is labelled " + rl.text);
+              if (R.reference && Math.abs(ra.opacity - M.play.rate.reference) > 0.01) fail(tag + ": the reference arrow " + R.lead + " is not faint");
+              var lb = label(R.label).getBoundingClientRect();
+              if (describe(lb.left + lb.width / 2 - r.left - fl.xaxis._offset, lb.top + lb.height / 2 - r.top, lb.left + lb.width / 2, lb.top + lb.height / 2,
+                           fl.xaxis, fl.yaxis, fl.yaxis2).indexOf(R.hover) < 0) fail(tag + ": the rate " + R.lead + " does not say what it measures on hover");
+              out.rateArrows[R.lead + (R.reference ? " (reference)" : "")] = rl.text + ", ends within " + off.toFixed(2) + " px of its points, " + clear.toFixed(1) + " px above the line";
             });
-            out.recovery = {label: rl.text, clearOfLinePx: +clear.toFixed(1), hover: R.hover};
-            if (clear < 4) fail(tag + ": the recovery's arrow is not clear above the line (" + clear.toFixed(1) + " px)");
-            var lb = label(AN.recovery_label).getBoundingClientRect();
-            if (describe(lb.left + lb.width / 2 - r.left - fl.xaxis._offset, lb.top + lb.height / 2 - r.top, lb.left + lb.width / 2, lb.top + lb.height / 2,
-                         fl.xaxis, fl.yaxis, fl.yaxis2).indexOf(R.hover) < 0) fail(tag + ": the recovery's rate does not say what it measures on hover");
+            // Drawn tail to head as the box comes up, and not before.
+            var R0 = b.rate, ra0 = function () { return gd.layout.annotations[R0.arrow]; };
+            busy = false; pending = null; render(b.c0 - 0.02);
+            if (ra0().visible !== false) fail(tag + ": the rate arrow " + R0.lead + " is up before its box");
+            busy = false; pending = null; render(b.c0 + 0.3 * M.play.rate.draw);
+            var part_ = (toMs(ra0().x) - toMs(R0.start)) / (toMs(R0.end) - toMs(R0.start));
+            if (ra0().visible === false || !(part_ > 0.15 && part_ < 0.6)) fail(tag + ": the rate arrow " + R0.lead + " is not drawn tail to head (" + part_.toFixed(2) + ")");
+            if (stateAt(b.c0).T < toMs(R0.end) - DAY) fail(tag + ": the box with the rate arrow " + R0.lead + " comes up before the playhead reaches its end");
+            busy = false; pending = null; render(b.c0 + 0.75 * (b.c1 - b.c0));
             beatCard.click();
             render(clock);
-            if (gd.layout.annotations[AN.recovery_arrow].visible !== false) fail(tag + ": the recovery's arrow stays when its box is dismissed");
+            if (ratesOf(b).some(function (R) { return gd.layout.annotations[R.arrow].visible !== false; })) fail(tag + ": a rate arrow stays when its box is dismissed");
             dismissed = {};
           }
         });
@@ -5167,7 +5425,8 @@ _SCRIPT = r"""<script>
       var by = function (kind) { return TL.filter(function (s) { return s.kind === kind; }).map(function (s) { return +s.dur.toFixed(2); }); };
       out.play = {opening: by("open")[0], acts: ACTS.map(function (A) { return A.numeral + ": " + A.total.toFixed(2); }),
                   interlude: by("inter")[0], breaks: by("break"), ending: by("end")[0], pullBack: by("pull")[0], total: +END.toFixed(2),
-                  totalAt2x: +(END / M.play.speeds[1]).toFixed(2)};
+                  totalAtDefault: +(END / M.play.speed).toFixed(2),
+                  totalAtFastest: +(END / last(M.play.speeds)).toFixed(2)};
       out.pass = out.fails.length === 0;
       window.__CHINA_AUDIT__ = out;
       console.log("CHINA-AUDIT " + JSON.stringify(out));
@@ -5268,19 +5527,27 @@ _SCRIPT = r"""<script>
     BEATS = M.play.beats.map(function (b, n) {
       var since = toMs(b.since), until = toMs(b.until);
       return {id: "beat" + n, t: toMs(b.date), act: b.act, kind: b.kind, panel: b.panel, lead: b.lead, text: b.text,
-              picture: b.picture, share: b.share, event: b.event, overlay: b.overlay, seconds: b.seconds,
-              since: since, until: until, last: false,
+              picture: b.picture, share: b.share, event: b.event, rate: b.rate, reference: b.reference,
+              seconds: b.seconds, since: since, until: until, last: false,
               c0: ACTS[b.act].c0 + tauOf(b.act, since), c1: ACTS[b.act].c0 + tauOf(b.act, until), box: null};
     });
     // The interlude's box: after its arrow, while the playhead rests at the end of its act.
     var IA = ACTS[IL.act], ic0 = IA.i0 + IL.arrow_seconds + IL.pause;
     INTER = {id: "inter", t: IA.t1, act: IL.act, kind: "text", panel: "economy", lead: IL.lead, text: IL.text,
-             picture: null, event: null, overlay: "inter", seconds: IL.seconds, since: IA.t1, until: IA.t1,
+             picture: null, event: null, rate: null, reference: null, overlay: "inter", seconds: IL.seconds,
+             since: IA.t1, until: IA.t1,
              last: false, c0: ic0, c1: ic0 + fade + IL.seconds, box: null};
     BEATS.push(INTER);
     // The last box, which closes the ending.
     FINAL = {id: "last", t: T1, act: ACTS.length - 1, kind: "text", panel: M.play.final.panel, lead: M.play.final.lead,
-             text: M.play.final.text, picture: null, event: null, since: T1, until: T1, last: true, box: null};
+             text: M.play.final.text, picture: null, event: null, rate: null, reference: null, since: T1, until: T1,
+             last: true, box: null};
+    // The annotations that are beats: each slows playback, between two moments, as its point is reached.
+    NOTES = M.play.notes.map(function (n) {
+      var a = ARROWS.filter(function (x) { return x.role === n.role; })[0], since = toMs(n.since), until = toMs(n.until);
+      return {role: n.role, act: n.act, t: a.t, y: a.y, since: since, until: until,
+              c0: ACTS[n.act].c0 + tauOf(n.act, since), c1: ACTS[n.act].c0 + tauOf(n.act, until)};
+    });
     // The key: a row for the bottom panel's zero line, a numbered row for each arrowed annotation,
     // a row for each closing rate and one for the gap. A row shows only if the plot has no room
     // for what it says.
@@ -5324,7 +5591,7 @@ _SCRIPT = r"""<script>
     });
     startOut.textContent = new Date(T0).getUTCFullYear();   // static: the two ends of the timeline
     endOut.textContent = new Date(T1).getUTCFullYear();
-    setSpeed(M.play.speeds[0]);
+    setSpeed(M.play.speed);
     // The page opens on the finished chart.
     clock = want = END; playhead = T1; STATE = stateAt(END);
 
@@ -5369,7 +5636,7 @@ _SCRIPT = r"""<script>
     if (location.search.indexOf("china-") >= 0) window.__CHINA__ = {
       show: function (c) { pause(); busy = false; pending = null; dismissed = {}; render(c); return STATE; },
       state: function () { return STATE; }, clockAt: clockAt, timeline: TL, acts: ACTS, views: VIEWS, beats: BEATS,
-      last: FINAL, inter: INTER, end: END, hovered: function () { return hovered.slice(); }};
+      last: FINAL, inter: INTER, notes: NOTES, end: END, hovered: function () { return hovered.slice(); }};
     // The audit waits for that second fit, so it measures the settled figure.
     if (location.search.indexOf("china-audit") >= 0) fontsReady.then(function () { setTimeout(runAudit, 900); });
   }
@@ -5480,11 +5747,11 @@ def _run_checks() -> None:
         assert abs(a - b) <= tol, f"{msg}: {a} != {b} (tol {tol})"
 
     def build(**kw):
-        """Build the figure: the only warning allowed is the one for the missing Coca-Cola picture (no file yet)."""
+        """Build the figure, which must not warn: every picture and every number is there."""
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             built = build_china_figure(**kw)
-        others = [str(w.message) for w in caught if "coke_1979" not in str(w.message)]
+        others = [str(w.message) for w in caught]
         assert not others, f"the build warned: {others}"
         return built
 
@@ -5500,7 +5767,7 @@ def _run_checks() -> None:
         warnings.simplefilter("error", UserWarning)  # every number is there
         words, numbers = narration_numbers(gdp, usa, s, e, STOCK_ANCHOR, cutoff, returns)
     assert anchor_month_end(s_file) == STOCK_ANCHOR == s.index[0], "STOCK_ANCHOR should be a month-end in the derived file"
-    fig = build()                                    # (warns of nothing but the Coca-Cola picture, which has no file yet)
+    fig = build()
     meta = dict(fig.layout.meta)
     tr = meta["trace"]
     gdp_tr, stock, economy = fig.data[tr["gdp"]], fig.data[tr["stock"]], fig.data[tr["economy"]]
@@ -5842,7 +6109,7 @@ def _run_checks() -> None:
     leads = ([ev["description"] for ev in meta["events"]] + [era["description"] for era in meta["eras"]]
              + [who["description"] for who in meta["leaders"]]
              + [b["description"] for b in meta["bands"]] + [b["early"]["description"] for b in meta["bands"] if b["early"]]
-             + [meta["recovery"]["hover"]])
+             + [spec["hover"] for b in meta["play"]["beats"] for spec in (b["rate"], b["reference"]) if spec])
     for text in leads:
         m = re.match(r"\*\*([^*]+)\*\*: \S", text)
         assert m and re.search(r"(19|20)\d\d|present", m.group(1)), f"a hover text does not lead with a bold date: {text[:50]}"
@@ -5948,7 +6215,7 @@ def _run_checks() -> None:
     play = meta["play"]
     acts, beats = play["acts"], play["beats"]
     assert play["start"] == gdp_tr.x[0] == acts[0]["start"] and play["end"] == _iso(cutoff) == acts[-1]["end"]
-    assert play["speeds"] == [1, 2] and 'class="china-speed"' in page
+    assert play["speeds"] == [1, 1.5, 2] and play["speed"] == DEFAULT_SPEED == 1.5 and 'class="china-speed"' in page
     assert [(a["numeral"], a["title"]) for a in acts] == list(zip(("I", "II", "III"), PART_TITLES))
     # The same on the title card and the scrubber: the middle title in curly quotes on both.
     assert PART_TITLES == ["Mao's Mayhem", "“Seeking Truth from Facts”", "An Investable China"]
@@ -5984,9 +6251,10 @@ def _run_checks() -> None:
     #       1.5 s with no box up to explain it. Every box comes up within SYNC_DAYS of its date, and
     #       stays up for its reading time.
     assert EVENT_SLOWDOWN >= 0.7 and EVENT_WINDOW_YEARS <= 0.25, "a labelled event should slow playback gently and briefly"
-    assert BOX_SLOWDOWN == 0.2 and BOX_SECONDS == (1.5, 0.3) and PICTURE_SLOWDOWN == 0.1 and PICTURE_SECONDS == (2.5, 0.3)
-    assert LAST_BOX_EXTRA == 1.5 and SYNC_DAYS == 31 and CROWD_SHARE == 0.05 and MIN_SHARE < CROWD_SHARE
-    assert SLOW_LIMIT == (0.6, 1.5) and [spec.seconds for spec in ACTS] == [75.0, 90.0, 100.0]
+    assert BOX_SLOWDOWN == 0.2 and BOX_SECONDS == (1.2, 0.27) and PICTURE_SLOWDOWN == 0.1 and PICTURE_SECONDS == (2.2, 0.27)
+    assert LAST_BOX_EXTRA == 0.5 and SYNC_DAYS == 45 and CROWD_SHARE == 0.05 and MIN_SHARE < CROWD_SHARE and MAX_BASE == 1.3
+    assert SLOW_LIMIT == (0.6, 1.5) and [spec.seconds for spec in ACTS] == [55.0, 70.0, 73.0]
+    assert NOTE_BEAT == dict(seconds=3.0, pulse=0.9) and NOTE_BEATS == ("arrow_economy", "arrow_parity")
     plan, marks, plan_words, _ = default_plan()
     assert plan_words == words and len(marks) == len(labelled)
     durations, bases, slowest, offsets, shares = [], [], [], [], []
@@ -6072,7 +6340,9 @@ def _run_checks() -> None:
     # (13b) The beat script. Every beat lies inside its part; the boxes say what the script says,
     #       with every number in them computed (and each computed number as expected).
     assert len(beats) == len(BEATS) == sum(len(part["beats"]) for part in plan) == 28
-    assert [sum(b["act"] == n for b in beats) for n in range(3)] == [9, 10, 9], "the beats are not in the parts they belong to"
+    assert [sum(b["act"] == n for b in beats) for n in range(3)] == [7, 10, 11], "the beats are not in the parts they belong to"
+    trims = {b.lead: b.trim for b in BEATS if b.trim}
+    assert trims == {"Dec 1978": -1.0, "1988": -1.0}, trims
     for b in beats:
         act = acts[b["act"]]
         assert act["start"] < b["date"] <= act["end"], f"the beat of {b['date']} lies outside its part"
@@ -6081,28 +6351,67 @@ def _run_checks() -> None:
         assert b["panel"] in ("economy", "stocks") and "{" not in b["lead"] + b["text"], "an unfilled placeholder"
         count = len(f"{b['lead']} {b['text']}".split())
         start_, per_word = PICTURE_SECONDS if b["kind"] == "picture" else BOX_SECONDS
-        close(b["seconds"], start_ + per_word * count, 1e-3, "a box's reading time")
+        close(b["seconds"], start_ + per_word * count + trims.get(b["lead"], 0.0), 1e-3, "a box's reading time")
         off = (pd.Timestamp(b["since"]) - pd.Timestamp(b["date"])) / pd.Timedelta(days=1)
         assert abs(off) <= SYNC_DAYS, f"the box of {b['date']} comes up {off:+.1f} days from its date"
-    assert [b["panel"] for b in beats] == ["economy"] * 19 + ["stocks"] * 6 + ["economy"] * 2 + ["stocks"]
-    assert [b["overlay"] for b in beats].count("recovery") == 1 and beats[2]["overlay"] == "recovery"
+    # Economy boxes in the top panel, market boxes in the bottom one.
+    assert [b["panel"] for b in beats] == (["economy"] * 15 + ["stocks", "economy"] + ["stocks"] * 2 + ["economy"] * 2
+                                           + ["stocks"] * 3 + ["economy", "stocks", "economy", "stocks"])
+    # Every box that quotes a rate has an arrow over its span, and comes up at its span's last point.
+    rated = {b["lead"]: (b["rate"]["text"], b["reference"]["text"] if b["reference"] else None) for b in beats if b["rate"]}
+    assert rated == {"1962–65": ("+0.11 bits/yr", None), "1966–68": ("−0.15 bits/yr", None),
+                     "1968–70": ("+0.19 bits/yr", None), "1989–91": ("+0.01 bits/yr", "(0.09 before)"),
+                     "1993–97": ("+0.10 bits/yr", None), "2002–12": ("+0.12 bits/yr", None),
+                     "2012–19": ("+0.06 bits/yr", "(0.12 before)")}, rated
+    for b in beats:
+        assert b["rate"] or "bits a year" not in b["text"], f"the box of {b['date']} quotes a rate without an arrow"
+        for spec in filter(None, (b["rate"], b["reference"])):
+            a, z = spec["span"]
+            assert (spec["start"], spec["end"]) == (f"{a}-07-01", f"{z}-07-01"), "an arrow does not run between July points"
+            close(spec["change"], year(g, z) - year(g, a), 1e-6, f"the change over {spec['lead']}")
+            close(spec["rate"], (year(g, z) - year(g, a)) / (z - a), 1e-6, f"the rate over {spec['lead']}")
+            assert (spec["y0"], spec["y1"]) == (year(g, a), year(g, z)), "an arrow's ends are not its points"
+            ra, rl = fig.layout.annotations[spec["arrow"]], fig.layout.annotations[spec["label"]]
+            assert (ra.ax, ra.ay, ra.x, ra.y) == (spec["start"], spec["y0"], spec["end"], spec["y1"]) and ra.showarrow
+            assert ra.arrowwidth == RATE_ARROW["width"] == 1.5 and ra.arrowside in (None, "end") and not ra.text
+            assert _rgb(ra.arrowcolor).tolist() == _rgb(_INK).tolist() == _rgb(rl.font.color).tolist(), "an arrow is not in ink"
+            assert ra.visible is False and rl.visible is False and rl.text == spec["text"], "an arrow shows outside its box"
+            verb = "rose" if spec["change"] >= 0 else "fell"
+            assert spec["hover"].startswith(f"**{spec['lead']}**: Against America, output per person {verb} "
+                                            f"{abs(spec['change']):.2f} bits."), spec["hover"]
+        if b["rate"]:
+            assert b["date"] == b["rate"]["end"], f"the box of {b['date']} does not come up at its span's end"
+            # (Within an hour: where a box follows straight on from the one before, the two meet within a
+            # fraction of a second of the date.)
+            assert pd.Timestamp(b["since"]) >= pd.Timestamp(b["rate"]["end"]) - pd.Timedelta(hours=1), (
+                f"the box of {b['date']} comes up before its span's end")
+    assert next(b for b in beats if b["lead"] == "1962–65")["rate"]["hover"] == (
+        "**1962–65**: Against America, output per person rose 0.33 bits. Part of any recovery is a mechanical rebound "
+        "from the collapse.")
+    # The annotations that are beats: reached at their points, and slow to a text box's speed for 3 s.
+    noted = play["notes"]
+    assert [n["role"] for n in noted] == list(NOTE_BEATS)
+    for n in noted:
+        when = points[n["role"]][0]
+        assert n["date"] == pd.Timestamp(when).strftime("%Y-%m-%d %H:%M:%S"), f"{n['role']} is not reached at its point"
+        assert n["share"] <= BOX_SLOWDOWN + 1e-9 and abs((pd.Timestamp(n["since"]) - when) / pd.Timedelta(days=1)) <= SYNC_DAYS
     # The numbers: each computed from the data, and each as expected. (fdi_rate: the brief had 0.11; it computes 0.10.)
     quoted = dict(famine_fall=31, factions_fall=14, rebound_rise=32, y1976_fall=3, since_reform_rise=75,
-                  austerity_growth=2.5, recovery_bits=0.36, recovery_rate=0.09, fdi_rate=0.10, trough_china=46,
+                  austerity_growth=2.5, fdi_rate=0.10, trough_china=46,
                   trough_usa=8, hu_rate=0.12, part2_bits=1.1, part2_rate=0.08, part2_own=2.8, economy_end=2.23,
                   stocks_end=-0.57, gap=2.80)
     got = {k: (round(numbers[k]) if isinstance(v, int) else round(numbers[k], len(str(v).split(".")[1]))) for k, v in quoted.items()}
     wrong = {k: (got[k], v) for k, v in quoted.items() if got[k] != v}
     assert not wrong, f"a number in the narration is not what was expected (computed, expected): {wrong}"
     assert words["hu_pct"] == "9" and words["gap_factor"] == "7" and words["trough_lag"] == "A month later"
-    assert words["japan_share"] == "a sixth" and words["part2_change"] == "roughly doubled" and words["xi_change"] == "roughly halved"
+    assert words["japan_share"] == "a sixth" and words["part2_change"] == "roughly doubled" and words["xi_change"] == "roughly halves"
     assert words["catch_up_claim"] == "the biggest catch-up with America in the World Bank's records"
     assert numbers["trough"] == trough and numbers["peak"] == peak and numbers["trough_months_after_wto"] == 1
     # "Faster than ever": no other leader's years saw the ratio rise as fast. "Roughly halved": since.
     assert max(numbers["era_rates"], key=numbers["era_rates"].get) == "Hu", numbers["era_rates"]
     assert 0.4 <= numbers["xi_share"] <= 0.6, "the catch-up has not roughly halved"
     assert 1.8 <= numbers["part2_multiple"] <= 2.3, "the catch-up to 1992 is not roughly a doubling"
-    assert pd.Timestamp(next(b.date for b in BEATS if "{xi_from}" in b.text)).year == _XI_COMPARED_TO
+    assert pd.Timestamp(next(b.date for b in BEATS if "{xi_from}" in b.lead)).year == _XI_COMPARED_TO
     # The numbers by another route: straight from the series in the derived file.
     chn, usa_ = gdp["CHN"], usa
     own_level = lambda y: 2.0 ** (year(chn, y) + year(usa_, y))
@@ -6112,7 +6421,6 @@ def _run_checks() -> None:
     close(100 * (1 - own_level(1976) / own_level(1975)), numbers["y1976_fall"], 1e-9, "the fall of 1976")
     close(100 * (own_level(1985) / own_level(1978) - 1), numbers["since_reform_rise"], 1e-9, "the rise of 1978-85")
     close(100 * ((own_level(1990) / own_level(1988)) ** 0.5 - 1), numbers["austerity_growth"], 1e-9, "growth in 1989-90")
-    close(year(g, 1966) - year(g, 1962), numbers["recovery_bits"], 1e-6, "the recovery of 1962-66")
     close((year(g, 1997) - year(g, 1993)) / 4, numbers["fdi_rate"], 1e-6, "the climb of 1993-97")
     close((year(g, 2012) - year(g, 2002)) / 10, numbers["hu_rate"], 1e-6, "the catch-up under Hu")
     close(2.0 ** (year(gdp["CHN"], 2010) - year(gdp["JPN"], 2010)), numbers["japan_share"], 1e-9, "China against Japan, 2010")
@@ -6147,69 +6455,82 @@ def _run_checks() -> None:
     said = [f"{b['lead']} | {b['text']}" for b in beats]
     script_ = [
         "1959–61 | The Great Leap Forward ends in famine. On official figures, output per person falls 31% "
-                      "from 1960 to 1962.",
+        "from 1960 to 1962.",
         "Jan–Feb 1962 | At a conference of 7,000 Party officials, Liu Shaoqi blames the famine “30% on "
-                      "nature, 70% on people.” Mao admits mistakes and steps back from day-to-day work.",
-        "1962–66 | Liu and Deng steer a recovery, tolerating private plots and household farming. “It "
-                      "doesn't matter whether a cat is yellow or black,” says Deng, “as long as it catches mice.”",
+        "nature, 70% on people.” Mao admits mistakes and steps back from day-to-day work.",
+        "1962–65 | Liu and Deng steer a recovery, tolerating private plots and household farming. “It "
+        "doesn't matter whether a cat is yellow or black,” says Deng, “as long as it catches mice.”",
         "May 16, 1966 | The “May 16 Notification” launches the Cultural Revolution. Red Guards wave Mao's "
-                      "Little Red Book.",
-        "1966–69 | Mao's “Bombard the Headquarters” poster (Aug 1966) targets Liu and Deng. By 1967 both "
-                      "are stripped of power and under house arrest; Liu is expelled in 1968 and dies in custody in 1969.",
-        "1967–68 | Fighting between Red Guard factions disrupts production. Output per person falls 14%.",
+        "Little Red Book.",
+        "1966–68 | Mao's “Bombard the Headquarters” poster (Aug 1966) targets Liu and Deng; by 1967 both are "
+        "under house arrest, and Liu dies in custody in 1969. Red Guard factions fight; output per person falls 14%.",
         "1968–70 | The army restores order, and millions of Red Guards and urban youths are sent to the "
-                      "countryside. Output per person rebounds 32%.",
-        "Sep 9, 1976 | Mao dies, six weeks after the Tangshan earthquake. In October the Gang of Four, the "
-                      "Cultural Revolution's radical leaders, are arrested. Output per person falls 3% that year.",
-        "1977 | Deng is rehabilitated. University entrance exams resume after an eleven-year gap.",
+        "countryside. Output per person rebounds 32%.",
+        "1976–77 | Mao dies six weeks after the Tangshan earthquake, and the Gang of Four, the Cultural "
+        "Revolution's radical leaders, are arrested; output per person falls 3% in 1976. In 1977 Deng is "
+        "rehabilitated, and university entrance exams return after eleven years.",
         "Dec 1978 | At the Third Plenum, Deng emerges as paramount leader and the Party turns from class "
-                      "struggle to growth. Markets and commerce begin to return, and China starts the biggest catch-up "
-                      "with America in the World Bank's records.",
+        "struggle to growth. Markets and commerce begin to return, and China starts the biggest catch-up "
+        "with America in the World Bank's records.",
         "1978–84 | Xiaogang's farmers secretly split their collective's land. Beijing makes it national "
-                      "policy, the Household Responsibility System; by 1984 nearly every farm uses it.",
+        "policy, the Household Responsibility System; by 1984 nearly every farm uses it.",
         "1979 | Deng tours America and dons a cowboy hat at a Texas rodeo. Coca-Cola goes the other way: "
-                      "the first American consumer brand sold in China in 30 years.",
+        "the first American consumer brand sold in China in 30 years.",
         "1980 | China joins the International Monetary Fund and the World Bank. Four special economic zones "
-                      "open to foreign capital.",
+        "open to foreign capital.",
         "Dec 1985 | TIME names Deng its Man of the Year, for the second time. Since 1978, China's output "
-                      "per person has risen 75%.",
+        "per person has risen 75%.",
         "1988 | China's dual-track prices, state and market side by side, breed corruption. Deng pushes to "
-                      "free prices in one leap; panic buying and inflation near 20% follow. The leap is abandoned within "
-                      "months, but by 1993 markets set most prices.",
+        "free prices in one leap; panic buying and inflation near 20% follow. The leap is abandoned within "
+        "months, but by 1993 markets set most prices.",
         "Spring 1989 | Protests over inflation, corruption and the lack of political freedom fill Tiananmen "
-                      "Square. On June 4 the army clears it; estimates of the dead range from hundreds to thousands. On "
-                      "June 5, “Tank Man” faces down a column of tanks.",
+        "Square. On June 4 the army clears it; estimates of the dead range from hundreds to thousands. On "
+        "June 5, “Tank Man” faces down a column of tanks.",
         "1989–91 | Credit is tightened, reformist Party chief Zhao Ziyang is purged, and conservatives try "
-                      "to roll back market reforms. Growth per person falls to 2.5% a year; the catch-up stalls.",
+        "to roll back market reforms. Growth per person falls to 2.5% a year; the catch-up stalls.",
         "Dec 1990 | Shanghai's stock exchange opens; Shenzhen's follows in July 1991. Their shares "
-                      "(A-shares) are for Chinese citizens only: foreigners still cannot invest.",
+        "(A-shares) are for Chinese citizens only: foreigners still cannot invest.",
         "Jan–Feb 1992 | Deng, 87 and officially retired, tours the south demanding faster market reform: "
-                      "“Development is the only hard truth.” The conservatives retreat, and markets are back to stay.",
+        "“Development is the only hard truth.” The conservatives retreat, and markets are back to stay.",
         "Feb 1992 | Foreigners can buy Chinese shares for the first time: B-shares, a separate class priced "
-                      "in US or Hong Kong dollars. The market stays small, illiquid and opaque; by 2001 it is so moribund "
-                      "that it is opened to Chinese citizens.",
+        "in US or Hong Kong dollars. The market stays small, illiquid and opaque; by 2001 it is so moribund "
+        "that it is opened to Chinese citizens.",
         "Jul 1993 | Tsingtao Brewery becomes the first mainland company to list in Hong Kong: the first "
-                      "“H-share.”",
+        "“H-share.” Hong Kong's open, dollar-pegged market makes H-shares far easier for foreigners to buy than "
+        "B-shares.",
         "1993–97 | Foreign direct investment surges, from about $4 billion in 1991 to over $40 billion a "
-                      "year by 1996, more than any other developing country. Against America, output per person climbs "
-                      "0.10 bits a year.",
+        "year by 1996, more than any other developing country. Against America, output per person climbs "
+        "0.10 bits a year.",
         "1994–2003 | Zhu Rongji, vice premier then premier, centralizes taxation, sells off thousands of "
-                      "small state firms, ends state-allocated housing and halves the central ministries' staff. Tens of "
-                      "millions of state workers lose their jobs; growth softens.",
+        "small state firms, ends state-allocated housing and halves the central ministries' staff. Tens of "
+        "millions of state workers lose their jobs; growth softens.",
         f"Dec 2001 | China joins the World Trade Organization. A month later its "
-                      f"stocks bottom: down 46% since {since}, against 8% for US stocks through the dot-com bust.",
+        f"stocks bottom: down 46% since {since}, against 8% for US stocks through the dot-com bust.",
+        "Dec 2002 | QFII, the Qualified Foreign Institutional Investor scheme, lets licensed foreign "
+        "institutions buy A-shares for the first time, within quotas.",
         "2005–07 | China's biggest state banks list in Hong Kong; the Industrial and Commercial Bank of "
-                      "China's 2006 initial public offering is then the world's largest. The boom peaks in Oct 2007.",
+        "China's 2006 initial public offering is then the world's largest. The boom peaks in Oct 2007.",
         "2002–12 | Under Hu Jintao, China carries out its WTO commitments, unpegs the renminbi from the "
-                      "dollar, lists its big banks and abolishes the farm tax. It gains on America faster than ever: "
-                      "0.12 bits a year (about 9%).",
-        "2018 | Xi abolishes presidential term limits, and the state's grip on the economy tightens. Since "
-                      "he took office in 2012, China's catch-up with America has roughly halved.",
-        "2020–21 | Beijing halts Ant Group's initial public offering and turns on tech, tutoring and "
-                      "property firms.",
+        "dollar, lists its big banks and abolishes the farm tax. It gains on America faster than ever: "
+        "0.12 bits a year (about 9%).",
+        "2014–18 | Stock Connect lets anyone with a Hong Kong brokerage account buy mainland A-shares "
+        "(Shanghai 2014, Shenzhen 2016). In 2018 MSCI begins adding A-shares to its indexes. Access is no "
+        "longer the obstacle.",
+        "2012–19 | Under Xi Jinping, who abolishes presidential term limits in 2018, the state's grip on the "
+        "economy tightens and China's catch-up with America roughly halves.",
+        "2020–21 | Days after Jack Ma criticizes regulators, Beijing halts Ant Group's initial public "
+        "offering, and Ma vanishes from public view for nearly three months. The crackdown spreads to tech, "
+        "tutoring and property firms.",
     ]
     assert said == script_, [(a, b) for a, b in zip(said, script_) if a != b]
-    assert beats[23]["date"] == _iso(trough + pd.DateOffset(months=1)), "the WTO box follows the computed trough"
+    assert beats[21]["date"] == _iso(trough + pd.DateOffset(months=1)), "the WTO box follows the computed trough"
+    # The merges and the new boxes: no box at the old dates; the new ones in place, picking out their events.
+    dates_ = [b["date"] for b in beats]
+    assert not {"1963-06-30", "1967-01-13", "1968-03-31", "1969-06-30", "1976-09-09", "1977-12-31", "1990-03-31",
+                "2010-06-30", "2019-01-31"} & set(dates_), "a box that was merged or moved is still there"
+    for when, label_ in (("2002-12-01", "QFII"), ("2018-06-01", "A-shares join MSCI")):
+        b = beats[dates_.index(when)]
+        assert b["panel"] == "stocks" and meta["events"][b["event"]]["label"] == label_
     assert play["final"]["lead"] == f"{since} – {_month(cutoff)}" and play["final"]["text"] == (
         "Against America, China's economy gained 2.23 bits; its stocks lost 0.57. Stocks finished 2.80 bits, "
         "a factor of 7, behind the economy.")
@@ -6224,16 +6545,6 @@ def _run_checks() -> None:
     assert ia.showarrow and ia.arrowside == "end+start" and (ia.x, ia.ax, ia.ay, ia.axref, ia.ayref) == (
         "1992-02-21", "1992-02-21", 0.0, "x", "y") and abs(ia.y - by_hand) < 1e-6 and ia.visible is False and not ia.text
     assert _rgb(ia.arrowcolor).tolist() == _rgb(_INK).tolist(), "the interlude's arrow is not in ink"
-    # The recovery's arrow: along the 1962-66 chord, lifted clear of the line by the script; its rate and hover.
-    rec = meta["recovery"]
-    ra, rl = fig.layout.annotations[rec["arrow"]], fig.layout.annotations[rec["label"]]
-    assert (rec["start"], rec["end"]) == ("1962-07-01", "1966-07-01") and (ra.ax, ra.x) == (rec["start"], rec["end"])
-    assert (ra.ay, ra.y) == (rec["y0"], rec["y1"]) == (year(g, 1962), year(g, 1966)) and ra.arrowside in (None, "end")
-    chord_ = lambda y: year(g, 1962) + (y - 1962) / 4 * (year(g, 1966) - year(g, 1962))
-    close(rec["dev"], max(year(g, y) - chord_(y) for y in (1963, 1964, 1965)), 2e-4, "the line's highest point above the chord")
-    assert rec["text"] == rl.text == "+0.09 bits/yr" and _rgb(ra.arrowcolor).tolist() == _rgb(_INK).tolist()
-    assert rec["hover"] == ("**1962–66**: Against America, output per person rose 0.36 bits. Part of any recovery is a "
-                            "mechanical rebound from the collapse.")
     # No box hard-codes a number that is the data's, or a date that is the anchor's or the cutoff's:
     # as written (before the numbers go in), a beat names neither. (Typed history may hold a number:
     # Liu's 30/70, inflation near 20%.)
@@ -6251,7 +6562,8 @@ def _run_checks() -> None:
                + [n.text for era in ERAS for n in era.notes] + [who.description for who in LEADERS]
                + [w for band in BANDS for w in band.wraps] + [b["description"] for b in meta["bands"]]
                + [b["early"]["description"] for b in meta["bands"] if b["early"]]
-               + [f"{b['lead']} {b['text']}" for b in beats] + [inter["lead"], inter["text"], rec["hover"], rec["text"]]
+               + [f"{b['lead']} {b['text']}" for b in beats] + [inter["lead"], inter["text"]]
+               + [spec[k] for b in beats for spec in (b["rate"], b["reference"]) if spec for k in ("hover", "text")]
                + [play["final"]["lead"], play["final"]["text"]] + PART_TITLES + [a["kicker"] for a in acts]
                + list(_HINTS.values()) + [w for spec in _FILL_LABELS.values() for w in spec["wraps"]]
                + [w for a in meta["arrows"] for w in a["wraps"]] + [a["key"] for a in meta["arrows"]]
@@ -6273,14 +6585,23 @@ def _run_checks() -> None:
     #       short credit; the full credits are in the data. A missing file means a text box and a warning.
     cards = [b for b in beats if b["kind"] == "picture"]
     shown_pics = [key for key, p in PICTURES.items() if p.credit and (_HERE / p.file).exists()]
-    assert [b.picture for b in BEATS if b.picture] == list(PICTURES) == ["cr_1966", "coke_1979", "time_1985", "hkex_2007"]
-    assert shown_pics == ["cr_1966", "time_1985", "hkex_2007"] and [b["date"][:4] for b in cards] == ["1966", "1985", "2006"]
+    assert [b.picture for b in BEATS if b.picture] == list(PICTURES) == [
+        "cr_1966", "deng_carter_1979", "time_1985", "hkex_2007", "jack_ma"]
+    assert shown_pics == list(PICTURES) and [b["date"][:4] for b in cards] == ["1966", "1979", "1985", "2006", "2020"]
     for p in PICTURES.values():                      # beside the module, in the post's own folder: no subfolder
         assert "/" not in p.file and Path(p.file).suffix == ".jpg"
     for b, key in zip(cards, shown_pics):
         pic = b["picture"]
         assert pic["src"].startswith("data:image/jpeg;base64,") and pic["credit"] == PICTURES[key].short and 0.3 < pic["aspect"] < 3
         assert len(pic["src"]) < 200_000, f"the picture {key} is embedded too large"
+        # Scaled down to PICTURE_MAX_PX on its long side (never up), a JPEG; the file left as it is.
+        from PIL import Image
+        with Image.open(_HERE / PICTURES[key].file) as original:
+            long_side = max(original.size)
+        assert max(pic["size"]) == min(PICTURE_MAX_PX, long_side) and PICTURE_MAX_PX == 600 and PICTURE_QUALITY == 82
+        sized = picture_data(key)
+        close(len(base64.b64decode(pic["src"].split(",", 1)[1])) / 1024, sized["kb"], 0.06, f"the size of {key}")
+        assert "kb" not in pic, "a size in KB would read as a stray number in the figure"
         assert PICTURES[key].short and len(PICTURES[key].short) < 40
         # Published by being embedded: the page names no picture file, so Quarto has nothing to copy.
         assert PICTURES[key].file not in html, f"the page refers to {PICTURES[key].file} instead of carrying it"
@@ -6292,7 +6613,9 @@ def _run_checks() -> None:
         "(https://commons.wikimedia.org/wiki/File:Hong_Kong_Exchange_Trade_Lobby_2007.jpg)")
     credits = picture_credits()
     assert credits.startswith("Images: ") and all(PICTURES[k].credit.rstrip(".") in credits for k in shown_pics)
-    assert "Coca-Cola" not in credits and PICTURES["coke_1979"].credit is None
+    assert "Coca-Cola" not in credits and "coke_1979" not in PICTURES
+    assert PICTURES["deng_carter_1979"].short == "Photo: White House / public domain"
+    assert PICTURES["jack_ma"].short == "Photo: World Economic Forum, CC BY 2.0" and PICTURES["jack_ma"].credit.endswith("; cropped")
     assert all(v >= 160 for v in wide["card"]["pictures"]) and max(wide["card"]["pictures"]) <= 280
     real = dict(PICTURES)
     try:
@@ -6308,15 +6631,14 @@ def _run_checks() -> None:
               "a card without its picture is paced as a text box")
     finally:
         PICTURES.update(real)
-    # A Coca-Cola picture dropped in later, with a credit, makes the 1979 box a picture card, and
-    # changes nothing else: the same words, the same boxes. (Stood in for here by another file.)
+    # Without its file, the Carter-Deng picture card is a text box too, saying the same.
     try:
-        PICTURES["coke_1979"] = Picture(real["time_1985"].file, "Test credit.", "Test")
-        with_coke = build_china_figure().layout.meta["play"]["beats"]
-        assert [b["kind"] for b in with_coke if b["date"] == "1979-02-02"] == ["picture"]
-        assert [(b["date"], b["lead"], b["text"]) for b in with_coke] == [(b["date"], b["lead"], b["text"]) for b in beats]
-        assert [b["kind"] for b in with_coke if b["date"] != "1979-02-02"] == [b["kind"] for b in beats if b["date"] != "1979-02-02"]
-        assert "Test credit." in picture_credits()
+        PICTURES["deng_carter_1979"] = Picture("no-such-file.jpg", real["deng_carter_1979"].credit, "x")
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            without = build_china_figure().layout.meta["play"]["beats"]
+        assert [b["kind"] for b in without if b["date"] == "1979-02-02"] == ["text"]
+        assert [b["text"] for b in without] == [b["text"] for b in beats]
     finally:
         PICTURES.update(real)
     # The page: no year watermark, no ghosted image; a scrim and a title card; a box; the scrubber.
@@ -6529,9 +6851,9 @@ def _run_checks() -> None:
     print(f"  events: labelled markers {count(labelled)}; ticks {count(ticks)}; {len(stored)} stored; "
           f"{sum(len(p.notes) for p, _ in parents)} notes on {len(parents)} parents.")
     print(f"  context: {len(LEADERS)} leaders; {len(ERAS)} eras; {len(BANDS)} access bands.")
-    fast = SPEEDS[1]
-    both = lambda secs: f"{secs:.1f} ({secs / fast:.1f})"
-    print(f"  playback, in seconds at 1x ({fast}x): opening card {both(opening)}; "
+    both = lambda secs: " / ".join(f"{secs / v:.1f}" for v in SPEEDS)
+    print(f"  playback, in seconds at {' / '.join(f'{v}x' for v in SPEEDS)} (the default is {DEFAULT_SPEED}x): "
+          f"opening card {both(opening)}; "
           + "; ".join(f"part {a['numeral']} {both(d)} (target {spec.seconds:.0f})" for a, d, spec in zip(acts, durations, ACTS))
           + f"; the stop at the end of Part II {both(interlude)}; each of the {len(acts) - 1} part breaks {both(transition)}; "
           f"the ending {both(ending)}; the pull-back {both(ENDING['pullback'])}; in all {both(total)}.")
@@ -6554,15 +6876,17 @@ def _run_checks() -> None:
           f"gap factor {2 ** numbers['gap']:.2f} (7); China per person against Japan, 2010: {numbers['japan_share']:.3f} "
           f"(about a sixth); catch-up since 1978: China first of {len(ranked)} countries ({gains['CHN']:.2f} bits; next "
           + ", ".join(f"{c} {gains[c]:.2f}" for c in ranked[1:4]) + ").")
-    print(f"  FLAG: the 1993–97 box: output per person against America climbs {numbers['fdi_rate']:.4f} bits a year, "
-          f"which prints as {words['fdi_rate']}, not the 0.11 in the brief (1992–97 gives "
-          f"{(year(g, 1997) - year(g, 1992)) / 5:.3f}).")
+    print("  rate arrows: " + "; ".join(f"{spec['lead']} {spec['text']} ({spec['change']:+.3f} bits)"
+                                        for b in beats for spec in (b["rate"], b["reference"]) if spec) + ".")
+    print(f"  FLAG: the 1993–97 box quotes a rate, so it has an arrow and comes up at Jul 1997 (the brief's table left it out).")
     print(f"  rates since {since} ({span_years:.3f} years): " + "; ".join(c["text"] for c in chords) + f"; {end_['text']}.")
     print(f"  anchor as a parameter: rebuilt at {since2} and every dependent element followed "
           f"(there: {'; '.join(c['text'] for c in am['chords'])}; {am['gap']['text']}; “{bottom2['text'].split(': ', 1)[1]}”).")
     print(f"  pacing chart: {chart_path.name} written beside this module.")
-    print(f"  pictures: {', '.join(PICTURES[k].file for k in shown_pics)} beside this module, embedded in the page "
-          f"(scaled to {PICTURE_MAX_PX} px): nothing to publish alongside it. coke_1979.jpg: no file yet, so a text box.")
+    print(f"  pictures, embedded in the page at {PICTURE_MAX_PX} px on the long side, JPEG {PICTURE_QUALITY}: "
+          + "; ".join(f"{PICTURES[k].file} {picture_data(k)['file_kb']:.0f} KB on disk → {b['picture']['size'][0]}×"
+                      f"{b['picture']['size'][1]}, {picture_data(k)['kb']:.0f} KB" for b, k in zip(cards, shown_pics))
+          + f". Page HTML {len(html) / 1024:.0f} KB; nothing to publish alongside it.")
     print(f"  credits, for the caption:\n    {credits}")
     print(f"  derived file: {gdp.shape[1]} GDP entities; page HTML {len(html) / 1024:.0f} KB.")
 
