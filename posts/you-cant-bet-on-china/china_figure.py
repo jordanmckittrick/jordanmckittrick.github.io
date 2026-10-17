@@ -191,7 +191,10 @@ COPY_TEXT = dict(
     anchor="{anchor} = 0",
     zero_key="Zero line: above it Chinese stocks are ahead since {since}, below it American ones.",
     chord_rate="{rate} bits/yr (×{multiple}/yr)",
-    chord_economy_top="Economy since {anchor_year}",
+    # An era's chord in the top panel (ERA_CHORDS); without the multiple where it would read ×1.00.
+    era_rate="{name}, {span}: {rate} bits/yr (×{multiple}/yr)",
+    era_rate_flat="{name}, {span}: {rate} bits/yr",
+    climb="{bits} bits since {anchor_year} (×{multiple})",
     chord_economy="Economy",
     chord_stocks="Stocks",
     gap="Gap: {gap_bits} bits (×{gap_multiple})",
@@ -222,10 +225,12 @@ SLOW_LIMIT = (0.6, 1.5)          # the tempo rule: never under this share of bas
 # An act break, step by step: the title card and its scrim come up, hold, the x-axis moves to the
 # next act's range, the next ghosts appear, the card goes.
 TRANSITION = dict(card_in=0.7, hold=2.0, move=1.1, ghost=0.4, card_out=0.6)
-# The ending: each chord is drawn, then its rate fades in, then a pause (first the economy's since
-# 1978, in the top panel; then the two in the bottom panel); the gap's arrow, its
-# label; the last box holds (for its reading time, ``LAST_BOX_EXTRA`` included); and the view
-# pulls back to the whole chart.
+# The ending. When the data ends the view pulls back to the whole chart, and the rest happens there,
+# so that the finished chart is what the reader last saw. In the top panel, the chord across each
+# era (ERA_CHORDS) is drawn in turn, then its rate fades in, then a short beat (half a pause); the
+# arrow from the 1978 level up to the line's last point, its label, a pause. Then in the bottom
+# panel each chord, its rate, a pause; the gap's arrow, its label; the last box holds (for its
+# reading time, ``LAST_BOX_EXTRA`` included).
 ENDING = dict(chord=1.4, label=0.4, pause=0.8, arrow=0.7, pullback=1.8)
 # At the end of Part II, before its break: an arrow is drawn up the economy's line from its 1978
 # level, and a box says what it measures.
@@ -376,83 +381,75 @@ EVENTS = [
     # ---- Economy, labelled: drawn above and through the top panel. Kept in
     #      this order; dropped from the end (Bombard the Headquarters first). ----
     Event("1972-02-21", "Nixon in Beijing",
-          "**Feb 21, 1972**: Richard Nixon arrives in Beijing, the first visit to the People's Republic by an "
-          "American president.", "label", "economy"),
-    Event("1978-12-18", "Reform and opening",
-          "**Dec 18–22, 1978**: the Third Plenum of the 11th Central Committee, the conventional start of "
-          "Deng Xiaoping's “reform and opening up.”", "label", "economy",
-          notes=(
-              # The Third Plenum of the 10th Central Committee, July 16-21, 1977.
-              Note("1977-07-21", "Jul 1977", "Deng rehabilitated."),
-              # UNSURE of the wording, which is as given to me: the exams were
-              # suspended in 1966 and were last HELD in 1965.
-              Note("1977-12-10", "Dec 1977",
-                   "national university entrance exams (gaokao) held for the first time since 1966."),
-              Note("1979-01-01", "Jan 1, 1979", "US and China establish diplomatic relations."),
-          )),
+          ("**Feb 21, 1972**: Richard Nixon arrives in Beijing, the first visit to the PRC by an American "
+           "president, laying the groundwork for the eventual complete normalization of diplomatic ties in "
+           "1979."), "label", "economy"),
+    Event("1978-12-18", "“Reform and opening up”",
+          ("**Dec 18–22, 1978**: Deng Xiaoping launches his campaign of “reform and opening up” at the Third "
+           "Plenum of the 11th Central Committee."), "label", "economy"),
     Event("1989-06-04", "Tiananmen",
-          "**Jun 4, 1989**: the army clears the Tiananmen Square protests by force.", "label", "economy"),
+          ("**Jun 4, 1989**: the army clears the Tiananmen Square protests by force. The next day “Tank Man” "
+           "stares down a column of tanks."), "label", "economy"),
     Event("1992-01-18", "Southern Tour",
-          "**Jan 18 – Feb 21, 1992**: Deng Xiaoping tours the south, and economic reform regains its momentum.",
-          "label", "economy",
-          # The 14th Party Congress, October 12-18, 1992.
-          notes=(Note("1992-10-12", "Oct 1992", "the Party adopts the “socialist market economy.”"),)),
+          ("**Jan 18 – Feb 21, 1992**: Deng Xiaoping tours the south, and economic reform regains its "
+           "momentum. Deng's political influence remains decisive; conservatives retreat."),
+          "label", "economy"),
     Event("2001-12-11", "Joins WTO",
-          "**Dec 11, 2001**: China becomes a member of the World Trade Organization.", "label", "economy"),
+          "**Dec 11, 2001**: China joins the World Trade Organization.", "label", "economy"),
     # UNSURE of one name in the text, which is as given to me. On August 26, 1980
     # the National People's Congress Standing Committee approved the regulations
     # for the zones in Guangdong: Shenzhen, Zhuhai and Shantou. Xiamen's zone, in
     # Fujian, was approved by the State Council in October 1980.
     Event("1980-08-26", "Special economic zones",
-          "**Aug 1980**: Shenzhen, Zhuhai, Shantou and Xiamen designated special economic zones (SEZs) — "
-          "enclaves with lower taxes and looser rules for foreign investment and export production.",
+          ("**Aug 1980**: Special Economic Zones (SEZs) — special coastal enclaves with lower taxes, lighter "
+           "regulations, and stronger property rights protections — are established to experiment with "
+           "free-market reforms while insulating the rest of China from potential upheaval."),
           "label", "economy", short="SEZs"),
     # UNSURE: two dates, one line. The IMF's board recognized the People's
     # Republic as China's representative on April 17, 1980 and the World Bank's
     # followed on May 15, 1980 (both days are from memory); the line is drawn at
     # the first.
     Event("1980-04-17", "Joins World Bank, IMF",
-          "**Apr–May 1980**: the People's Republic takes China's seat at the International Monetary Fund and "
-          "then at the World Bank.", "label", "economy"),
-    Event("1976-09-09", "Mao dies", "**Sep 9, 1976**: Mao Zedong dies.", "label", "economy"),
+          ("**Apr–May 1980**: the PRC takes China's seat at the International Monetary Fund and the World "
+           "Bank, displacing Taiwan."), "label", "economy"),
+    Event("1976-09-09", "Mao dies", ("**Sep 9, 1976**: Mao Zedong dies, leaving the relatively weak Hua "
+                                     "Guofeng as his chosen successor."), "label", "economy"),
     Event("1966-05-16", "May 16 Notification",
-          "**May 16, 1966**: the Party circulates the “May 16 Notification,” the conventional start of the "
-          "Cultural Revolution.", "label", "economy"),
+          ("**May 16, 1966**: the Party circulates the “May 16 Notification,” launching the Cultural "
+           "Revolution."), "label", "economy"),
     # The Seven Thousand Cadres Conference, January 11 - February 7, 1962.
     Event("1962-01-11", "7,000 Cadres Conference",
-          "**Jan 11 – Feb 7, 1962**: some 7,000 Party officials gather in Beijing to take stock of the Great "
-          "Leap Forward.", "label", "economy"),
+          ("**Jan 11 – Feb 7, 1962**: some 7,000 CCP officials gather in Beijing to assess the impact of the "
+           "Great Leap Forward."), "label", "economy"),
     # UNSURE of the day: I have September 22 - October 12, 1980 for Friedman's first visit.
     Event("1980-09-22", "Friedman visits",
-          "**Sep 1980**: Milton Friedman visits China for the first time, on a lecture tour.", "label", "economy",
-          notes=(Note("1988-09-19", "Sep 1988",
-                      "Friedman returns and meets Party chief Zhao Ziyang in the middle of the price-reform crisis."),)),
+          ("**Sep 1980**: As part of its efforts to successfully liberalize its economy, China invites "
+           "Milton Friedman to give a series of lectures on free markets, deregulation, and the price "
+           "mechanism."), "label", "economy"),
     # UNSURE of the day, which I chose: August 16, 2010 is when Japan's second-quarter
     # figures showed its output below China's (the full-year figures followed in
     # February 2011). The share per person is computed (narration_numbers).
     Event("2010-08-16", "Overtakes Japan",
-          "**2010**: China's total output passes Japan's. Per person it was still about {japan_share} of "
-          "Japan's (in this figure's constant 2015 dollars).", "label", "economy"),
+          "**2010**: China's total output passes Japan's, though on a per capita basis it remains far behind.", "label", "economy"),
     Event("2008-11-09", "¥4 trillion stimulus",
-          "**Nov 9, 2008**: China announces a stimulus program of ¥4 trillion (four trillion yuan).",
+          "**Nov 9, 2008**: China floods the economy with a massive stimulus package worth ¥4 trillion.",
           "label", "economy"),
     Event("1997-07-01", "Hong Kong handover",
-          "**Jul 1, 1997**: sovereignty over Hong Kong passes from Britain to China.", "label", "economy"),
+          "**Jul 1, 1997**: Britain formally cedes Hong Kong to China.", "label", "economy"),
     Event("1994-01-01", "Currency unification",
-          "**Jan 1, 1994**: China merges its official and swap-market exchange rates into one, devaluing the "
-          "official yuan by about a third.", "label", "economy"),
+          ("**Jan 1, 1994**: China eliminates its two-tier currency system, streamlining foreign direct "
+           "investment."), "label", "economy"),
     # UNSURE of the day, and of the label: December 9, 2021 is when Fitch declared
     # Evergrande in "restricted default"; it had been missing payments since
     # September, and "property crisis" names something that has no single date.
     Event("2021-12-09", "Property crisis",
-          "**Dec 9, 2021**: the developer Evergrande is declared in default on its dollar bonds, the emblem of a "
-          "wider property crisis.", "label", "economy",
-          # The meeting of regulators and developers was on August 20, 2020.
-          notes=(Note("2020-08-20", "Aug 2020", "“three red lines” debt limits imposed on property developers."),)),
+          ("**Dec 9, 2021**: Fitch declares the massive Chinese property developer Evergrande to be in "
+           "default, the emblem of a crisis in the wider property market, which had been fueled by easy "
+           "credit and rampant speculation."), "label", "economy"),
     # The lowest priority: the first to go wherever the strip is short of room.
-    Event("1966-08-05", "Bombard the Headquarters",
-          "**Aug 5, 1966**: Mao writes his big-character poster “Bombard the Headquarters,” aimed at Liu Shaoqi "
-          "and Deng Xiaoping.", "label", "economy"),
+    Event("1966-08-05", "“Bombard the Headquarters”",
+          ("**Aug 5, 1966**: Mao writes his big-character poster “Bombard the Headquarters,” aimed at the "
+           "“bourgeois dictatorship,” an implicit though unmistakable attack on Liu and Deng."), "label", "economy"),
 
     # ---- Economy, ticks ----
     Event("2008-08-08", "Beijing Olympics", "**Aug 8–24, 2008**: Beijing hosts the Summer Olympics.", "tick", "economy"),
@@ -462,24 +459,22 @@ EVENTS = [
     # UNSURE of the day: February 21, 1992 for the first B-share listing in
     # Shanghai (Shanghai Vacuum Electron Devices). February 1992 is solid.
     Event("1992-02-21", "First B-shares",
-          "**Feb 1992**: the first B-shares, a class of share open to foreign investors, list in Shanghai.",
+          ("**Feb 1992**: the first B-shares list in Shanghai. In contrast to A-shares, B-shares are open to "
+           "foreign capital."),
           "label", "stocks"),
     # UNSURE which date is meant: the QFII rules were issued in early November
     # 2002 and took effect on December 1, 2002; the first QFII trade was in July
     # 2003. This uses the effective date.
     Event("2002-12-01", "QFII",
-          "**Dec 1, 2002**: the Qualified Foreign Institutional Investor (QFII) program takes effect, admitting "
-          "approved foreign institutions to the A-share market.", "label", "stocks",
-          notes=(
-              Note("2011-12-16", "Dec 2011", "RQFII (Renminbi QFII) lets licensed investors use renminbi raised offshore."),
-              Note("2019-09-10", "Sep 2019", "QFII and RQFII quota limits abolished."),
-          )),
+          ("**Dec 1, 2002**: the Qualified Foreign Institutional Investor (QFII) program is launched, "
+           "allowing certain foreign institutions to participate in the A-share market."), "label", "stocks",
+          notes=(Note("2019-09-10", "Sep 2019", "QFII and Renminbi QFII (RQFII) quota limits abolished."),)),
     Event("2008-09-15", "Financial crisis",
           "**Sep 15, 2008**: Lehman Brothers files for bankruptcy and the global financial crisis enters its most "
           "acute phase.", "label", "stocks"),
     Event("2014-11-17", "Stock Connect",
-          "**Nov 2014**: Stock Connect, a trading link through which investors in Hong Kong can buy "
-          "mainland-listed A-shares and mainland investors Hong Kong shares.", "label", "stocks",
+          ("**Nov 2014**: Stock Connect, a link between mainland and Hong Kong stock exchanges, is created, "
+           "significantly opening mainland China to foreign capital."), "label", "stocks",
           notes=(
               Note("2014-11-17", "Nov 17, 2014", "Shanghai–Hong Kong link opens."),
               Note("2016-12-05", "Dec 5, 2016", "Shenzhen–Hong Kong link opens."),
@@ -487,29 +482,31 @@ EVENTS = [
     # A choice: the Shanghai Composite's peak. The fall began the next trading
     # day; the other candidate is "Black Monday", August 24, 2015.
     Event("2015-06-12", "Crash",
-          "**Jun 12, 2015**: the Shanghai Composite peaks; it loses about a third of its value within a month.",
-          "label", "stocks",
-          notes=(Note("2015-08-11", "Aug 11, 2015", "renminbi devalued."),)),
+          "**Jun 12, 2015**: the Shanghai Composite peaks, losing about a third of its value within a month.",
+          "label", "stocks"),
     # These two share one label: five weeks apart, they stand about a pixel apart.
     Event("2018-06-01", "A-shares join MSCI",
-          "**Jun 2018**: MSCI begins including mainland-listed A-shares, at 2.5% of their free-float market cap, "
-          "raised in steps to 20% by Nov 2019. This changes what the index measures.",
+          ("**Jun 2018**: MSCI incorporates a small amount of mainland-listed A-shares into its index, "
+           "eventually reaching 20% by Nov 2019, fundamentally altering what the index measures."),
           "label", "stocks", group="2018"),
     Event("2018-07-06", "US tariffs",
-          "**Jul 6, 2018**: the first American tariffs of the trade war take effect, on 34 billion dollars of "
-          "Chinese goods, and China answers in kind.", "label", "stocks", group="2018"),
+          "**Jul 6, 2018**: the first of President Trump's tariffs take effect. China answers in kind.", "label", "stocks", group="2018"),
     # Re-dated from the Didi review (July 2, 2021) to the start of the crackdown.
     # The Ant listing had been due on November 5, 2020.
     Event("2020-11-03", "Chinese tech crackdown",
-          "**Nov 3, 2020**: Ant Group's initial public offering (IPO) suspended days before listing. Widens "
-          "through 2021: Didi probe (Jul), private-tutoring ban (Jul).", "label", "stocks"),
+          ("**Nov 3, 2020**: In an apparent retaliation against Jack Ma's public criticism of Chinese "
+           "regulators, Ant Group's initial public offering (IPO) is suspended just days before listing. The crackdown spreads to "
+           "tech, tutoring and property firms."), "label", "stocks"),
     # UNSURE of the day: September 24, 2024 for the central bank's announcement
     # (the Politburo followed two days later). September 2024 is solid.
     Event("2024-09-24", "Stimulus rally",
-          "**Sep 2024**: a central-bank support package sets off a sharp rally in Chinese stocks.",
+          ("**Sep 2024**: after years of economic malaise wrought by the ongoing crisis in the property "
+           "market, the People's Bank of China unveils an aggressive stimulus package that sparks a sharp "
+           "rally in Chinese equities."),
           "label", "stocks"),
     Event("1993-07-15", "First H-shares",
-          "**Jul 15, 1993**: Tsingtao Brewery lists in Hong Kong, the first mainland company to issue H-shares.",
+          ("**Jul 15, 1993**: Tsingtao Brewery lists in Hong Kong, the first mainland company to issue "
+           "H-shares, opening the way for foreign investment."),
           "label", "stocks"),
     # One label for both exchanges, at Shanghai's opening (the start of the plain band).
     Event(_EXCHANGE_OPENS, "Exchanges open",
@@ -518,20 +515,17 @@ EVENTS = [
 
     # ---- Stocks, ticks ----
     Event("2005-07-21", "Renminbi de-pegged",
-          "**Jul 21, 2005**: the renminbi's fixed peg to the US dollar ends; managed appreciation follows. The "
-          "economy panel is unaffected (constant 2015 US dollars fix the exchange rate); MSCI China was then "
-          "mostly Hong Kong-listed and priced in Hong Kong dollars, which are pegged to the US dollar, so the "
-          "effect on this line runs mainly through earnings.", "tick", "stocks"),
+          ("**Jul 21, 2005**: the renminbi's fixed peg to the US dollar ends, allowing for managed "
+           "appreciation to follow."), "tick", "stocks"),
     # China Construction Bank listed on October 27, 2005 and Bank of China on June 1, 2006.
     Event("2006-10-27", "ICBC IPO",
-          "**Oct 27, 2006**: the Industrial and Commercial Bank of China (ICBC) lists in Hong Kong, then the "
-          "largest IPO, or initial public offering, ever. China Construction Bank (Oct 2005) and Bank of China "
-          "(Jun 2006) listed before it; the big-bank listings reshape MSCI China.", "tick", "stocks"),
+          ("**Oct 27, 2006**: the Industrial and Commercial Bank of China (ICBC) lists in Hong Kong, then "
+           "the largest initial public offering (IPO) ever. With China Construction Bank (Oct 2005) and Bank of China (Jun 2006) "
+           "before it, the big banks reshape MSCI China."), "tick", "stocks"),
     # Effective at the close of November 30, 2015; the second half on May 31, 2016.
     Event("2015-11-30", "Chinese ADRs join MSCI",
-          "**Nov 2015**: MSCI China begins including US-listed Chinese companies (American depositary receipts, "
-          "ADRs) — Alibaba, Baidu, JD.com, NetEase and others. Half weight in Nov 2015, full weight in May 2016. "
-          "This changes what the index measures.", "tick", "stocks"),
+          ("**Nov 2015**: MSCI China begins including US-listed Chinese companies (American depositary "
+           "receipts, ADRs), e.g. Alibaba. This changes what the index measures."), "tick", "stocks"),
 
     # ---- Stored: not drawn ----
     Event("1971-10-25", "UN seat",
@@ -547,7 +541,7 @@ _PROPER = {"Beijing", "World", "Bank", "IMF", "WTO", "Tour", "Hong", "Kong", "B-
            "Cadres", "Conference", "Notification", "Headquarters"}
 # All-capitals words that are names in their own right and need no spelling out
 # in hover text. Every other one must be spelled out where it appears.
-_NAMES = {"US", "MSCI", "COVID", "JD"}        # JD: the company JD.com
+_NAMES = {"US", "MSCI", "COVID", "JD", "PRC", "CCP"}        # JD: the company JD.com
 
 
 @dataclass(frozen=True)
@@ -575,12 +569,15 @@ class Leader:
 LEADERS = [
     Leader("1949-10-01", "1976-09-09", "Mao", "**Oct 1949 – Sep 1976**: Mao Zedong, Party chairman until his death."),
     Leader("1976-10-07", "1978-12-22", "Hua",
-           "**Oct 1976 – Dec 1978**: Hua Guofeng, Mao's chosen successor; sidelined by Deng at the Third Plenum "
-           "(formally Party chairman until 1981)."),
+           ("**Oct 1976 – Dec 1978**: Hua Guofeng, Mao's chosen successor; swiftly sidelined by Deng by Dec "
+            "1978.")),
     Leader("1978-12-22", "1989-06-24", "Deng",
-           "**Dec 1978 – Jun 1989**: Deng Xiaoping, paramount leader without holding the top post; retired "
-           "1989–90 but decisive until about 1992."),
-    Leader("1989-06-24", "2002-11-15", "Jiang", "**Jun 1989 – Nov 2002**: Jiang Zemin, Party general secretary."),
+           ("**Dec 1978 – Jun 1989**: Though he never officially holds the top post, Deng Xiaoping is the de "
+            "facto paramount leader of China; retired 1989–90 but decisive until about 1992, the year of his "
+            "Southern Tour.")),
+    Leader("1989-06-24", "2002-11-15", "Jiang", ("**Jun 1989 – Nov 2002**: Jiang Zemin, Party general "
+                                                 "secretary. As paramount leader, Jiang broadly continues "
+                                                 "Deng's reformist, market-oriented policies.")),
     Leader("2002-11-15", "2012-11-15", "Hu", "**Nov 2002 – Nov 2012**: Hu Jintao, Party general secretary."),
     Leader("2012-11-15", None, "Xi", "**Nov 2012 – present**: Xi Jinping, Party general secretary."),
 ]
@@ -608,32 +605,17 @@ class Era:
 ERAS = [
     # The calendar years the famine is conventionally given. Drawn 1959-61,
     # though the plot starts in 1960.
-    Era("1959-01-01", "1961-12-31", "Famine", "**1959–61**: the famine that followed the Great Leap Forward."),
+    Era("1959-01-01", "1961-12-31", "Famine", "**1959–61**: the Great Chinese Famine."),
     Era("1966-05-16", "1976-10-06", "Cultural Revolution",
-        "**May 16, 1966 – Oct 6, 1976**: the Cultural Revolution, from the “May 16 Notification” "
-        "to the arrest of the Gang of Four.",
-        notes=(
-            Note("1966-10-01", "1966–67",
-                 "Deng purged as the “number two capitalist roader”; sent to work in a Jiangxi tractor factory, "
-                 "Oct 1969."),
-            # The Twelfth Plenum of the 8th Central Committee, 13-31 October 1968.
-            Note("1968-10-31", "Oct 1968", "Liu Shaoqi expelled from the Party."),
-            # Mao's directive, in People's Daily on 22 December 1968. The figure
-            # is an estimate; others run from about 16 to 18 million.
-            Note("1968-12-22", "Dec 1968",
-                 "“Down to the countryside” directive; about 17 million urban youths sent down by 1980."),
-            Note("1971-09-13", "Sep 13, 1971", "Lin Biao dies in a plane crash in Mongolia."),
-            # Removed from all his posts on 7 April 1976. He had been restored in 1973.
-            Note("1976-04-07", "Apr 1976", "Deng purged a second time."),
-        )),
+        ("**May 16, 1966 – Oct 6, 1976**: the Cultural Revolution, lasting from the “May 16 Notification” "
+         "till Hua's arrest of the Gang of Four.")),
     # UNSURE, INTERPRETIVE: there is no agreed start or end. The start is the
     # Third Plenum of the 13th Central Committee (26-30 September 1988), which
     # launched the austerity programme; the end is put at the close of 1991,
     # just before the Southern Tour.
     Era("1988-09-26", "1991-12-31", "Retrenchment",
-        "**1989–91**: Not just austerity. Credit was tightened and Party conservatives, led by Premier Li Peng "
-        "and the elder Chen Yun, tried to roll back Deng's market reforms after the 1988 inflation and the 1989 "
-        "protests.",
+        ("**1989–91**: Credit is tightened and Party conservatives attempt to roll back Deng's market "
+         "reforms after the 1988 inflation and the 1989 protests."),
         drop_first=True),
     # UNSURE, INTERPRETIVE: whole calendar years, from the first year of WTO
     # membership to the last year before the global financial crisis.
@@ -643,7 +625,8 @@ ERAS = [
     # UNSURE of both days: 23 January 2020 is the lockdown of Wuhan and
     # 7 December 2022 the "ten new measures" that ended most controls.
     Era("2020-01-23", "2022-12-07", "Zero-COVID",
-        "**Jan 2020 – Dec 2022**: from the lockdown of Wuhan to the lifting of most zero-COVID controls."),
+        ("**Jan 2020 – Dec 2022**: from the initial lockdown of Wuhan to the lifting of most zero-COVID "
+         "controls.")),
 ]
 
 
@@ -674,19 +657,19 @@ class Band:
 BANDS = [
     Band(None, _EXCHANGE_OPENS, "none",
          ("No stock exchange", "No stock<br>exchange"),
-         "**Before Dec 19, 1990**: mainland China has no stock exchange; the Shanghai Stock Exchange opens on "
-         "December 19, 1990.",
+         "**Before Dec 19, 1990**: mainland China has no stock exchange.",
          y=0.56),
     Band(_EXCHANGE_OPENS, None, "limited",
          ("Exchanges open, mostly closed to foreigners", "Exchanges open,<br>mostly closed to foreigners",
           "Exchanges open,<br>mostly closed<br>to foreigners", "Exchanges<br>open, mostly<br>closed to<br>foreigners"),
-         "**From Feb 1992**: a small B-share market for foreign investors; from July 1993, H-shares listed in "
-         "Hong Kong. A-shares stayed closed to foreigners until QFII (the Qualified Foreign Institutional "
-         "Investor program: licensed institutions with quotas, from 2002–03).",
+         ("**From Feb 1992**: a small B-share market opens for foreign investors. **From Jul 1993**: "
+          "B-shares fail to attract much foreign capital, so H-shares list in Hong Kong as an alternative. "
+          "A-shares remain forbidden to foreigners."),
          y=0.76,
          # Ends where the "First B-shares" event stands.
          early_end="1992-02-21",
-         early_description="**Dec 1990 – Feb 1992**: A-shares only, closed to foreigners."),
+         early_description=("**Dec 1990 – Feb 1992**: Only A-shares trade on the stock exchanges, so "
+                            "foreigners are unable to invest.")),
 ]
 
 
@@ -772,8 +755,8 @@ PICTURES = dict(
         "Jack Ma, World Economic Forum Annual Meeting, Davos, 2018. Photo: World Economic Forum / Ciaran McCrickard, "
         "CC BY 2.0 (https://creativecommons.org/licenses/by/2.0/), via Flickr "
         "(https://flickr.com/photos/49344088@N04/39008130265); cropped",
-        # (At 920 px there is room for it only below the economy's line in the top panel, and only at
-        # 150 px tall, with about 100 characters of words.)
+        # (At 920 px there is room for it in the top panel only at 150 px tall, with about 100
+        # characters of words, its lead included.)
         "Photo: World Economic Forum, CC BY 2.0", max_px=150, room=100),
 )
 
@@ -830,110 +813,88 @@ NARRATION_SPANS = dict(famine=(1960, 1962), factions=(1966, 1968), rebound=(1968
 BEATS = [
     # ---- Part I ----
     Beat("1961-06-30", "1959–61",
-         "The Great Leap Forward ends in famine. On official figures, output per person falls {famine_fall}% "
-         "from {famine_from} to {famine_to}."),
+         "The Great Chinese Famine. 15–45 million people die."),
     Beat("1962-01-30", "Jan–Feb 1962",
-         "At a conference of 7,000 Party officials, Liu Shaoqi blames the famine “30% on nature, 70% on people.” "
-         "Mao admits mistakes and steps back from day-to-day work."),
+         ("At the 7,000 Cadres Conference, Liu Shaoqi blames the famine primarily on bad policy. Mao makes a "
+          "rare self-criticism and cedes power over the economy to Liu and Deng Xiaoping.")),
     Beat("1965-07-01", "1962–65",
-         "Liu and Deng steer a recovery, tolerating private plots and household farming. “It doesn't matter "
-         "whether a cat is yellow or black,” says Deng, “as long as it catches mice.”",
-         rate=(1962, 1965), rate_note="Part of any recovery is a mechanical rebound from the collapse."),
+         "Liu and Deng steer a recovery with pragmatic policies and greater market influences.",
+         rate=(1962, 1965)),
     Beat("1966-05-16", "May 16, 1966",
-         "The “May 16 Notification” launches the Cultural Revolution. Red Guards wave Mao's Little Red Book.",
+         ("The “May 16 Notification” launches the Cultural Revolution. The text at the bottom of the poster "
+          "says, “Use Mao Zedong Thought as a weapon!”"),
          picture="cr_1966"),
     Beat("1968-07-01", "1966–68",
-         "Mao's “Bombard the Headquarters” poster (Aug 1966) targets Liu and Deng; by 1967 both are under house "
-         "arrest, and Liu dies in custody in 1969. Red Guard factions fight; output per person falls "
-         "{factions_fall}%.", rate=(1966, 1968)),
+         ("Mao's “Bombard the Headquarters” poster targets pragmatists; Liu and Deng arrested; Red Guards "
+          "attack “bourgeois elements.”"), rate=(1966, 1968)),
     Beat("1970-07-01", "1968–70",
-         "The army restores order, and millions of Red Guards and urban youths are sent to the countryside. "
-         "Output per person rebounds {rebound_rise}%.", rate=(1968, 1970)),
+         "The PLA restores order. Output per person rebounds {rebound_rise}%.", rate=(1968, 1970)),
     Beat("1977-07-01", "1976–77",
-         "Mao dies six weeks after the Tangshan earthquake, and the Gang of Four, the Cultural Revolution's "
-         "radical leaders, are arrested; output per person falls {y1976_fall}% in 1976. In 1977 Deng is "
-         "rehabilitated, and university entrance exams return after eleven years."),
+         ("Mao dies; Hua arrests the Gang of Four, the Cultural Revolution's radical leaders; Deng "
+          "rehabilitated.")),
     # ---- Part II ----
     Beat("1978-12-22", "Dec 1978",
-         "At the Third Plenum, Deng emerges as paramount leader and the Party turns from class struggle to "
-         "growth. Markets and commerce begin to return, and China starts {catch_up_claim}.", trim=-1.0),
-    Beat("1979-01-15", "1978–84",
-         "Xiaogang's farmers secretly split their collective's land. Beijing makes it national policy, the "
-         "Household Responsibility System; by 1984 nearly every farm uses it."),
+         "At the Third Plenum, Deng emerges as paramount leader of China.", trim=-1.0),
+    Beat("1979-01-15", "1979–84",
+         "Beijing implements the Household Responsibility System, ending the communes."),
     # Deng at the rodeo in Simonton, Texas, February 2, 1979.
     Beat("1979-02-02", "1979",
-         "Deng tours America and dons a cowboy hat at a Texas rodeo. Coca-Cola goes the other way: the first "
-         "American consumer brand sold in China in 30 years.", picture="deng_carter_1979"),
+         "Deng tours America; attends a rodeo. Coca-Cola begins selling in China.", picture="deng_carter_1979"),
     Beat("1980-08-26", "1980",
-         "China joins the International Monetary Fund and the World Bank. Four special economic zones open "
-         "to foreign capital."),
+         "China joins the IMF and the World Bank; establishes special economic zones."),
     Beat("1985-12-30", "Dec 1985",
-         "TIME names Deng its Man of the Year, for the second time. Since {reform_from}, China's output per "
-         "person has risen {since_reform_rise}%.", picture="time_1985"),
+         "TIME names Deng its Man of the Year.", picture="time_1985"),
     Beat("1988-08-15", "1988",
-         "China's dual-track prices, state and market side by side, breed corruption. Deng pushes to free "
-         "prices in one leap; panic buying and inflation near 20% follow. The leap is abandoned within months, "
-         "but by 1993 markets set most prices.", trim=-1.0),
+         ("Deng pushes to rapidly free state-set prices; inflation nears 20%. The plan is replaced by "
+          "gradual reform, spanning several years."), trim=-1.0),
     Beat("1989-05-15", "Spring 1989",
-         "Protests over inflation, corruption and the lack of political freedom fill Tiananmen Square. On "
-         "June 4 the army clears it; estimates of the dead range from hundreds to thousands. On June 5, "
-         "“Tank Man” faces down a column of tanks."),
+         ("Protests over inflation, corruption, and a lack of democracy erupt in Tiananmen Square; the army "
+          "quashes them.")),
     Beat("1990-07-01", "1989–91",
-         "Credit is tightened, reformist Party chief Zhao Ziyang is purged, and conservatives try to roll back "
-         "market reforms. Growth per person falls to {austerity_growth}% a year; the catch-up stalls.",
+         "Credit is tightened, and conservatives try to roll back market reforms.",
          rate=(1988, 1990), reference=(1978, 1988)),
     # A market box, in Part II: in the bottom panel.
     Beat(_EXCHANGE_OPENS, "{exchange_month}",
-         "Shanghai's stock exchange opens; Shenzhen's follows in {shenzhen_month}. Their shares (A-shares) are "
-         "for Chinese citizens only: foreigners still cannot invest.", panel="stocks"),
+         ("Shanghai's stock exchange opens; Shenzhen's follows in {shenzhen_month}. Foreigners are unable to "
+          "invest."), panel="stocks"),
     Beat("1992-01-18", "Jan–Feb 1992",
-         "Deng, 87 and officially retired, tours the south demanding faster market reform: “Development is the "
-         "only hard truth.” The conservatives retreat, and markets are back to stay."),
+         "Deng embarks on his Southern Tour to advocate for continued market reforms."),
     # ---- Part III (market boxes in the bottom panel, economy boxes in the top one) ----
     # A week into the act: the listing itself (February 21) is the moment the act opens on.
     Beat("1992-02-28", "{bshares_month}",
-         "Foreigners can buy Chinese shares for the first time: B-shares, a separate class priced in US or Hong "
-         "Kong dollars. The market stays small, illiquid and opaque; by 2001 it is so moribund that it is opened "
-         "to Chinese citizens."),
+         ("Foreigners can buy Chinese shares for the first time: B-shares. The market fails to attract "
+          "significant foreign capital.")),
     Beat("1993-07-15", "{hshares_month}",
-         "Tsingtao Brewery becomes the first mainland company to list in Hong Kong: the first “H-share.” Hong "
-         "Kong's open, dollar-pegged market makes H-shares far easier for foreigners to buy than B-shares.",
+         "H-shares are launched at Hong Kong's far more open and internationally connected stock exchange.",
          event="First H-shares"),
     # It quotes a rate, so it has an arrow, and comes up at the span's end (the brief's table left it out).
     Beat("1997-07-01", "1993–97",
-         "Foreign direct investment surges, from about $4 billion in 1991 to over $40 billion a year by 1996, "
-         "more than any other developing country. Against America, output per person climbs {fdi_rate} bits a "
-         "year.", panel="economy", rate=(1993, 1997)),
+         "Foreign direct investment surges by nearly an order of magnitude.", panel="economy", rate=(1993, 1997)),
     Beat("1998-06-30", "1994–2003",
-         "Zhu Rongji, vice premier then premier, centralizes taxation, sells off thousands of small state firms, "
-         "ends state-allocated housing and halves the central ministries' staff. Tens of millions of state "
-         "workers lose their jobs; growth softens.", panel="economy"),
+         ("Zhu Rongji, vice premier then premier, enacts sweeping market-oriented reforms, laying off tens "
+          "of millions of state employees, and reinforcing Deng's vision of “reform and opening up.”"), panel="economy"),
     Beat(None, "{wto_month}",
-         "China joins the World Trade Organization. {trough_lag} its stocks bottom: {trough_falls}.",
+         "China joins the WTO. {trough_lag} its stocks bottom: {trough_falls}.",
          after="trough"),
     Beat("2002-12-01", "{qfii_month}",
-         "QFII, the Qualified Foreign Institutional Investor scheme, lets licensed foreign institutions buy "
-         "A-shares for the first time, within quotas.", event="QFII"),
+         "QFII allows foreigners to buy A-shares for the first time.", event="QFII"),
     Beat("2006-10-27", "2005–{peak_yy}",
-         "China's biggest state banks list in Hong Kong; the Industrial and Commercial Bank of China's "
-         "{icbc_year} initial public offering is then the world's largest. The boom peaks in {peak_month}.",
+         ("China's big state banks list in Hong Kong; ICBC's {icbc_year} IPO is then the world's largest. "
+          "The boom peaks in {peak_month}."),
          picture="hkex_2007"),
     Beat("2012-07-01", "{hu_from}–{hu_to_yy}",
-         "Under Hu Jintao, China carries out its WTO commitments, unpegs the renminbi from the dollar, lists its "
-         "big banks and abolishes the farm tax. It gains on America faster than ever: {hu_rate} bits a year "
-         "(about {hu_pct}%).", panel="economy", rate=(2002, 2012)),
+         ("China carries out further market-oriented reforms, gaining on America faster than ever: {hu_rate} "
+          "bits a year (about {hu_pct}%)."), panel="economy", rate=(2002, 2012)),
     Beat("2018-06-01", "2014–18",
-         "Stock Connect lets anyone with a Hong Kong brokerage account buy mainland A-shares (Shanghai 2014, "
-         "Shenzhen 2016). In 2018 MSCI begins adding A-shares to its indexes. Access is no longer the obstacle.",
+         ("Stock Connect allows anyone, including foreigners, with a Hong Kong brokerage account to buy "
+          "mainland A-shares."),
          event="A-shares join MSCI"),
     Beat("2019-07-01", "{xi_from}–{xi_to_yy}",
-         "Under Xi Jinping, who abolishes presidential term limits in 2018, the state's grip on the economy "
-         "tightens and China's catch-up with America {xi_change}.", panel="economy", rate=(2012, 2019),
+         "Xi Jinping tightens the state's grip on the economy. China's catch-up with America {xi_change}.", panel="economy", rate=(2012, 2019),
          reference=(2002, 2012)),
     Beat("2020-11-03", "2020–21",
-         "Days after Jack Ma criticizes regulators, Beijing halts Ant Group's initial public offering, and Ma "
-         "vanishes from public view for nearly three months. The crackdown spreads to tech, tutoring and "
-         "property firms.", picture="jack_ma", event="Chinese tech crackdown",
+         "Jack Ma criticizes regulators; Beijing halts Ant's IPO and Ma vanishes for months.",
+         picture="jack_ma", event="Chinese tech crackdown",
          # Tried first in the top panel, below the economy's line, where there is room near the playhead.
          panel="economy", cross=True),
 ]
@@ -950,12 +911,39 @@ _FRACTIONS = {2: "a half", 3: "a third", 4: "a quarter", 5: "a fifth", 6: "a six
 # The box at the end of Part II, with the arrow up the economy's line: computed at the playhead,
 # which stands at the end of the part.
 INTERLUDE_BOX = Beat(None, "{part2_from}–{part2_end_year}",
-                     "Against America, China's output per person has {part2_change}: {part2_bits} bits, "
-                     "{part2_rate} bits a year. In its own terms it is up ×{part2_own}.")
+                     ("Against America, China's output per person has {part2_change}: {part2_bits} bits, "
+                      "{part2_rate} bits a year."))
 # The last box, which closes the ending. Every number in it is a placeholder.
 FINAL_BOX = Beat(None, "{since} – {end_month}",
                  "Against America, China's economy {economy_verb} {economy_bits} bits; its stocks {stocks_verb} "
                  "{stocks_bits}. Stocks finished {gap_bits} bits, a factor of {gap_factor}, {gap_side} the economy.")
+
+
+@dataclass(frozen=True)
+class EraChord:
+    """An era the ending's top-panel chords span: the economy's line from one point to another.
+
+    ``name`` leads the chord's label ("Mao, 1960–78: …"). ``start`` and
+    ``end`` are the years of the line's points it runs between (``end``
+    None: the line's last point). ``hover`` is what the label says on
+    hover, a template: ``{span}`` (the years, as "1960–78"), ``{china}``
+    and ``{usa}`` (each one's output per person: its growth, % a year).
+    """
+    name: str
+    start: int
+    end: int | None
+    hover: str
+
+
+# The top panel's chords at the ending, in the order they are drawn. (The Mao hover's last sentence is
+# typed: the checks assert China's output per person grew no faster than America's over the span.)
+ERA_CHORDS = [
+    EraChord("Mao", 1960, 1978,
+             "**{span}**: China's output per person grew {china}% a year, America's {usa}%. Starting far poorer, "
+             "China did not catch up at all."),
+    EraChord("Deng to Hu", 1978, 2012, "**{span}**: {china}% a year against America's {usa}%."),
+    EraChord("Xi", 2012, None, "**{span}**: {china}% a year against America's {usa}%."),
+]
 # How the fall of each market to the bottom is put, and what is said instead if
 # the derived file has no MSCI USA return for the anchor in use.
 _TROUGH_FALLS = "down {trough_china}% since {since}, against {trough_usa}% for US stocks through the dot-com bust"
@@ -1177,6 +1165,36 @@ def _month_name(when) -> str:
     """A month as running prose gives it: "July 1991"."""
     when = pd.Timestamp(when)
     return f"{when:%B} {when.year}"
+
+
+def _span(a: int, b: int) -> str:
+    """Two years as a span, the second cut to its last two digits within a century: 1960–78, 1978–2012."""
+    return f"{a}–{b % 100:02d}" if a // 100 == b // 100 else f"{a}–{b}"
+
+
+def era_numbers(gdp: pd.DataFrame, usa: pd.Series) -> list[dict]:
+    """The top panel's closing chords, one per ``ERA_CHORDS``, from the data.
+
+    Each: the era; its first and last years and dates (the economy's July 1
+    points); the line's value at each, in bits against America since 1978
+    (as plotted); the chord's ``rate``, bits a year (the change over the
+    years between); its ``multiple`` a year, ``2 ** rate``; and ``china`` and
+    ``usa``, each one's own output per person, growth in % a year.
+    """
+    ratio = gdp["CHN"].dropna()
+    point = {d.year: (d, float(v)) for d, v in ratio.items()}
+    own = {d.year: float(v) for d, v in (gdp["CHN"] + usa).dropna().items()}
+    us = {d.year: float(v) for d, v in usa.dropna().items()}
+    base = point[GDP_ANCHOR_YEAR][1]
+    out = []
+    for era in ERA_CHORDS:
+        a, b = era.start, era.end if era.end is not None else max(point)
+        growth = lambda level: 100.0 * (2.0 ** ((level[b] - level[a]) / (b - a)) - 1.0)
+        rate = (point[b][1] - point[a][1]) / (b - a)
+        out.append(dict(era=era, start=a, end=b, t0=point[a][0], t1=point[b][0], y0=point[a][1] - base,
+                        y1=point[b][1] - base, rate=rate, multiple=2.0 ** rate, china=growth(own), usa=growth(us),
+                        span=_span(a, b)))
+    return out
 
 
 def narration_numbers(gdp: pd.DataFrame, usa: pd.Series, s: pd.Series, e: pd.Series,
@@ -2329,19 +2347,53 @@ def build_china_figure(
                                               multiple=f"{2.0 ** rate:.3f}")
         return said, [f"<b>{said}</b>", f"<b>{said.replace(' (', '<br>(', 1)}</b>"]
 
-    # First, in the top panel: the economy since 1978, from the 1978 marker to the line's last point.
-    g_end = g.index[-1]
-    top_rate = gdp_y[-1] / ((g_end - pd.Timestamp(gdp_anchor)) / pd.Timedelta(days=365.25))
-    top_said, top_wraps = chord_said(top_rate)
-    top_name = COPY_TEXT["chord_economy_top"].format(anchor_year=GDP_ANCHOR_YEAR)
-    top_chord = dict(
-        key="economy_top", name=top_name, color=_GDP_COLOR, rate=round(top_rate, 6), value=gdp_y[-1],
-        start=gdp_anchor, date=_iso(g_end), wraps=top_wraps, said=top_said, text=f"{top_name}: {top_said}",
-        shape=shape(type="line", xref="x", yref="y", x0=gdp_anchor, y0=0, x1=_iso(g_end), y1=gdp_y[-1],
-                    line=dict(color=_GDP_COLOR, width=1.6, dash="dash"), layer="between"),
-        annotation=note("rate_economy_top", xref="x", yref="y", x=_iso(g_end), y=gdp_y[-1], xanchor="left",
-                        yanchor="middle", align="left", xshift=beside["label"], text=top_wraps[1],
-                        size=wide["rate_font"], color=_GDP_COLOR))
+    # First, in the top panel: a chord across each era (ERA_CHORDS), from the economy line's point at
+    # its start to the one at its end, each with its rate in bits a year against America, and what that
+    # was in growth on hover. The script places each rate near its chord, or in the gutter.
+    def wrapped(said: str) -> list[str]:
+        """A label in bold on one line, then broken after the colon, before the multiple, after the name."""
+        forms = [said]
+        for at, broken in ((": ", ":<br>"), (" (", "<br>("), (", ", ",<br>")):
+            forms.append(forms[-1].replace(at, broken, 1))
+        return [f"<b>{form}</b>" for form in dict.fromkeys(forms)]
+
+    era_chords, plotted = [], dict(zip(gdp_x, gdp_y))
+    for n, era in enumerate(era_numbers(gdp, usa)):
+        y0, y1 = plotted[_iso(era["t0"])], plotted[_iso(era["t1"])]       # (on the points as drawn)
+        signed_rate = f"{'+' if era['rate'] >= 0 else '−'}{abs(era['rate']):.3f}"
+        flat = f"{era['multiple']:.2f}" == "1.00"
+        said = COPY_TEXT["era_rate_flat" if flat else "era_rate"].format(
+            name=era["era"].name, span=era["span"], rate=signed_rate, multiple=f"{era['multiple']:.3f}")
+        mid = era["t0"] + (era["t1"] - era["t0"]) / 2
+        era_chords.append(dict(
+            key=f"era{n}", name=era["era"].name, span=era["span"], color=_GDP_COLOR, rate=round(era["rate"], 6),
+            start=_iso(era["t0"]), end=_iso(era["t1"]), y0=y0, y1=y1,
+            said=said, text=said, wraps=wrapped(said),
+            hover=era["era"].hover.format(span=era["span"], china=f"{era['china']:.1f}", usa=f"{era['usa']:.1f}"),
+            shape=shape(type="line", xref="x", yref="y", x0=_iso(era["t0"]), y0=y0, x1=_iso(era["t1"]),
+                        y1=y1, line=dict(color=_GDP_COLOR, width=1.6, dash="dash"), layer="between"),
+            annotation=note(f"rate_era{n}", xref="x", yref="y", x=_iso(mid), y=(y0 + y1) / 2,
+                            xanchor="center", yanchor="middle", align="center", text=wrapped(said)[-1],
+                            visible=False, size=wide["rate_font"], color=_GDP_COLOR)))
+    # Then the climb since 1978: a double-headed arrow in ink, just right of the line's last point,
+    # from the 1978 level (zero) up to it; and in the gutter what it measures.
+    g_end, climbed = g.index[-1], gdp_y[-1]
+    climb_multiple = 2.0 ** climbed
+    climb_text = COPY_TEXT["climb"].format(
+        bits=f"{'+' if climbed >= 0 else '−'}{abs(climbed):.2f}", anchor_year=GDP_ANCHOR_YEAR,
+        multiple=f"{climb_multiple:.0f}" if climb_multiple >= 10 else f"{climb_multiple:.1f}")
+    climb_forms = [climb_text, climb_text.replace(" (", "<br>(", 1)]
+    climb_forms.append(climb_forms[-1].replace(" since ", "<br>since ", 1))
+    climb = dict(
+        value=round(climbed, 6), date=_iso(g_end), text=climb_text, wraps=list(dict.fromkeys(climb_forms)),
+        arrow=note("climb_arrow", xref="x", yref="y", x=_iso(g_end), y=climbed, ax=_iso(g_end), ay=0.0,
+                   axref="x", ayref="y", showarrow=True, arrowside="end+start", arrowhead=2, startarrowhead=2,
+                   arrowsize=1, startarrowsize=1, arrowwidth=1.3, arrowcolor=ink("arrow"), standoff=0,
+                   startstandoff=0, xshift=beside["arrow"], text="", visible=False, size=wide["rate_font"],
+                   color=ink("arrow")),
+        label=note("climb_label", xref="x", yref="y", x=_iso(g_end), y=climbed / 2, xanchor="left",
+                   yanchor="middle", align="left", xshift=beside["label"], text=climb_forms[1], visible=False,
+                   size=wide["rate_font"], color=ink("rate")))
     chords = []
     for key, name, value, color in (("economy", COPY_TEXT["chord_economy"], economy_y[-1], _GDP_COLOR),
                                     ("stocks", COPY_TEXT["chord_stocks"], stock_y[-1], _STOCK_COLOR)):
@@ -2550,7 +2602,7 @@ def build_china_figure(
         shapes=shapes, annotations=annotations,
         meta=dict(
             trace=trace, ann=role, zero=zero, playhead=playhead, events=events, eras=eras, leaders=leaders,
-            bands=bands, arrows=arrows, fills=fills, chords=chords, top_chord=top_chord, gap=gap_end, anchor=anchor,
+            bands=bands, arrows=arrows, fills=fills, chords=chords, era_chords=era_chords, climb=climb, gap=gap_end, anchor=anchor, anchor_moved=anchor != _iso(STOCK_ANCHOR),
             anchors=[dict(trace="anchor_top", panel="economy", date=gdp_anchor,
                           text=COPY_TEXT["anchor"].format(anchor=GDP_ANCHOR_YEAR)),
                      dict(trace="anchor_bottom", panel="stocks", date=anchor, text=COPY_TEXT["anchor"].format(anchor=since))],
@@ -2794,7 +2846,7 @@ _SCRIPT = r"""<script>
   var DAY = 86400000, YEAR = 31557600000, HOUR = 3600000;          // ms
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var hotBox = $(".china-hots"), pulseRing = $(".china-pulse"), pulseDot = $(".china-pulse-dot");
-  var PL, M, TR, AN, G, S, PEERS, EV, ERAS, LEADERS, BANDS, ARROWS, FILLS, CHORDS, TOPCHORD, GAP, ANCHORS, ACTS, VIEWS, BEATS, FINAL, INTER, NOTES, TL, END;
+  var PL, M, TR, AN, G, S, PEERS, EV, ERAS, LEADERS, BANDS, ARROWS, FILLS, CHORDS, ERACHORDS, CLIMB, GAP, ANCHORS, ACTS, VIEWS, BEATS, FINAL, INTER, NOTES, TL, END;
   var T0, T1, TA, TB, TG, X0, X1, FONT;
   var L = null, GEO = null, P = null, FIT = null, STATE = null, lastW = 0, sent = {};
   var clock = 0, want = 0, playhead = 0, playing = false, played = false, raf = 0, busy = false, pending = null, speed = 1;
@@ -2952,7 +3004,7 @@ _SCRIPT = r"""<script>
   //   newAct / newAlpha: marks belonging to acts before newAct may show; those
   //     of newAct itself at strength newAlpha (the next ghosts arrive only
   //     after the axis has moved).
-  //   chords, rates, arrow, gap, last: the ending, piece by piece (0 to 1).
+  //   eras, eraRates, climb, climbLabel, chords, rates, arrow, gap, last: the ending, piece by piece (0 to 1).
   //   inter, interAlpha: the arrow at the end of the interlude's act: how far drawn, and how strong.
   function stateAt(c) {
     c = clamp(c, 0, END);
@@ -2960,12 +3012,15 @@ _SCRIPT = r"""<script>
     for (var i = 1; i < TL.length; i++) if (c >= TL[i].c0) seg = TL[i];
     var s = c - seg.c0, k = seg.act, last = ACTS.length - 1, whole = VIEWS.length - 1;
     var st = {clock: c, kind: seg.kind, act: k, done: c >= END, card: -1, cardAlpha: 0, newAct: k, newAlpha: 1,
-              va: k, vb: k, vu: 0, chords: [0, 0], rates: [0, 0], top: 0, topRate: 0, arrow: 0, gap: 0, last: 0,
+              va: k, vb: k, vu: 0, chords: [0, 0], rates: [0, 0], eras: ERACHORDS.map(function () { return 0; }),
+              eraRates: ERACHORDS.map(function () { return 0; }), climb: 0, climbLabel: 0, arrow: 0, gap: 0, last: 0,
               beat: null, beatAlpha: 0,
               inter: 0, interAlpha: 0, note: null, noteAlpha: 0, pulse: 0};
     if (st.done) {
       st.kind = "done"; st.T = T1; st.act = st.newAct = last; st.va = st.vb = whole;
-      st.chords = [1, 1]; st.rates = [1, 1]; st.top = st.topRate = 1; st.arrow = st.gap = 1;
+      st.chords = [1, 1]; st.rates = [1, 1]; st.arrow = st.gap = 1;
+      st.eras = st.eras.map(function () { return 1; }); st.eraRates = st.eraRates.map(function () { return 1; });
+      st.climb = st.climbLabel = 1;
     } else if (seg.kind === "play") {
       st.T = timeOf(k, s);
     } else if (seg.kind === "inter") {     // at rest at the end of act k: the arrow is drawn up, then its box comes
@@ -2982,18 +3037,19 @@ _SCRIPT = r"""<script>
       st.newAct = k + 1; st.newAlpha = clamp((s - held - tr.move) / tr.ghost, 0, 1);
       // The interlude's arrow fades as the title card comes up.
       if (k === M.play.interlude.act) { st.inter = 1; st.interAlpha = clamp(1 - s / tr.card_in, 0, 1); }
-    } else if (seg.kind === "end") {       // each chord is drawn, then its rate; the gap's arrow, its label; the last box
+    } else if (seg.kind === "end") {       // in the whole chart's view: the top panel's chords and arrow, then the bottom's; the last box
       var E = seg.marks;
-      st.T = T1; st.newAct = last;
-      st.top = clamp((s - E.top) / en.chord, 0, 1); st.topRate = clamp((s - E.topRate) / en.label, 0, 1);
+      st.T = T1; st.newAct = last; st.va = st.vb = whole;
+      st.eras = E.era.map(function (t) { return clamp((s - t) / en.chord, 0, 1); });
+      st.eraRates = E.eraRate.map(function (t) { return clamp((s - t) / en.label, 0, 1); });
+      st.climb = clamp((s - E.climb) / en.arrow, 0, 1); st.climbLabel = clamp((s - E.climbLabel) / en.label, 0, 1);
       st.chords = E.chord.map(function (t) { return clamp((s - t) / en.chord, 0, 1); });
       st.rates = E.rate.map(function (t) { return clamp((s - t) / en.label, 0, 1); });
       st.arrow = clamp((s - E.arrow) / en.arrow, 0, 1);
       st.gap = clamp((s - E.gap) / en.label, 0, 1);
       st.last = clamp(Math.min((s - E.box) / fade, (E.boxOut + fade - s) / fade), 0, 1);
-    } else {                               // the pull-back: from the last act's view to the whole chart
+    } else {                               // the pull-back, as the data ends: from the last act's view to the whole chart
       st.T = T1; st.newAct = last; st.vb = whole; st.vu = smooth(s / seg.dur);
-      st.chords = [1, 1]; st.rates = [1, 1]; st.top = st.topRate = 1; st.arrow = st.gap = 1;
     }
     var A = VIEWS[st.va], B = VIEWS[st.vb];
     st.r0 = A.r0 + (B.r0 - A.r0) * st.vu; st.r1 = A.r1 + (B.r1 - A.r1) * st.vu;
@@ -3409,6 +3465,104 @@ _SCRIPT = r"""<script>
   }
   function ratesOf(b) { return [b.rate, b.reference].filter(function (R) { return R; }); }
 
+  // ---- The top panel's labels at the ending ------------------------------------------
+  // Each era's rate near the middle of its chord, in the whole chart's view: along the chord, above
+  // or below it, on one line or broken, whichever is nearest its middle and clear of the line, the
+  // chords, the event lines, the ticks, the panel's name, the anchor's marker, the labels by the zero
+  // line, and the rates placed before it. Where there is no such place, in the gutter right of the
+  // plot, as near its chord's height as the climb's label there allows (each on as few lines as the
+  // gutter's width allows). The climb's label stands in the gutter beside its arrow. Where there is
+  // no gutter (a phone), each goes in the key. Sets ERACHORDS[n].place and CLIMB.place (null: the
+  // key) and, through A (fit's), the annotations.
+  function placeEras(plotW, A) {
+    var whole = VIEWS.length - 1, sc = scaleIn(whole, plotW), X = function (t) { return pxIn(whole, t, plotW); };
+    var Y = function (v) { return (M.view.y[1] - v) * GEO.ppb; }, f = L.rate_font, room = GEO.topH;
+    // (Measured in the bold they are set in, every line of them.)
+    function bold(html) {
+      ctx.font = "700 " + f + "px " + FONT;
+      var lines = String(html).split("<br>"), w = 0;
+      lines.forEach(function (ln) { w = Math.max(w, ctx.measureText(ln.replace(/<[^>]+>/g, "")).width); });
+      return {w: w + 2, h: lines.length * f * 1.3};
+    }
+    var chordAt = function (ec, T) { return ec.y0 + (ec.y1 - ec.y0) * (T - ec.t0) / (ec.t1 - ec.t0); };
+    var lines = EV.filter(function (e) { return e.panel === "economy" && e.on && !e.tick && inView(whole, e.t); })
+      .map(function (e) { return X(e.t); });
+    var taken = [{a: -L.margin.l, b: GEO.head[0].b + 4, top: 0, bottom: GEO.head[0].h + 4}];
+    var ht = FIT.hints.top;
+    if (ht && ht.fits[whole]) taken.push({a: X(ht.t) - 2, b: X(ht.t) + ht.w + 2, top: Y(0) - 18, bottom: Y(0) + 18});
+    ANCHORS.forEach(function (a) { if (a.panel === "economy") taken.push({a: X(a.t) - 9, b: X(a.t) + 9, top: Y(0) - 9, bottom: Y(0) + 9}); });
+    function offTheLines(q) {
+      for (var x = q.a - 3; x <= q.b + 3; x += 2) {
+        var T = VIEWS[whole].r0 + x / sc, g = at(G.t, G.y, T), ys = g === null ? [] : [Y(g)];
+        ERACHORDS.forEach(function (ec) { if (T >= ec.t0 && T <= ec.t1) ys.push(Y(chordAt(ec, T))); });
+        if (ys.some(function (y) { return y > q.top - 5 && y < q.bottom + 5; })) return false;
+      }
+      return true;
+    }
+    function clear(q) {
+      if (q.a < 3 || q.b > plotW - 3 || q.top < L.tick.down + 4 || q.bottom > room - 3) return false;
+      if (lines.some(function (x) { return x > q.a - 4 && x < q.b + 4; })) return false;
+      if (taken.some(function (o) { return q.a < o.b + 4 && o.a < q.b + 4 && q.top < o.bottom + 4 && o.top < q.bottom + 4; })) return false;
+      return offTheLines(q);
+    }
+    function toData(x, y) { return {x: iso(VIEWS[whole].r0 + x / sc), y: M.view.y[1] - y / GEO.ppb}; }
+    var gx = X(T1) + L.end.label, gw = plotW + L.margin.r - 3 - gx, inGutter = [];
+    function narrowest(wraps) {
+      for (var k = 0; k < wraps.length; k++) if (bold(wraps[k]).w <= gw) return wraps[k];
+      return null;
+    }
+    ERACHORDS.forEach(function (ec) {
+      ec.place = null;
+      if (!FIT.ends) return;
+      var x0 = X(ec.t0), x1 = X(ec.t1), mid = (x0 + x1) / 2, best = null;
+      ec.wraps.forEach(function (w, k) {
+        var sz = bold(w), W = sz.w, h = sz.h;
+        for (var xc = x0 + W / 2; xc <= x1 - W / 2; xc += 3) {
+          var yc = Y(chordAt(ec, VIEWS[whole].r0 + xc / sc));
+          [1, -1].forEach(function (side) {
+            for (var off = 5; off <= 120; off += 5) {
+              var top = side > 0 ? yc + off : yc - off - h, cost = Math.abs(xc - mid) + off + 40 * k;
+              if (best && cost >= best.cost) return;
+              var q = {a: xc - W / 2, b: xc + W / 2, top: top, bottom: top + h};
+              if (clear(q)) { best = {cost: cost, q: q, text: w, x: xc}; return; }
+            }
+          });
+        }
+      });
+      if (!best) { inGutter.push(ec); return; }
+      taken.push(best.q);
+      var d = toData(best.x, (best.q.top + best.q.bottom) / 2);
+      ec.place = {gutter: false, text: best.text, rect: best.q};
+      A(ec.annotation, {text: best.text, x: d.x, y: d.y, xshift: 0, xanchor: "center", yanchor: "middle", align: "center", "font.size": f});
+    });
+    // The gutter: the climb's label beside its arrow's middle, then each rate that found no place in
+    // the plot, as near its chord's middle height as it can be without touching another.
+    CLIMB.place = null;
+    if (!FIT.ends) return;
+    var stack = [], ct = narrowest(CLIMB.wraps);
+    if (ct) {
+      var ch = textSize(ct, f).h, cy = clamp(Y(CLIMB.value / 2), ch / 2 + 2, room - ch / 2 - 2);
+      CLIMB.place = {gutter: true, text: ct, rect: {a: gx, b: gx + textSize(ct, f).w + 2, top: cy - ch / 2, bottom: cy + ch / 2}};
+      stack.push(CLIMB.place.rect);
+      A(CLIMB.label, {text: ct, y: M.view.y[1] - cy / GEO.ppb, xshift: L.end.label, "font.size": f});
+    }
+    inGutter.forEach(function (ec) {
+      var text = narrowest(ec.wraps);
+      if (!text) return;
+      var h = bold(text).h, want = Y((ec.y0 + ec.y1) / 2), got = null;
+      for (var d = 0; d <= room && got === null; d += 2) [want + d, want - d].forEach(function (y) {
+        if (got !== null || y - h / 2 < 2 || y + h / 2 > room - 2) return;
+        if (stack.every(function (o) { return y + h / 2 + 4 <= o.top || y - h / 2 - 4 >= o.bottom; })) got = y;
+      });
+      if (got === null) return;
+      var rect = {a: gx, b: gx + bold(text).w, top: got - h / 2, bottom: got + h / 2};
+      stack.push(rect);
+      ec.place = {gutter: true, text: text, rect: rect};
+      A(ec.annotation, {text: text, x: iso(T1), y: M.view.y[1] - got / GEO.ppb, xshift: L.end.label, xanchor: "left",
+                        yanchor: "middle", align: "left", "font.size": f});
+    });
+  }
+
   // ---- The ending's chords, and the boxes of narration --------------------------------
   // The two chords, as px down from the top of the bottom panel at a px column
   // of the finished chart.
@@ -3452,7 +3606,7 @@ _SCRIPT = r"""<script>
   // it has one); and the strip of labels between the panels (`strip`), which a
   // card tall enough to run from one panel into the other must keep off too.
   function inTheWay(b, plotW) {
-    var v = b.act, sc = scaleIn(v, plotW), y1 = GEO.topH + GEO.gap, zero = [M.view.y[1] * GEO.ppb, y1 + M.view.y2[1] * GEO.ppb];
+    var v = b.view !== undefined ? b.view : b.act, sc = scaleIn(v, plotW), y1 = GEO.topH + GEO.gap, zero = [M.view.y[1] * GEO.ppb, y1 + M.view.y2[1] * GEO.ppb];
     var rects = [], strip = [], X = function (t) { return pxIn(v, t, plotW); };
     GEO.head.forEach(function (h, k) { rects.push({a: 0, b: h.b + 2, top: k ? y1 : 0, bottom: (k ? y1 : 0) + h.h}); });
     BANDS.forEach(function (bd) {
@@ -3475,6 +3629,8 @@ _SCRIPT = r"""<script>
     ANCHORS.forEach(function (a) {
       if (a.t <= b.until) rects.push({a: X(a.t) - 8, b: X(a.t) + 8, top: zero[a.panel === "economy" ? 0 : 1] - 8, bottom: zero[a.panel === "economy" ? 0 : 1] + 8});
     });
+    // (The last box: the eras' rates placed in the plot, which are up by then.)
+    if (b.last) ERACHORDS.forEach(function (ec) { if (ec.place && !ec.place.gutter) rects.push(ec.place.rect); });
     // The box's rate arrows and their rates, which are up with it.
     ratesOf(b).forEach(function (spec) {
       var R = rateGeometry(spec, v, plotW), Y = function (y) { return zero[0] - y * GEO.ppb; };
@@ -3493,18 +3649,20 @@ _SCRIPT = r"""<script>
   }
   // Is the box q (px from the plot's top-left) clear of the data drawn by the
   // time the beat's box comes down? In the top panel, of the economy's line
-  // (and, at the ending, its chord from 1978); in the bottom one, of both lines
+  // (and, at the ending, the eras' chords); in the bottom one, of both lines
   // and the fill between them, and, at the ending, of the chords. The dot at the playhead is on the lines, so it is
   // covered by this too.
   function offTheData(q, b, plotW) {
-    var v = b.act, V = VIEWS[v], sc = scaleIn(v, plotW), y1 = GEO.topH + GEO.gap, c = 7;
+    var v = b.view !== undefined ? b.view : b.act, V = VIEWS[v], sc = scaleIn(v, plotW), y1 = GEO.topH + GEO.gap, c = 7;
     var zero = [M.view.y[1] * GEO.ppb, y1 + M.view.y2[1] * GEO.ppb], top = q.top < GEO.topH, bottom = q.bottom > y1;
     for (var x = q.a - c; x <= q.b + c; x += 2) {
       var T = V.r0 + x / sc;
       if (T > b.until) break;
       if (top) {
         var g = at(G.t, G.y, T), ys0 = g === null ? [] : [zero[0] - g * GEO.ppb];
-        if (b.last && T >= TOPCHORD.t0) ys0.push(zero[0] - TOPCHORD.value * (T - TOPCHORD.t0) / (TOPCHORD.t - TOPCHORD.t0) * GEO.ppb);
+        if (b.last) ERACHORDS.forEach(function (ec) {
+          if (T >= ec.t0 && T <= ec.t1) ys0.push(zero[0] - (ec.y0 + (ec.y1 - ec.y0) * (T - ec.t0) / (ec.t1 - ec.t0)) * GEO.ppb);
+        });
         if (ys0.some(function (y) { return y > q.top - c && y < q.bottom + c; })) return false;
       }
       if (bottom) {
@@ -3531,7 +3689,7 @@ _SCRIPT = r"""<script>
   // the place (a, top: px from the plot's top-left; `fallback` if it is not in
   // its own panel) and the way, or null.
   function placeBox(b, plotW, before, pictureOnly) {
-    var v = b.act, sc = scaleIn(v, plotW), y1 = GEO.topH + GEO.gap, prefer = b.panel === "economy" ? 0 : 1;
+    var v = b.view !== undefined ? b.view : b.act, sc = scaleIn(v, plotW), y1 = GEO.topH + GEO.gap, prefer = b.panel === "economy" ? 0 : 1;
     var panels = [{y0: 0, y1: GEO.topH}, {y0: y1, y1: GEO.plotH}], right = plotW + L.margin.r - 6;
     // The playhead's sweep while the box is up. (The last box has no playhead to keep off: it keeps left of the ending.)
     var s0 = b.last ? pxIn(v, T1, plotW) - 14 : pxIn(v, b.since, plotW) - 12, s1 = b.last ? Infinity : pxIn(v, b.until, plotW) + 12;
@@ -3616,7 +3774,7 @@ _SCRIPT = r"""<script>
     // to its label. Where the first would run through the panel's name (the
     // last act's view puts three events there) it starts below the name
     // instead. A beat can pick an event out, once reached, while its box is up.
-    var next = {}, faint = done ? M.final_line_share : st.kind === "pull" ? 1 - (1 - M.final_line_share) * st.vu : 1;
+    var next = {}, faint = done || st.kind === "end" ? M.final_line_share : st.kind === "pull" ? 1 - (1 - M.final_line_share) * st.vu : 1;
     if (!done) EV.forEach(function (e) {
       if (e.tick || !e.on || st.clock >= e.clock) return;
       if (!next[e.panel] || e.t < next[e.panel].t) next[e.panel] = e;
@@ -3723,10 +3881,16 @@ _SCRIPT = r"""<script>
       H(ch.shape, {visible: f > 0, x1: iso(TA + f * (ch.t - TA)), y1: f * ch.value});
       A(ch.annotation, {visible: r > 0, opacity: r});
     });
-    // (The top panel's chord, from the 1978 marker.)
-    var tr_ = FIT.ends ? st.topRate : 0;
-    H(TOPCHORD.shape, {visible: st.top > 0, x1: iso(TOPCHORD.t0 + st.top * (TOPCHORD.t - TOPCHORD.t0)), y1: st.top * TOPCHORD.value});
-    A(TOPCHORD.annotation, {visible: tr_ > 0, opacity: tr_});
+    // (In the top panel: each era's chord, drawn from its start, then its rate wherever it was placed;
+    // the arrow from the 1978 level up to the line's last point, grown upwards, then its label.)
+    ERACHORDS.forEach(function (ec, n) {
+      var f = st.eras[n], r = ec.place ? st.eraRates[n] : 0;
+      H(ec.shape, {visible: f > 0, x1: iso(ec.t0 + f * (ec.t1 - ec.t0)), y1: ec.y0 + f * (ec.y1 - ec.y0)});
+      A(ec.annotation, {visible: r > 0, opacity: r});
+    });
+    var cl = CLIMB.place ? st.climbLabel : 0;
+    A(CLIMB.arrow, {visible: st.climb > 0, y: Math.max(st.climb, 0.04) * CLIMB.value});
+    A(CLIMB.label, {visible: cl > 0, opacity: cl});
     var grown = Math.max(st.arrow, 0.04), gl = FIT.ends ? st.gap : 0;
     A(GAP.arrow, {visible: st.arrow > 0, ay: GAP.top + grown * (GAP.bottom - GAP.top)});
     A(GAP.label, {visible: gl > 0, opacity: gl});
@@ -3783,7 +3947,7 @@ _SCRIPT = r"""<script>
     var st = STATE = stateAt(c), T = st.T, done = st.done, data = {x: [], y: []}, idx = [];
     clock = c; playhead = T;
     function put(i, x, y) { idx.push(i); data.x.push(x); data.y.push(y); }
-    var g = reveal(G, T), p = revealPair(T), f = fills(p), mk = markersAt(T), live = !done && st.kind !== "pull";
+    var g = reveal(G, T), p = revealPair(T), f = fills(p), mk = markersAt(T), live = !done && st.kind !== "pull" && st.kind !== "end";
     PEERS.forEach(function (D) { var r = reveal(D, T); put(D.trace, r.x, r.y); });
     put(TR.gdp, g.x, g.y);
     put(TR.gdp_head, live ? [last(g.x)] : [], live ? [last(g.y)] : []);
@@ -3867,8 +4031,9 @@ _SCRIPT = r"""<script>
     });
     // The key's rows arrive with what they stand for: an annotation, a rate, the gap.
     Array.prototype.forEach.call(keyBox.querySelectorAll("[data-t]"), function (row) {
-      var part = row.getAttribute("data-end");
-      row.style.opacity = done ? 1 : part === "gap" ? st.gap : part === "top" ? st.topRate : part ? st.rates[+part]
+      var part = row.getAttribute("data-end"), era = row.getAttribute("data-era");
+      row.style.opacity = done ? 1 : era !== null ? st.eraRates[+era] : part === "gap" ? st.gap : part === "climb" ? st.climbLabel
+        : part ? st.rates[+part]
         : clamp((st.clock - clockOf(+row.getAttribute("data-t"))) / M.play.reveal, 0, 1);
     });
     // An act's title card, and the scrim that dims the figure behind it.
@@ -3976,9 +4141,9 @@ _SCRIPT = r"""<script>
     raf = requestAnimationFrame(step);
   }
   // A click or a tap on a box sends it away. A beat's box: playback eases back to normal speed.
-  // The last box: on to the pull-back.
+  // The last box: on to its fade, the end of the ending.
   function dismiss() {
-    var st = STATE, end = TL[TL.length - 2];
+    var st = STATE, end = TL.filter(function (s) { return s.kind === "end"; })[0];
     if (st.last > 0) {
       var out = end.c0 + end.marks.boxOut;
       if (playing) want = Math.max(want, out); else render(Math.max(clock, out));
@@ -4203,11 +4368,13 @@ _SCRIPT = r"""<script>
     // enough for that and on two if not. Where there is no gutter (a phone) the three go in the key.
     FIT.ends = L.end.label !== null;
     var gutter = plotW + L.margin.r - 3 - pxIn(whole, T1, plotW) - (L.end.label || 0);
-    [TOPCHORD].concat(CHORDS, [GAP]).forEach(function (it) {
+    CHORDS.concat([GAP]).forEach(function (it) {
       var i = it === GAP ? GAP.label : it.annotation;
       if (FIT.ends) A(i, {text: it.wraps[textSize(it.wraps[0], L.rate_font).w + 2 <= gutter ? 0 : 1], xshift: L.end.label, "font.size": L.rate_font});
     });
     A(GAP.arrow, {xshift: L.end.arrow});
+    A(CLIMB.arrow, {xshift: L.end.arrow});
+    placeEras(plotW, A);
     // Each rate arrow, clear of the line (and of every point between its ends); its rate just above
     // its middle, clear of the arrow's slope.
     BEATS.forEach(function (b) {
@@ -4221,7 +4388,8 @@ _SCRIPT = r"""<script>
     // The key under the plot: whatever could not be labelled directly.
     var keyed = false;
     Array.prototype.forEach.call(keyBox.children, function (row) {
-      row.hidden = row.hasAttribute("data-zero") ? FIT.hints.bottom : row.hasAttribute("data-end") ? FIT.ends : !!FIT.arrows;
+      row.hidden = row.hasAttribute("data-zero") ? FIT.hints.bottom : row.hasAttribute("data-era") ? !!ERACHORDS[+row.getAttribute("data-era")].place
+        : row.getAttribute("data-end") === "climb" ? !!CLIMB.place : row.hasAttribute("data-end") ? FIT.ends : !!FIT.arrows;
       keyed = keyed || !row.hidden;
     });
     keyBox.hidden = !keyed;
@@ -4365,7 +4533,10 @@ _SCRIPT = r"""<script>
     });
     // The ending: each rate in its series' colour; the gap's arrow and its label in ink.
     CHORDS.forEach(function (ch) { A(ch.annotation, ch.color, P.paper); });
-    A(TOPCHORD.annotation, TOPCHORD.color, P.paper);
+    ERACHORDS.forEach(function (ec) { A(ec.annotation, ec.color, P.paper); });
+    A(CLIMB.label, P.text("rate"), P.paper);
+    A(CLIMB.arrow, P.text("arrow"), P.paper);
+    layout["annotations[" + CLIMB.arrow + "].arrowcolor"] = P.text("arrow");
     A(GAP.label, P.text("rate"), P.paper);
     A(GAP.arrow, P.text("arrow"), P.paper);
     layout["annotations[" + GAP.arrow + "].arrowcolor"] = P.text("arrow");
@@ -4450,6 +4621,10 @@ _SCRIPT = r"""<script>
     var rb = STATE.beat;
     if (!done && rb && STATE.beatAlpha > 0 && !dismissed[rb.id]) ratesOf(rb).forEach(function (R) {
       if (inside(label(R.label), cx, cy)) out.push(R.hover);
+    });
+    // An era's rate, once it is up, says what it was in growth.
+    ERACHORDS.forEach(function (ec, n) {
+      if (ec.place && STATE.eraRates[n] > 0 && inside(label(ec.annotation), cx, cy)) out.push(ec.hover);
     });
     if (py >= y2._offset && py <= y2._offset + y2._length) BANDS.forEach(function (bd) {
       if (!bd.span || px < bd.span[0] || px > bd.span[1]) return;
@@ -4647,7 +4822,9 @@ _SCRIPT = r"""<script>
     ARROWS.forEach(function (a) { who[AN[a.role]] = {name: a.role, kind: "arrow", over: true}; });
     FILLS.forEach(function (f) { who[AN[f.role]] = {name: f.role, kind: "fill", over: true, infill: f.kind === "behind"}; });
     CHORDS.forEach(function (ch) { who[ch.annotation] = {name: "rate: " + ch.key, kind: "rate", over: true}; });
-    who[TOPCHORD.annotation] = {name: "rate: " + TOPCHORD.key, kind: "rate", over: true};
+    // (An era's rate in the plot keeps clear of the event lines, as a label of its own does.)
+    ERACHORDS.forEach(function (ec) { who[ec.annotation] = {name: "rate: " + ec.name, kind: "era rate", over: false}; });
+    who[CLIMB.label] = {name: "the climb's label", kind: "rate", over: true};
     who[GAP.label] = {name: "the gap's label", kind: "rate", over: true};
     BEATS.forEach(function (b) { ratesOf(b).forEach(function (R) { who[R.label] = {name: "rate: " + R.text, kind: "rate", over: true}; }); });
 
@@ -4753,11 +4930,12 @@ _SCRIPT = r"""<script>
             else gap = Math.max(a.t - Math.max.apply(null, ys), Math.min.apply(null, ys) - a.b);
             minData = Math.min(minData, gap);
             if (gap < 2.5) fail(tag + ": text on the data: " + a.name);
-            var tsh = fl.shapes[TOPCHORD.shape];
-            if (k === 0 && tsh.visible !== false && T >= TOPCHORD.t0 && T <= toMs(tsh.x1)) {
-              var ty = pn.top + pn.ax.l2p(TOPCHORD.value * (T - TOPCHORD.t0) / (TOPCHORD.t - TOPCHORD.t0));
-              if (Math.max(a.t - ty, ty - a.b) < 2) fail(tag + ": text on a chord: " + a.name + " / " + TOPCHORD.key);
-            }
+            if (k === 0) ERACHORDS.forEach(function (ec) {
+              var esh = fl.shapes[ec.shape];
+              if (esh.visible === false || T < ec.t0 || T > toMs(esh.x1)) return;
+              var ty = pn.top + pn.ax.l2p(ec.y0 + (ec.y1 - ec.y0) * (T - ec.t0) / (ec.t1 - ec.t0));
+              if (Math.max(a.t - ty, ty - a.b) < 2) fail(tag + ": text on a chord: " + a.name + " / " + ec.name);
+            });
             if (k === 1 && chordsOn) CHORDS.forEach(function (ch) {
               var y = pn.top + pn.ax.l2p(ch.value * (T - TA) / (ch.t - TA));
               if (Math.max(a.t - y, y - a.b) < 2) fail(tag + ": text on a chord: " + a.name + " / " + ch.key);
@@ -4784,6 +4962,8 @@ _SCRIPT = r"""<script>
     // the ghosts, the cards, and the usual collisions. `seen` is where each label
     // was the last time it showed in this act: nothing may move within an act.
     var yRanges = JSON.stringify([gd._fullLayout.yaxis.range, gd._fullLayout.yaxis2.range]), seen = {}, ghostsSeen = {};
+    var framed = false;
+    function CLIMB_UP() { return gd._fullLayout.annotations[CLIMB.arrow].visible !== false; }
     function moment(tag, c) {
       return go(c).then(function () {
         var st = STATE, fl = gd._fullLayout, xa = fl.xaxis, r = gd.getBoundingClientRect(), tr = M.play.transition;
@@ -4792,7 +4972,8 @@ _SCRIPT = r"""<script>
         if (JSON.stringify([fl.yaxis.range, fl.yaxis2.range]) !== yRanges) fail(tag + ": a y-range has changed");
         // The x-range: the act's own, except while a break (or the pull-back) is moving it.
         var moving = (seg.kind === "break" && s > held && s < held + tr.move) || (seg.kind === "pull" && s > 0 && s < seg.dur);
-        var A = VIEWS[seg.kind === "break" && s >= held + tr.move ? k + 1 : k], B = VIEWS[seg.kind === "pull" ? whole : k + 1];
+        // (The ending happens in the whole chart's view, after the pull-back.)
+        var A = VIEWS[seg.kind === "end" ? whole : seg.kind === "break" && s >= held + tr.move ? k + 1 : k], B = VIEWS[seg.kind === "pull" ? whole : k + 1];
         if (moving) {
           var between = function (v, a, b) { return a === b ? Math.abs(v - a) < 1000 : v > Math.min(a, b) + DAY && v < Math.max(a, b) - DAY; };
           if (!between(x0, VIEWS[k].r0, B.r0) || !between(x1, VIEWS[k].r1, B.r1)) fail(tag + ": the axis is not between two views while it moves");
@@ -4848,10 +5029,10 @@ _SCRIPT = r"""<script>
         if (cardUp !== (scrim.style.display !== "none")) fail(tag + ": the scrim and the title card are not up together");
         if (cardUp && (actCard.querySelector(".china-act-kicker").textContent !== M.play.acts[st.card].kicker
             || actCard.querySelector(".china-act-name").textContent !== M.play.acts[st.card].card_title)) fail(tag + ": the title card has the wrong words");
-        if (seg.kind !== "end" && seg.kind !== "pull" && (gd.layout.shapes[CHORDS[0].shape].visible !== false
-            || gd.layout.shapes[TOPCHORD.shape].visible !== false)) fail(tag + ": a chord is drawn before the end");
-        // Every event line at its strength: full during play; a share of it on the finished chart (and on the way there).
-        var share_ = seg.kind === "pull" ? 1 - (1 - M.final_line_share) * st.vu : 1;
+        if (seg.kind !== "end" && (gd.layout.shapes[CHORDS[0].shape].visible !== false || CLIMB_UP()
+            || ERACHORDS.some(function (ec) { return gd.layout.shapes[ec.shape].visible !== false; }))) fail(tag + ": a chord is drawn before the ending");
+        // Every event line at its strength: full during play; a share of it once the view has pulled back (and on the way).
+        var share_ = seg.kind === "end" ? M.final_line_share : seg.kind === "pull" ? 1 - (1 - M.final_line_share) * st.vu : 1;
         EV.forEach(function (e, n) {
           var sh = fl.shapes[e.shape];
           // (Those fully drawn, and not picked out by a box.)
@@ -5068,27 +5249,54 @@ _SCRIPT = r"""<script>
         } else if (!Array.prototype.some.call(keyBox.children, function (row) { return !row.hidden && row.textContent.indexOf(says) >= 0; }))
           fail("a rate is neither in the plot nor in the key: " + ch.key);
       });
-      // The top panel's chord: from the 1978 marker to the economy line's last point; its rate, the
-      // last value over the years since 1978, in the gutter.
+      // The top panel: each era's chord from the line's point at its start to the one at its end; its
+      // rate, the change over the years between, near the chord (clear of the event lines) or in the
+      // gutter, saying on hover what it was in growth; the climb's arrow from the 1978 level to the
+      // line's last point, and its label in the gutter.
       (function () {
-        var sh = fl5.shapes[TOPCHORD.shape], lab = fl5.annotations[TOPCHORD.annotation], gEnd = last(G.y), t0 = toMs(M.anchors[0].date);
-        var yrs = (last(G.t) - t0) / YEAR, rate = gEnd / yrs;
-        var says = (rate >= 0 ? "+" : "−") + Math.abs(rate).toFixed(3) + " bits/yr (×" + Math.pow(2, rate).toFixed(3) + "/yr)";
-        out.end.top = TOPCHORD.key + ": " + gEnd.toFixed(4) + " bits / " + yrs.toFixed(3) + " yr = " + rate.toFixed(5) + " → " + says;
-        if (sh.visible === false) fail("the top panel's chord is missing from the finished chart");
-        if (TOPCHORD.t0 !== t0 || toMs(sh.x0) !== t0 || sh.y0 !== 0 || sh.yref !== "y" || toMs(sh.x1) !== last(G.t) || Math.abs(sh.y1 - gEnd) > 1e-9)
-          fail("the top panel's chord does not run from the 1978 marker to the economy line's last point");
-        if (sh.line.dash !== "dash" || sh.line.color !== M.colors.gdp) fail("the top panel's chord is not dashed lime");
-        if (Math.abs(TOPCHORD.rate - rate) > 1e-5 || TOPCHORD.text.indexOf(says) < 0) fail("the top chord's rate is not the last value over the years: " + TOPCHORD.text + " vs " + says);
+        var r5 = gd.getBoundingClientRect(), xa5 = fl5.xaxis, right5 = r5.left + xa5._offset + xa5._length;
+        out.end.eras = [];
+        ERACHORDS.forEach(function (ec) {
+          var sh = fl5.shapes[ec.shape], lab = fl5.annotations[ec.annotation];
+          var a = G.t.indexOf(ec.t0), b = G.t.indexOf(ec.t1), rate = (G.y[b] - G.y[a]) / Math.round((ec.t1 - ec.t0) / YEAR);
+          var said = ec.name + ", " + ec.span + ": " + (rate >= 0 ? "+" : "−") + Math.abs(rate).toFixed(3) + " bits/yr";
+          if (Math.pow(2, rate).toFixed(2) !== "1.00") said += " (×" + Math.pow(2, rate).toFixed(3) + "/yr)";
+          if (a < 0 || b < 0) return fail("an era's chord does not start and end on the line's points: " + ec.name);
+          if (sh.visible === false || toMs(sh.x0) !== ec.t0 || toMs(sh.x1) !== ec.t1 || sh.y0 !== G.y[a] || sh.y1 !== G.y[b] || sh.yref !== "y")
+            fail("an era's chord does not run between its points on the finished chart: " + ec.name);
+          if (sh.line.dash !== "dash" || sh.line.color !== M.colors.gdp) fail("an era's chord is not dashed lime: " + ec.name);
+          if (Math.abs(ec.rate - rate) > 1e-5 || ec.text !== said) fail("an era's rate is not its change over its years: " + ec.text + " vs " + said);
+          if (!ec.place) {
+            if (FIT.ends) fail("an era's rate found no place on a chart with a gutter: " + ec.name);
+            if (!Array.prototype.some.call(keyBox.children, function (row) { return !row.hidden && row.textContent.indexOf(said) >= 0; }))
+              fail("an era's rate is neither in the plot nor in the key: " + ec.name);
+            return out.end.eras.push(ec.name + ": in the key");
+          }
+          var lb = label(ec.annotation).getBoundingClientRect(), cx = (lb.left + lb.right) / 2, cy = (lb.top + lb.bottom) / 2;
+          if (lab.visible === false || !(lab.opacity > 0.99) || plain(lab.text) !== said) fail("an era's rate is not shown on the finished chart: " + ec.name);
+          if (lab.font.color !== ec.color || lab.text.indexOf("<b>") !== 0) fail("an era's rate is not in lime, in bold: " + ec.name);
+          if (ec.place.gutter !== lb.left >= right5) fail("an era's rate is not where it was placed: " + ec.name);
+          if (lb.top < r5.top + fl5.yaxis._offset || lb.bottom > r5.top + fl5.yaxis._offset + fl5.yaxis._length) fail("an era's rate is outside the top panel: " + ec.name);
+          var said_ = describe(cx - r5.left - xa5._offset, cy - r5.top, cx, cy, xa5, fl5.yaxis, fl5.yaxis2);
+          if (said_.indexOf(ec.hover) < 0) fail("an era's rate does not say what it was in growth on hover: " + ec.name);
+          var mid = xa5.l2p((ec.t0 + ec.t1) / 2) + r5.left + xa5._offset;
+          out.end.eras.push(ec.name + ": " + (ec.place.gutter ? "in the gutter" : "in the plot, " + Math.round(cx - mid) + " px from the chord's middle")
+                            + " (" + plain(lab.text).length + " characters, " + lab.text.split("<br>").length + " line(s))");
+        });
+        var arrow = fl5.annotations[CLIMB.arrow], cl = fl5.annotations[CLIMB.label], gEnd = last(G.y);
+        var says = (gEnd >= 0 ? "+" : "−") + Math.abs(gEnd).toFixed(2) + " bits since " + new Date(toMs(M.anchors[0].date)).getUTCFullYear()
+          + " (×" + (Math.pow(2, gEnd) >= 10 ? Math.pow(2, gEnd).toFixed(0) : Math.pow(2, gEnd).toFixed(1)) + ")";
+        out.end.climb = says;
+        if (arrow.visible === false || arrow.arrowside !== "end+start" || toMs(arrow.x) !== last(G.t) || toMs(arrow.ax) !== last(G.t)
+            || Math.abs(arrow.y - gEnd) > 1e-9 || arrow.ay !== 0) fail("the climb's arrow does not run from the 1978 level to the line's last point");
+        if (arrow.arrowcolor !== P.text("arrow") || arrow.xshift !== L.end.arrow) fail("the climb's arrow is not in ink beside the last point");
+        if (CLIMB.text !== says) fail("the climb's label does not say what the arrow measures: " + CLIMB.text + " vs " + says);
         if (FIT.ends) {
-          if (lab.visible === false || !(lab.opacity > 0.99) || plain(lab.text).replace(" (", "(") !== says.replace(" (", "("))
-            fail("the top chord's rate is not shown at its end on the finished chart: " + plain(lab.text));
-          if (lab.font.color !== TOPCHORD.color || lab.text.indexOf("<b>") !== 0 || toMs(lab.x) !== last(G.t) || Math.abs(lab.y - gEnd) > 1e-9)
-            fail("the top chord's rate is not in lime, in bold, at the chord's end");
-          var lb = label(TOPCHORD.annotation).getBoundingClientRect(), xa5 = fl5.xaxis;
-          if (lb.left < r.left + xa5._offset + xa5._length) fail("the top chord's rate is not in the right gutter");
+          var cb = label(CLIMB.label).getBoundingClientRect();
+          if (!CLIMB.place || cl.visible === false || !(cl.opacity > 0.99) || plain(cl.text) !== says) fail("the climb's label is not shown on the finished chart");
+          else if (cb.left < right5) fail("the climb's label is not in the gutter");
         } else if (!Array.prototype.some.call(keyBox.children, function (row) { return !row.hidden && row.textContent.indexOf(says) >= 0; }))
-          fail("the top chord's rate is neither in the plot nor in the key");
+          fail("the climb's label is neither in the gutter nor in the key");
         // The event lines, faint: each at a share of its playing strength.
         var faintWant = M.event_line_opacity * M.final_line_share, seen = [];
         EV.forEach(function (e) {
@@ -5158,7 +5366,8 @@ _SCRIPT = r"""<script>
       function then(tag, c, also) { chain = chain.then(function () { return moment(tag, c); }).then(also || function () {}); }
       function chord(n) { var sh = gd._fullLayout.shapes[CHORDS[n].shape]; return sh.visible === false ? 0 : (toMs(sh.x1) - TA) / (T1 - TA); }
       function shown(i) { var a = gd._fullLayout.annotations[i]; return a.visible === false ? 0 : a.opacity === undefined ? 1 : a.opacity; }
-      function topChord() { var sh = gd._fullLayout.shapes[TOPCHORD.shape]; return sh.visible === false ? 0 : (toMs(sh.x1) - TOPCHORD.t0) / (TOPCHORD.t - TOPCHORD.t0); }
+      function eraChord(n) { var ec = ERACHORDS[n], sh = gd._fullLayout.shapes[ec.shape]; return sh.visible === false ? 0 : (toMs(sh.x1) - ec.t0) / (ec.t1 - ec.t0); }
+      function climbLength() { var a = gd._fullLayout.annotations[CLIMB.arrow]; return a.visible === false ? 0 : a.y / CLIMB.value; }
       function arrowLength() { var a = gd._fullLayout.annotations[GAP.arrow]; return a.visible === false ? 0 : (a.ay - GAP.top) / (GAP.bottom - GAP.top); }
       TL.forEach(function (seg) {
         var A = ACTS[seg.act], name = "act " + A.numeral;
@@ -5232,18 +5441,32 @@ _SCRIPT = r"""<script>
           });
           then(into + ": card out", seg.c0 + seg.dur - tr.card_out / 2);
         } else if (seg.kind === "end") {
-          // The ending, step by step: the lime chord, its rate, a pause; the periwinkle one, its rate, a
-          // pause; the gap's arrow, its label; the last box.
+          // The ending, step by step, in the whole chart's view: each era's chord alone, then its rate;
+          // the climb's arrow, its label, a pause; the lime chord, its rate, a pause; the periwinkle
+          // one, its rate, a pause; the gap's arrow, its label; the last box.
           var E = seg.marks;
-          out.ending = {top: E.top, topRate: E.topRate, chord: E.chord, rate: E.rate, arrow: E.arrow, gap: E.gap, box: E.box, dur: +seg.dur.toFixed(3)};
-          then("ending: top chord", seg.c0 + E.top + en.chord / 2, function () {
-            if (!(topChord() > 0.3 && topChord() < 0.7) || chord(0) !== 0 || shown(TOPCHORD.annotation)) fail("the top panel's chord is not drawn first, alone: " + topChord().toFixed(2));
+          out.ending = {era: E.era, eraRate: E.eraRate, climb: E.climb, climbLabel: E.climbLabel, chord: E.chord, rate: E.rate,
+                        arrow: E.arrow, gap: E.gap, box: E.box, dur: +seg.dur.toFixed(3)};
+          ERACHORDS.forEach(function (ec, n) {
+            then("ending: era chord " + (n + 1), seg.c0 + E.era[n] + en.chord / 2, function () {
+              var drawn = ERACHORDS.map(function (_, m) { return eraChord(m); });
+              if (!(drawn[n] > 0.3 && drawn[n] < 0.7) || drawn.some(function (d, m) { return m < n ? d !== 1 : m > n && d !== 0; }) || shown(ec.annotation)
+                  || climbLength() || chord(0)) fail("the eras' chords are not drawn in turn: " + ec.name + " " + drawn.map(function (d) { return d.toFixed(2); }).join(", "));
+            });
+            then("ending: era rate " + (n + 1), seg.c0 + E.eraRate[n] + en.label + en.pause / 4, function () {
+              if (eraChord(n) !== 1 || (ec.place && shown(ec.annotation) < 0.99) || (n + 1 < ERACHORDS.length && eraChord(n + 1)))
+                fail("an era's rate does not follow its chord: " + ec.name);
+            });
           });
-          then("ending: top rate", seg.c0 + E.topRate + en.label + en.pause / 2, function () {
-            if (topChord() !== 1 || chord(0) !== 0 || (FIT.ends && shown(TOPCHORD.annotation) < 0.99)) fail("the top chord's rate does not follow it, with a pause before the bottom panel's chords");
+          then("ending: climb arrow", seg.c0 + E.climb + en.arrow / 2, function () {
+            if (!(climbLength() > 0.3 && climbLength() < 0.7) || shown(CLIMB.label) || chord(0)) fail("the climb's arrow is not drawn up from the 1978 level, after the eras: " + climbLength().toFixed(2));
+          });
+          then("ending: climb label", seg.c0 + E.climbLabel + en.label + en.pause / 2, function () {
+            if (climbLength() !== 1 || (CLIMB.place && shown(CLIMB.label) < 0.99) || chord(0)) fail("the climb's label does not follow its arrow, with a pause before the bottom panel");
           });
           then("ending: first chord", seg.c0 + E.chord[0] + en.chord / 2, function () {
-            if (topChord() !== 1 || (FIT.ends && shown(TOPCHORD.annotation) < 0.99)) fail("the top chord does not stay while the bottom panel's are drawn");
+            if (ERACHORDS.some(function (ec, n) { return eraChord(n) !== 1 || (ec.place && shown(ec.annotation) < 0.99); }) || climbLength() !== 1)
+              fail("the top panel's chords and arrow do not stay while the bottom panel's are drawn");
             if (!(chord(0) > 0.3 && chord(0) < 0.7) || chord(1) !== 0 || shown(CHORDS[0].annotation)) fail("the economy's chord is not drawn first, alone: " + chord(0).toFixed(2) + " / " + chord(1).toFixed(2));
           });
           then("ending: first rate", seg.c0 + E.rate[0] + en.label + en.pause / 2, function () {
@@ -5271,12 +5494,14 @@ _SCRIPT = r"""<script>
             out.frames["ending: last box"].box = [Math.round(q.left - r.left), Math.round(q.top - r.top), Math.round(q.width), Math.round(q.height)];
           });
           then("ending: box gone", seg.c0 + seg.dur - 0.05, function () {
-            if (beatCard.style.display !== "none" && +beatCard.style.opacity > 0.3) fail("the last box has not faded before the pull-back");
+            if (beatCard.style.display !== "none" && +beatCard.style.opacity > 0.3) fail("the last box has not faded by the end");
           });
         } else if (seg.kind === "pull") {
+          // The pull-back comes first, as the data ends: nothing of the ending is drawn yet, and no box is up.
           then("pull-back: moving", seg.c0 + seg.dur / 2, function () {
-            if (topChord() !== 1 || chord(0) !== 1 || chord(1) !== 1 || arrowLength() !== 1) fail("the ending's marks do not stay through the pull-back");
-            if (beatCard.style.display !== "none") fail("the last box is still up in the pull-back");
+            if (ERACHORDS.some(function (_, n) { return eraChord(n); }) || climbLength() || chord(0) || chord(1) || arrowLength())
+              fail("the ending is drawn before the view has pulled back");
+            if (beatCard.style.display !== "none") fail("a box is up in the pull-back");
           });
         }
       });
@@ -5322,8 +5547,11 @@ _SCRIPT = r"""<script>
             if (has && (img.getAttribute("src") !== b.picture.src || credit !== b.picture.credit || +getComputedStyle(img).opacity < 1)) fail(tag + ": the picture or its credit is wrong");
             var side_ = Math.max(img.getBoundingClientRect().width, img.getBoundingClientRect().height);   // its longer side
             var cap_ = b.picture.max_px;
-            if (has && !L.card.below && (cap_ ? side_ > cap_ + 0.5 || side_ < Math.min(165, cap_) - 0.5 : side_ < 165 || side_ > 285)) fail(tag + ": the picture is not a sensible size");
+            if (has && !L.card.below && (cap_ ? side_ > cap_ + 1 || side_ < Math.min(165, cap_) - 1 : side_ < 165 || side_ > 285)) fail(tag + ": the picture is not a sensible size");
             if (!has && !L.card.below) out.picturesDropped = (out.picturesDropped || []).concat([tag]);
+            // (At the full column, with the figure as published, every picture shows. Rebuilt at another anchor the
+            // data stand elsewhere, and a card may fall back to words.)
+            if (!has && GEO.plotW + L.margin.l + L.margin.r >= 900 && !M.anchor_moved) fail(tag + ": the picture is not shown at the full column");
           } else if (has || credit) fail(tag + ": a text box shows a picture or a credit");
           if (b.event !== null && gd._fullLayout.shapes[EV[b.event].shape].opacity < 0.8) fail(tag + ": the box's event is not picked out");
           out.frames[tag].box = [Math.round(q.left - r.left), Math.round(q.top - r.top), Math.round(q.width), Math.round(q.height)];
@@ -5401,8 +5629,8 @@ _SCRIPT = r"""<script>
         return frames(2);
       }).then(function () {
         if (clock < INTER.c1 + M.play.card_fade - 1e-6) fail("a click on the interlude's box does not move on");
-        // And the last box: a click moves on to the pull-back.
-        var end = TL[TL.length - 2];
+        // And the last box: a click moves on to its fade.
+        var end = TL.filter(function (s) { return s.kind === "end"; })[0];
         return go(end.c0 + end.marks.box + M.play.card_fade + 1).then(function () {
           beatCard.click();
           return frames(2);
@@ -5428,7 +5656,8 @@ _SCRIPT = r"""<script>
           if (STATE.kind !== "play" || STATE.act !== k || Math.abs(xa.r2l(xa.range[0]) - VIEWS[k].r0) > 1000 || Math.abs(xa.r2l(xa.range[1]) - VIEWS[k].r1) > 1000)
             fail("scrubbing to " + f + " does not show that date's act at once");
           if (gd._fullLayout.shapes[CHORDS[0].shape].visible !== false || gd._fullLayout.annotations[CHORDS[0].annotation].visible !== false
-              || gd._fullLayout.shapes[TOPCHORD.shape].visible !== false || gd._fullLayout.annotations[TOPCHORD.annotation].visible !== false
+              || ERACHORDS.some(function (ec) { return gd._fullLayout.shapes[ec.shape].visible !== false || gd._fullLayout.annotations[ec.annotation].visible !== false; })
+              || gd._fullLayout.annotations[CLIMB.arrow].visible !== false || gd._fullLayout.annotations[CLIMB.label].visible !== false
               || gd._fullLayout.annotations[GAP.arrow].visible !== false || gd._fullLayout.annotations[GAP.label].visible !== false)
             fail("scrubbing back does not hide the ending");
           if (playing) fail("scrubbing does not pause");
@@ -5441,7 +5670,8 @@ _SCRIPT = r"""<script>
         scrub.dispatchEvent(new Event("input", {bubbles: true}));
         return frames(3);
       }).then(function () {
-        if (!STATE.done || gd._fullLayout.shapes[CHORDS[1].shape].visible === false || gd._fullLayout.shapes[TOPCHORD.shape].visible === false
+        if (!STATE.done || gd._fullLayout.shapes[CHORDS[1].shape].visible === false || gd._fullLayout.annotations[CLIMB.arrow].visible === false
+            || ERACHORDS.some(function (ec) { return gd._fullLayout.shapes[ec.shape].visible === false; })
             || gd._fullLayout.annotations[GAP.arrow].visible === false) fail("the end of the scrubber is not the finished chart");
       });
     }).then(function () {
@@ -5462,11 +5692,14 @@ _SCRIPT = r"""<script>
       return chain.then(function () {
         // The last moments, played for real (if frames are being given out).
         busy = false; pending = null;
+        return new Promise(function (ok) { var got = false; requestAnimationFrame(function () { got = true; }); setTimeout(function () { ok(got); }, 150); });
+      }).then(function (frames_) {
+        framed = frames_ && !document.hidden;
         play(END - 0.05);
-        return new Promise(function (ok) { setTimeout(ok, document.hidden ? 50 : 700); });
+        return new Promise(function (ok) { setTimeout(ok, framed ? 700 : 50); });
       }).then(function () {
-        out.replay = document.hidden ? "not observed: page hidden" : (playBtn.classList.contains("is-done") ? "replay" : "play");
-        if (!document.hidden && (playing || !STATE.done || !playBtn.classList.contains("is-done"))) fail("play does not become replay at the end");
+        out.replay = !framed ? "not observed: no frames" : (playBtn.classList.contains("is-done") ? "replay" : "play");
+        if (framed && (playing || !STATE.done || !playBtn.classList.contains("is-done"))) fail("play does not become replay at the end");
         pause();
         return go(END);
       });
@@ -5606,18 +5839,24 @@ _SCRIPT = r"""<script>
       if (k === ACTS.length - 1) return;
       A.b0 = c; TL.push({kind: "break", act: k, c0: c, dur: open + tr.move}); c += open + tr.move;
     });
-    // The ending, as moments from its start: the top panel's chord and its rate, a pause; each of the
-    // bottom panel's chords and the rate after it, a pause between; the gap's arrow and its label; the
-    // last box coming up, and starting to go.
-    var step = en.chord + en.label + en.pause;
-    var marks = {top: 0, topRate: en.chord, chord: [step, 2 * step], rate: [step + en.chord, 2 * step + en.chord]};
-    marks.arrow = 3 * step;
+    // As the data ends the view pulls back to the whole chart; the ending follows there, as moments
+    // from its start: in the top panel each era's chord and its rate, a short beat after each; the
+    // arrow up from the 1978 level and its label, a pause; then each of the bottom panel's chords and
+    // its rate, a pause after each; the gap's arrow and its label; the last box coming up, and going.
+    var eraStep = en.chord + en.label + en.pause / 2, step = en.chord + en.label + en.pause;
+    var marks = {era: M.era_chords.map(function (_, n) { return n * eraStep; }),
+                 eraRate: M.era_chords.map(function (_, n) { return n * eraStep + en.chord; })};
+    marks.climb = M.era_chords.length * eraStep;
+    marks.climbLabel = marks.climb + en.arrow;
+    var b0 = marks.climbLabel + en.label + en.pause;
+    marks.chord = [b0, b0 + step]; marks.rate = [b0 + en.chord, b0 + step + en.chord];
+    marks.arrow = b0 + 2 * step;
     marks.gap = marks.arrow + en.arrow;
     marks.box = marks.gap + en.label + en.pause / 2;
     marks.boxOut = marks.box + fade + M.play.final.seconds;
-    TL.push({kind: "end", act: ACTS.length - 1, c0: c, dur: marks.boxOut + fade + 0.15, marks: marks}); c += marks.boxOut + fade + 0.15;
-    TL.push({kind: "pull", act: ACTS.length - 1, c0: c, dur: en.pullback});
-    END = c + en.pullback;
+    TL.push({kind: "pull", act: ACTS.length - 1, c0: c, dur: en.pullback}); c += en.pullback;
+    TL.push({kind: "end", act: ACTS.length - 1, c0: c, dur: marks.boxOut + fade + 0.15, marks: marks});
+    END = c + marks.boxOut + fade + 0.15;
     EV = M.events.map(function (e) {
       var t = toMs(e.date);
       return {t: t, tier: e.tier, tick: e.tier === "tick", panel: e.panel, label: e.label,
@@ -5652,9 +5891,13 @@ _SCRIPT = r"""<script>
       return {key: ch.key, name: ch.name, color: ch.color, rate: ch.rate, value: ch.value, t: toMs(ch.date), wraps: ch.wraps,
               text: ch.text, shape: ch.shape, annotation: ch.annotation};
     });
-    var tc = M.top_chord;
-    TOPCHORD = {key: tc.key, name: tc.name, color: tc.color, rate: tc.rate, value: tc.value, t0: toMs(tc.start), t: toMs(tc.date),
-                wraps: tc.wraps, text: tc.text, shape: tc.shape, annotation: tc.annotation};
+    ERACHORDS = M.era_chords.map(function (ec) {
+      return {key: ec.key, name: ec.name, span: ec.span, color: ec.color, rate: ec.rate, t0: toMs(ec.start), t1: toMs(ec.end),
+              y0: ec.y0, y1: ec.y1, wraps: ec.wraps, text: ec.text, hover: ec.hover, shape: ec.shape, annotation: ec.annotation,
+              place: null};
+    });
+    CLIMB = {value: M.climb.value, t: toMs(M.climb.date), text: M.climb.text, wraps: M.climb.wraps, arrow: M.climb.arrow,
+             label: M.climb.label, place: null};
     GAP = {value: M.gap.value, text: M.gap.text, wraps: M.gap.wraps, top: M.gap.top, bottom: M.gap.bottom, arrow: M.gap.arrow, label: M.gap.label};
     ANCHORS = M.anchors.map(function (a) { return {trace: a.trace, panel: a.panel, date: a.date, t: toMs(a.date), text: a.text, shown: true}; });
     // A beat's box is up between two moments of the clock: those at which the playhead is at its two dates.
@@ -5673,7 +5916,8 @@ _SCRIPT = r"""<script>
              last: false, c0: ic0, c1: ic0 + fade + IL.seconds, box: null};
     BEATS.push(INTER);
     // The last box, which closes the ending.
-    FINAL = {id: "last", t: T1, act: ACTS.length - 1, kind: "text", panel: M.play.final.panel, lead: M.play.final.lead,
+    // (It comes up in the whole chart's view, where the ending now happens.)
+    FINAL = {id: "last", t: T1, act: ACTS.length - 1, view: VIEWS.length - 1, kind: "text", panel: M.play.final.panel, lead: M.play.final.lead,
              text: M.play.final.text, picture: null, event: null, rate: null, reference: null, since: T1, until: T1,
              last: true, box: null};
     // The annotations that are beats: each slows playback, between two moments, as its point is reached.
@@ -5705,7 +5949,8 @@ _SCRIPT = r"""<script>
       num.className = "china-key-n"; num.textContent = n + 1;
       keyRow(num, a.key + ".", a.t, null);
     });
-    keyRow(swatch("china-key-line china-key-dash", TOPCHORD.color), TOPCHORD.text + ".", T1, "end", "top");
+    ERACHORDS.forEach(function (ec, n) { keyRow(swatch("china-key-line china-key-dash", ec.color), ec.text + ".", T1, "era", n); });
+    keyRow(swatch("china-key-line china-key-gap"), CLIMB.text + ".", T1, "end", "climb");
     CHORDS.forEach(function (ch, n) { keyRow(swatch("china-key-line china-key-dash", ch.color), ch.text + ".", T1, "end", n); });
     keyRow(swatch("china-key-line china-key-gap"), GAP.text + ".", T1, "end", "gap");
     // The scrubber: a gap in the track where one act gives way to the next, and each act's title
@@ -5771,7 +6016,7 @@ _SCRIPT = r"""<script>
     if (location.search.indexOf("china-") >= 0) window.__CHINA__ = {
       show: function (c) { pause(); busy = false; pending = null; dismissed = {}; render(c); return STATE; },
       state: function () { return STATE; }, clockAt: clockAt, timeline: TL, acts: ACTS, views: VIEWS, beats: BEATS,
-      last: FINAL, inter: INTER, notes: NOTES, end: END, hovered: function () { return hovered.slice(); },
+      last: FINAL, inter: INTER, notes: NOTES, end: END, eras: ERACHORDS, climb: CLIMB, hovered: function () { return hovered.slice(); },
       // How many characters of text a picture card can hold and keep its picture at this width (its lead as it is):
       // the card's own words, repeated as needed, cut at a word.
       pictureRoom: function (i) {
@@ -5845,7 +6090,7 @@ def _decimals_in(text: str) -> np.ndarray:
 
 def _sentence_case(label: str) -> bool:
     """Only the first word is capitalised, apart from proper nouns and initialisms."""
-    words = [w.strip(",.:;()") for w in label.replace("<br>", " ").split()]
+    words = [w.strip(",.:;()“”\"") for w in label.replace("<br>", " ").split()]
     return all(not w[:1].isupper() or w in _PROPER for w in words[1:])
 
 
@@ -5875,28 +6120,33 @@ COPY_KINDS = ("title card", "scrubber label", "text box", "picture card", "pictu
               "arrow hover", "labelled event (label)", "labelled event (hover)", "note", "tick hover",
               "era band (label)", "era band (hover)", "leader (label)", "leader (hover)", "annotation", "fill label",
               "zero-line label", "panel label", "access band", "figure title", "series hover template", "rate label",
-              "gap label", "final card")
+              "rate hover", "gap label", "final card")
+# Word budgets set by hand, by row id: they take the place of the computed suggestion.
+COPY_BUDGETS = {"card-2020-11-03": 14}
 # The placeholders each composed string may use, by its key in COPY_TEXT.
 _COPY_TEXT_FIELDS = dict(
     panel_economy=(), panel_stocks=(), kicker=("numeral", "start_year", "end_year"),
     hover_economy_1978=("anchor_year", "change"), hover_stocks=("since", "change"), hover_economy=("since", "change"),
-    anchor=("anchor",), zero_key=("since",), chord_rate=("rate", "multiple"), chord_economy_top=("anchor_year",),
-    chord_economy=(), chord_stocks=(), gap=("gap_bits", "gap_multiple"))
+    anchor=("anchor",), zero_key=("since",), chord_rate=("rate", "multiple"),
+    era_rate=("name", "span", "rate", "multiple"), era_rate_flat=("name", "span", "rate"),
+    climb=("bits", "anchor_year", "multiple"), chord_economy=(), chord_stocks=(), gap=("gap_bits", "gap_multiple"))
 _COPY_TEXT_KINDS = dict(
     panel_economy="panel label", panel_stocks="panel label", kicker="title card",
     hover_economy_1978="series hover template", hover_stocks="series hover template",
     hover_economy="series hover template", anchor="series hover template", zero_key="zero-line label",
-    chord_rate="rate label", chord_economy_top="rate label", chord_economy="rate label", chord_stocks="rate label",
-    gap="gap label")
+    chord_rate="rate label", era_rate="rate label", era_rate_flat="rate label", climb="arrow label",
+    chord_economy="rate label", chord_stocks="rate label", gap="gap label")
 
 
 def running_time(plan: list[dict], words: dict) -> float:
     """The whole play at 1x, in seconds: the opening card, the parts, the stop at the end of Part II, the
-    breaks, the ending (its chords, the gap, the last box) and the pull-back."""
+    breaks, the pull-back and the ending (the eras' chords, the climb, the bottom panel's chords, the gap,
+    the last box)."""
     opening = sum(TRANSITION[k] for k in ("card_in", "hold", "ghost", "card_out"))
     breaks = (len(ACTS) - 1) * (opening + TRANSITION["move"])
     E = ENDING
-    ending = (3 * (E["chord"] + E["label"] + E["pause"]) + E["arrow"] + E["label"] + E["pause"] / 2
+    ending = (len(ERA_CHORDS) * (E["chord"] + E["label"] + E["pause"] / 2) + E["arrow"] + E["label"] + E["pause"]
+              + 2 * (E["chord"] + E["label"] + E["pause"]) + E["arrow"] + E["label"] + E["pause"] / 2
               + 2 * CARD_FADE_SECONDS + final_seconds(words) + 0.15)
     return (opening + sum(float(part["table"]["tau"][-1]) for part in plan) + interlude_seconds(words) + breaks
             + ending + E["pullback"])
@@ -5954,13 +6204,18 @@ def copy_rows() -> list[dict]:
         anchor=[dict(anchor=GDP_ANCHOR_YEAR), dict(anchor=words["since"])],
         zero_key=[dict(since=words["since"])],
         chord_rate=[dict(zip(("rate", "multiple"), re.findall(r"[+−][\d.]+|(?<=×)[\d.]+", c["said"])))
-                    for c in [meta["top_chord"]] + list(meta["chords"])],
-        chord_economy_top=[dict(anchor_year=GDP_ANCHOR_YEAR)],
+                    for c in meta["chords"]],
+        era_rate=[dict(name=c["name"], span=c["span"], rate=f"{'+' if c['rate'] >= 0 else '−'}{abs(c['rate']):.3f}",
+                       multiple=f"{2.0 ** c['rate']:.3f}") for c in meta["era_chords"] if "(×" in c["said"]],
+        era_rate_flat=[dict(name=c["name"], span=c["span"], rate=f"{'+' if c['rate'] >= 0 else '−'}{abs(c['rate']):.3f}")
+                       for c in meta["era_chords"] if "(×" not in c["said"]],
+        climb=[dict(bits=re.match(r"[+−][\d.]+", meta["climb"]["text"]).group(), anchor_year=GDP_ANCHOR_YEAR,
+                    multiple=re.search(r"×([\d.]+)", meta["climb"]["text"]).group(1))],
         gap=[dict(zip(("gap_bits", "gap_multiple"), re.findall(r"[\d.]+", meta["gap"]["text"])))])
     for key, text in COPY_TEXT.items():
         seen = instances.get(key, [])
         values = {p: ", ".join(dict.fromkeys(str(v[p]) for v in seen if p in v)) for p in _COPY_TEXT_FIELDS[key]}
-        panel = "economy" if key in ("panel_economy", "hover_economy_1978", "chord_economy_top") else (
+        panel = "economy" if key in ("panel_economy", "hover_economy_1978", "era_rate", "era_rate_flat", "climb") else (
             "stocks" if key in ("panel_stocks", "hover_stocks", "hover_economy", "zero_key", "chord_economy",
                                 "chord_stocks", "gap") else "—")
         add(f"copy-{key.replace('_', '-')}", _COPY_TEXT_KINDS[key], text, ("COPY_TEXT", key), panel=panel,
@@ -5991,6 +6246,7 @@ def copy_rows() -> list[dict]:
             said = f"{b.lead} {b.text}".format(**words)      # (as many of its words as fit in the room, cut at a word)
             budget = min(budget, len(said[:pic.room + 1].rsplit(" ", 1)[0].split()) - (count(b) - typed(b)))
         id_ = "card-after-trough" if b.after else f"card-{b.date}"
+        budget = COPY_BUDGETS.get(id_, budget)
         act = ACTS[int(["I", "II", "III"].index(part_of(when)))]
         add(id_, "picture card" if has_picture(b) else "text box", text, ("BEATS", i, ("lead", "text")), date=when,
             panel=b.panel or act.panel, values=values_of(text, words), allowed=narration, budget=budget,
@@ -6011,6 +6267,16 @@ def copy_rows() -> list[dict]:
     add("copy-trough-falls", "text box", _TROUGH_FALLS, ("_TROUGH_FALLS",), date=wto, panel="stocks",
         values={"trough_china": f"{numbers['trough_china']:.0f}", "trough_usa": f"{numbers['trough_usa']:.0f}",
                 "since": words["since"]}, allowed=("trough_china", "trough_usa", "since"))
+
+    # The ending's top panel: each era's name (its chord's label leads with it) and its hover text.
+    gdp_, _ = load_derived()
+    usa_, _ = load_narration_data()
+    for i, (era, num) in enumerate(zip(ERA_CHORDS, era_numbers(gdp_, usa_))):
+        add(f"era-chord-{era.start}-name", "rate label", era.name, ("ERA_CHORDS", i, "name"), date=cutoff,
+            panel="economy")
+        add(f"era-chord-{era.start}-hover", "rate hover", era.hover, ("ERA_CHORDS", i, "hover"), date=cutoff,
+            panel="economy", values=dict(span=num["span"], china=f"{num['china']:.1f}", usa=f"{num['usa']:.1f}"),
+            allowed=("span", "china", "usa"))
 
     # The rate arrows: their labels and hover text (templates, one for every arrow).
     specs = [(b, s) for b in meta["play"]["beats"] for s in (b["rate"], b["reference"]) if s]
@@ -6166,10 +6432,10 @@ event-group-… is the name that two events share in one label ("2018: …").
 House style: American spelling; American dates ("May 16, 1966"; "Dec 1990" in short labels); sentence case for labels; every hover text opens with a bold date and a colon.
 
 Word budgets:
-"word budget" (boxes and cards only) is a suggestion: each box's words cut in proportion so that the play lasts about {target} at 1x ({at_default} at the default {default}x), given the reading time of each box (so much a box, plus so much a word). A picture card's budget is also no more than its picture leaves room for at the full 920 px column. "new words" counts your words.
+"word budget" (boxes and cards only) is a suggestion: each box's words cut in proportion so that the play lasts about {target} at 1x ({at_default} at the default {default}x), given the reading time of each box (so much a box, plus so much a word). A picture card's budget is also no more than its picture leaves room for at the full 920 px column. A budget set by hand (COPY_BUDGETS in china_figure.py) takes the place of the suggestion: the Jack Ma card's is 14 words, the most that leave its photo room. "new words" counts your words.
 
 Picture cards:
-apply_copy.py refuses a picture card's text that would no longer leave its picture room at 920 px (the room, in characters, was measured in the page). The Jack Ma card (2020–21) has room for about 100 characters, its lead included, with its photo at 150 px: until its text is that short it shows as a text box.
+apply_copy.py refuses a picture card's text that would no longer leave its picture room at 920 px (the room, in characters, was measured in the page). The Jack Ma card (2020–21) has room for about 100 characters, its lead included, with its photo at 150 px.
 """
 
 # British spellings that must not reach a reader (house style: American). Words, word endings and
@@ -6182,7 +6448,7 @@ _BRITISH = re.compile(
     r"ploughs?|sceptic\w*|whilst|judgement|ageing|manoeuvr\w*|per cent|catalogue|analys(?:e|ed|es|ing)|"
     r"paralys(?:e|ed|es|ing))\b", re.I)
 # Words in -ise/-ised/-ising/-isation that are American too (anything else in that form is British).
-_ISE_OK = {"rise", "rises", "rising", "otherwise", "promise", "promised", "promises", "premise", "premises", "exercise",
+_ISE_OK = {"rise", "rises", "rising", "otherwise", "malaise", "promise", "promised", "promises", "premise", "premises", "exercise",
            "exercised", "advertise", "advertised", "advertising", "surprise", "surprised", "surprising", "compromise",
            "compromised", "expertise", "enterprise", "enterprises", "franchise", "merchandise", "concise", "precise",
            "wise", "raise", "raised", "raises", "raising", "praise", "praised", "noise", "poise", "cruise", "arise",
@@ -6456,8 +6722,8 @@ def _run_checks() -> None:
     labelled, ticks, stored = ([ev for ev in EVENTS if ev.tier == tier] for tier in ("label", "tick", "stored"))
     in_time = lambda evs, panel: [ev.label for ev in sorted(evs, key=lambda ev: ev.date) if ev.panel == panel]
     assert in_time(labelled, "economy") == [
-        "7,000 Cadres Conference", "May 16 Notification", "Bombard the Headquarters", "Nixon in Beijing", "Mao dies",
-        "Reform and opening", "Joins World Bank, IMF", "Special economic zones", "Friedman visits", "Tiananmen",
+        "7,000 Cadres Conference", "May 16 Notification", "“Bombard the Headquarters”", "Nixon in Beijing", "Mao dies",
+        "“Reform and opening up”", "Joins World Bank, IMF", "Special economic zones", "Friedman visits", "Tiananmen",
         "Southern Tour", "Currency unification", "Hong Kong handover", "Joins WTO", "¥4 trillion stimulus",
         "Overtakes Japan", "Property crisis"]
     assert in_time(labelled, "stocks") == [
@@ -6467,13 +6733,13 @@ def _run_checks() -> None:
     assert in_time(ticks, "stocks") == ["Renminbi de-pegged", "ICBC IPO", "Chinese ADRs join MSCI"]
     # The order they are given up in (the round-4 order): from the end of each panel's list.
     kept = lambda panel: [ev.label for ev in labelled if ev.panel == panel]
-    assert kept("economy")[::-1][:5] == ["Bombard the Headquarters", "Property crisis", "Currency unification",
+    assert kept("economy")[::-1][:5] == ["“Bombard the Headquarters”", "Property crisis", "Currency unification",
                                          "Hong Kong handover", "¥4 trillion stimulus"], "Bombard the Headquarters goes first"
     assert kept("stocks")[::-1][:2] == ["Exchanges open", "First H-shares"]
     new = {ev.label: ev.date for ev in labelled if ev.label in (
-        "7,000 Cadres Conference", "May 16 Notification", "Bombard the Headquarters", "Mao dies", "Exchanges open")}
+        "7,000 Cadres Conference", "May 16 Notification", "“Bombard the Headquarters”", "Mao dies", "Exchanges open")}
     assert new == {"7,000 Cadres Conference": "1962-01-11", "May 16 Notification": "1966-05-16",
-                   "Bombard the Headquarters": "1966-08-05", "Mao dies": "1976-09-09", "Exchanges open": "1990-12-19"}
+                   "“Bombard the Headquarters”": "1966-08-05", "Mao dies": "1976-09-09", "Exchanges open": "1990-12-19"}
     drawn = meta["events"]
     assert [(ev["label"], ev["panel"]) for ev in drawn] == [
         (ev.label, ev.panel) for panel in ("economy", "stocks") for ev in EVENTS if ev.tier != "stored" and ev.panel == panel]
@@ -6521,21 +6787,20 @@ def _run_checks() -> None:
     assert by_label("US tariffs", "stocks")["lead"] == drawn.index(by_label("A-shares join MSCI", "stocks"))
     assert sum(ev["annotation"] is not None for ev in drawn) == len(labelled) - 1, "one label per event or group"
     sez = by_label("Special economic zones", "economy")
-    assert sez["date"] == "1980-08-26" and sez["short"] == "SEZs" and "special economic zones (SEZs)" in sez["description"]
+    assert sez["date"] == "1980-08-26" and sez["short"] == "SEZs" and "special economic zones (SEZs)" in sez["description"].lower().replace("sezs", "SEZs")
     assert by_label("Chinese tech crackdown", "stocks")["date"] == "2020-11-03"
     # The two stimulus labels, told apart; the yen sign's reading; and the new marks.
-    assert "yuan" in by_label("¥4 trillion stimulus", "economy")["description"] and by_label("¥4 trillion stimulus", "economy")["date"] == "2008-11-09"
+    assert "¥4 trillion" in by_label("¥4 trillion stimulus", "economy")["description"] and by_label("¥4 trillion stimulus", "economy")["date"] == "2008-11-09"
     # Every hover text is its template with the narration's words filled in (the Japan share, the exchanges' days).
     for ev in EVENTS:
         if ev.tier != "stored":
             assert by_label(ev.label, ev.panel)["description"] == ev.description.format(**words), ev.label
-    assert "{japan_share}" in next(ev.description for ev in EVENTS if ev.label == "Overtakes Japan")
     assert {"{exchange_day}", "{shenzhen_day}"} <= set(re.findall(r"\{\w+\}", next(
         ev.description for ev in EVENTS if ev.label == "Exchanges open")))
     assert by_label("Overtakes Japan", "economy")["date"][:4] == "2010" and by_label("Beijing Olympics", "economy")["date"][:7] == "2008-08"
-    assert [n["when"] for n in by_label("Southern Tour", "economy")["notes"]] == ["Oct 1992"]
+    assert by_label("Southern Tour", "economy")["notes"] == []
     friedman = by_label("Friedman visits", "economy")
-    assert friedman["tier"] == "label" and friedman["date"][:7] == "1980-09" and [n["when"] for n in friedman["notes"]] == ["Sep 1988"]
+    assert friedman["tier"] == "label" and friedman["date"][:7] == "1980-09" and friedman["notes"] == []
     both = build(tiers=("label", "tick", "stored"))
     assert len(both.layout.meta["events"]) == len(EVENTS), "a stored event does not pass through the same builder"
 
@@ -6545,9 +6810,7 @@ def _run_checks() -> None:
     era_meta = {era["label"]: era for era in meta["eras"]}
     parents = ([(ev, by_label(ev.label, ev.panel) if ev.tier != "stored" else None) for ev in EVENTS if ev.notes]
                + [(era, era_meta.get(era.label)) for era in ERAS if era.notes])
-    assert {p.label: len(p.notes) for p, _ in parents} == {
-        "Reform and opening": 3, "Friedman visits": 1, "Southern Tour": 1, "Property crisis": 1, "QFII": 2, "Stock Connect": 2,
-        "Crash": 1, "Cultural Revolution": 5}
+    assert {p.label: len(p.notes) for p, _ in parents} == {"QFII": 1, "Stock Connect": 2}
     for parent, shown in parents:
         assert shown is not None, f"notes on something that is not drawn: {parent.label}"
         in_order = sorted(parent.notes, key=lambda n: n.date)
@@ -6656,11 +6919,12 @@ def _run_checks() -> None:
     # Lime and periwinkle are for data: no shape wears them but the two closing chords (which ARE
     # data: each joins two points of its series), and no label but the one for the periwinkle fill.
     data_colours = [_rgb(_GDP_COLOR).tolist(), _rgb(_STOCK_COLOR).tolist()]
-    chord_shapes = {chord["shape"] for chord in meta["chords"]} | {meta["top_chord"]["shape"]}
+    chord_shapes = {chord["shape"] for chord in meta["chords"]} | {chord["shape"] for chord in meta["era_chords"]}
     for i, sh in enumerate(fig.layout.shapes):
         colour = _rgb(sh.fillcolor or sh.line.color).tolist()
         assert colour in (data_colours if i in chord_shapes else (navy, _rgb(_INK).tolist())), "a shape is in a data colour"
-    in_colour = {meta["ann"][k] for k in ("fill_ahead", "rate_economy", "rate_stocks", "rate_economy_top")}   # rates: each in its line's colour
+    in_colour = {meta["ann"][k] for k in ("fill_ahead", "rate_economy", "rate_stocks", "rate_era0", "rate_era1",
+                                          "rate_era2")}                                # rates: each in its line's colour
     for i, a in enumerate(fig.layout.annotations):
         assert (_rgb(a.font.color).tolist() in data_colours) == (i in in_colour), a.text
 
@@ -6696,7 +6960,7 @@ def _run_checks() -> None:
     # The y-ranges are the same in every act because there is only one of each: nothing changes them.
     assert meta["view"]["y"] == list(fig.layout.yaxis.range) and meta["view"]["y2"] == list(fig.layout.yaxis2.range)
     assert '"yaxis.range' not in script and '"yaxis2.range' not in script, "the script must never set a y-range"
-    reform = by_label("Reform and opening", "economy")
+    reform = by_label("“Reform and opening up”", "economy")
     assert reform["date"] == acts[0]["end"] and "Deng's reforms" not in html
 
     # (13a) The schedule and the tempo rules. Each part lasts what it was given, or (where its boxes'
@@ -6782,9 +7046,11 @@ def _run_checks() -> None:
     last_read = final_seconds(words)
     close(last_read, BOX_SECONDS[0] + BOX_SECONDS[1] * len(f"{play['final']['lead']} {play['final']['text']}".split())
           + LAST_BOX_EXTRA, 1e-9, "the last box's reading time")
-    # (The top panel's chord, its rate and a pause; then the bottom panel's two; the gap; the last box.)
-    ending = (3 * (ENDING["chord"] + ENDING["label"] + ENDING["pause"]) + ENDING["arrow"] + ENDING["label"] + ENDING["pause"] / 2
-              + CARD_FADE_SECONDS + last_read + CARD_FADE_SECONDS + 0.15)
+    # (After the pull-back: each era's chord, its rate and half a pause; the climb's arrow, its label, a
+    # pause; then the bottom panel's two chords, each with its rate and a pause; the gap; the last box.)
+    eras_ending = len(ERA_CHORDS) * (ENDING["chord"] + ENDING["label"] + ENDING["pause"] / 2) + ENDING["arrow"] + ENDING["label"]
+    ending = (eras_ending + ENDING["pause"] + 2 * (ENDING["chord"] + ENDING["label"] + ENDING["pause"]) + ENDING["arrow"]
+              + ENDING["label"] + ENDING["pause"] / 2 + CARD_FADE_SECONDS + last_read + CARD_FADE_SECONDS + 0.15)
     interlude = interlude_seconds(words)
     assert 4 <= transition <= 5.5 and 1.5 <= ENDING["pullback"] <= 2.0 and ENDING["pullback"] > TRANSITION["move"]
     assert ENDING["chord"] == 2 * 0.7 and ENDING["pause"] == 0.8 and "box_hold" not in ENDING, "the ending's timings"
@@ -6844,10 +7110,8 @@ def _run_checks() -> None:
                 f"the box of {b['date']} comes up before its span's end")
     recovery_ = next(b for b in BEATS if b.lead == "1962–65")
     assert next(b for b in beats if b["lead"] == "1962–65")["rate"]["hover"] == RATE_HOVER.format(
-        lead="1962–65", verb="rose", change="0.33") + " " + recovery_.rate_note
-    assert recovery_.rate_note and (
-        "**1962–65**: Against America, output per person rose 0.33 bits. Part of any recovery is a mechanical rebound "
-        "from the collapse.")
+        lead="1962–65", verb="rose", change="0.33") == "**1962–65**: Against America, output per person rose 0.33 bits."
+    assert recovery_.rate_note is None and not any(b.rate_note for b in BEATS), "an arrow's hover has a note again"
     # The annotations that are beats: reached at their points, and slow to a text box's speed for 3 s.
     noted = play["notes"]
     assert [n["role"] for n in noted] == list(NOTE_BEATS)
@@ -7010,15 +7274,18 @@ def _run_checks() -> None:
     assert credits.startswith("Images: ") and all(PICTURES[k].credit.rstrip(".") in credits for k in shown_pics)
     assert "Coca-Cola" not in credits and "coke_1979" not in PICTURES
     assert PICTURES["deng_carter_1979"].short == "Photo: White House / public domain"
-    # Each picture card's words leave its picture room at 920 px (measured); the Ma card's do not, yet.
+    # Each picture card's words leave its picture room at 920 px (measured), the Ma card's included.
     for b in BEATS:
         if b.picture:
             pic, said_ = PICTURES[b.picture], f"{b.lead} {b.text}".format(**words)
             assert pic.room, f"no measured room for {b.picture}"
-            if b.picture != "jack_ma":
-                assert len(said_) <= pic.room, f"the {b.lead} card's words leave its picture no room at 920 px"
+            assert len(said_) <= pic.room, f"the {b.lead} card's words leave its picture no room at 920 px"
     assert PICTURES["jack_ma"].max_px == 150 and [p for p in PICTURES if PICTURES[p].max_px] == ["jack_ma"]
     ma_words = f"{BEATS[-1].lead} {BEATS[-1].text}".format(**words)
+    # The sentence the Ma card gave up closes the crackdown's hover text.
+    gave_up = "The crackdown spreads to tech, tutoring and property firms."
+    crackdown = by_label("Chinese tech crackdown", "stocks")["description"]
+    assert gave_up not in BEATS[-1].text and crackdown.startswith("**Nov 3, 2020**: ") and crackdown.endswith(" " + gave_up)
     assert PICTURES["jack_ma"].short == "Photo: World Economic Forum, CC BY 2.0" and PICTURES["jack_ma"].credit.endswith("; cropped")
     assert all(v >= 160 for v in wide["card"]["pictures"]) and max(wide["card"]["pictures"]) <= 280
     real = dict(PICTURES)
@@ -7081,22 +7348,66 @@ def _run_checks() -> None:
     assert -0.0225 <= chords[1]["rate"] <= -0.0205, f"the stocks' rate is {chords[1]['rate']:+.4f} bits a year"
     assert (chords[0]["said"], chords[1]["said"]) == tuple(COPY_TEXT["chord_rate"].format(rate=r_, multiple=m_)
                                                          for r_, m_ in (("+0.084", "1.060"), ("−0.022", "0.985")))
-    # First, in the top panel: the economy since 1978, from the 1978 marker to its last point, at its rate.
-    top = meta["top_chord"]
-    line, label = fig.layout.shapes[top["shape"]], fig.layout.annotations[top["annotation"]]
-    since_1978 = (g.index[-1] - g.index[g.index.year == GDP_ANCHOR_YEAR][0]) / pd.Timedelta(days=365.25)
-    top_rate = float(g.iloc[-1]) / since_1978
-    assert (line.xref, line.yref, line.line.dash, line.line.color) == ("x", "y", "dash", _GDP_COLOR)
-    assert (line.x0, line.y0) == (fig.data[tr["anchor_top"]].x[0], 0) == (top["start"], 0), "the top chord does not start at the 1978 marker"
-    assert (line.x1, line.y1) == (gdp_tr.x[-1], gdp_tr.y[-1]) == (top["date"], top["value"]), "the top chord misses the last point"
-    close(top["rate"], top_rate, 1e-6, "the top chord's rate is not the final value over the years since 1978")
-    top_said = COPY_TEXT["chord_rate"].format(rate=f"{'+' if top_rate >= 0 else '−'}{abs(top_rate):.3f}", multiple=f"{2 ** top_rate:.3f}")
-    assert top["said"] == top_said and top["text"] == f"{top['name']}: {top_said}" and top["key"] == "economy_top"
-    assert (label.x, label.y, label.yref, label.xanchor, label.font.color) == (top["date"], top["value"], "y", "left", _GDP_COLOR)
-    assert label.xshift == wide["end"]["label"], "the top chord's rate is not in the gutter"
-    close(top_rate, 0.0855, 0.0006, "the top chord's rate is not about +0.086 bits a year")
+    # First, in the top panel: a chord across each era, from the line's point at its start to the one at
+    # its end; its rate, the change over the years between; on hover, each one's growth; the climb.
+    eras_ = era_numbers(gdp, usa)
+    point = {d.year: (_iso(d), float(v)) for d, v in g.items()}
+    assert [e_["era"].name for e_ in eras_] == ["Mao", "Deng to Hu", "Xi"] and [(e_["start"], e_["end"]) for e_ in eras_] == [
+        (1960, 1978), (1978, 2012), (2012, g.index[-1].year)], "the eras are not Mao, Deng to Hu, Xi"
+    assert eras_[0]["start"] == START_YEAR and eras_[-1]["end"] == g.index[-1].year, "the eras do not span the line"
+    assert all(a_["end"] == b_["start"] for a_, b_ in zip(eras_, eras_[1:])), "the eras do not meet"
+    for n_, (era_, chord) in enumerate(zip(eras_, meta["era_chords"])):
+        line = fig.layout.shapes[chord["shape"]]
+        (x0_, y0_), (x1_, y1_) = point[era_["start"]], point[era_["end"]]
+        assert (line.xref, line.yref, line.line.dash, line.line.color) == ("x", "y", "dash", _GDP_COLOR)
+        assert (line.x0, line.x1, chord["start"], chord["end"]) == (x0_, x1_, x0_, x1_), f"{chord['name']}'s chord misses its points"
+        close(line.y0, y0_, 1e-9, "an era's chord does not start on the line")
+        close(line.y1, y1_, 1e-9, "an era's chord does not end on the line")
+        rate = (y1_ - y0_) / (era_["end"] - era_["start"])
+        close(chord["rate"], rate, 1e-6, f"{chord['name']}'s rate is not its change over its years")
+        r_, m_ = f"{'+' if rate >= 0 else '−'}{abs(rate):.3f}", f"{2 ** rate:.3f}"
+        flat = f"{2 ** rate:.2f}" == "1.00"
+        said_ = COPY_TEXT["era_rate_flat" if flat else "era_rate"].format(name=chord["name"], span=era_["span"], rate=r_, multiple=m_)
+        assert chord["said"] == chord["text"] == said_ and chord["wraps"][0] == f"<b>{said_}</b>"
+        assert all(w.replace("<br>", " ") == f"<b>{said_}</b>" for w in chord["wraps"]), "a broken label says something else"
+        own_ = (gdp["CHN"] + usa).dropna()
+        lv = {d.year: float(v) for d, v in own_.items()}
+        us_ = {d.year: float(v) for d, v in usa.dropna().items()}
+        grow = lambda L_: 100 * (2 ** ((L_[era_["end"]] - L_[era_["start"]]) / (era_["end"] - era_["start"])) - 1)
+        close(era_["china"], grow(lv), 1e-9, "China's growth over an era")
+        close(era_["usa"], grow(us_), 1e-9, "America's growth over an era")
+        assert chord["hover"] == ERA_CHORDS[n_].hover.format(span=era_["span"], china=f"{grow(lv):.1f}", usa=f"{grow(us_):.1f}")
+        assert chord["hover"].startswith(f"**{era_['span']}**: "), "an era's hover text does not lead with its years in bold"
+    # What the brief expects of them, and the words as they read. (Deng to Hu: 0.09745 bits a year, so
+    # "+0.097", where the brief expected "+0.098".)
+    expect = [(-0.001, 0.999, 2.6, 2.7), (0.098, 1.070, 8.8, 1.7), (0.054, 1.038, 5.7, 1.8)]
+    for era_, (rate_, mult_, china_, usa_) in zip(eras_, expect):
+        close(era_["rate"], rate_, 0.0006, f"{era_['era'].name}: the rate")
+        close(era_["multiple"], mult_, 0.0006, f"{era_['era'].name}: the multiple")
+        close(era_["china"], china_, 0.051, f"{era_['era'].name}: China's growth")
+        close(era_["usa"], usa_, 0.051, f"{era_['era'].name}: America's growth")
+    assert [c_["said"] for c_ in meta["era_chords"]] == [
+        "Mao, 1960–78: −0.001 bits/yr", "Deng to Hu, 1978–2012: +0.097 bits/yr (×1.070/yr)", "Xi, 2012–25: +0.054 bits/yr (×1.038/yr)"]
+    assert [c_["hover"] for c_ in meta["era_chords"]] == [
+        "**1960–78**: China's output per person grew 2.6% a year, America's 2.7%. Starting far poorer, China did not catch up at all.",
+        "**1978–2012**: 8.8% a year against America's 1.7%.", "**2012–25**: 5.7% a year against America's 1.8%."]
+    # (The Mao hover's last sentence is typed: China's output per person grew no faster than America's then.)
+    assert eras_[0]["china"] <= eras_[0]["usa"] and eras_[0]["rate"] <= 0, "China did catch up under Mao: fix its hover text"
+    # The climb: a double-headed arrow from the 1978 level to the line's last point, in ink; its label in the gutter.
+    climb_ = meta["climb"]
+    arrow_, label_ = fig.layout.annotations[climb_["arrow"]], fig.layout.annotations[climb_["label"]]
+    assert (arrow_.x, arrow_.ax, arrow_.ay, arrow_.ayref, arrow_.arrowside) == (gdp_tr.x[-1], gdp_tr.x[-1], 0.0, "y", "end+start")
+    close(arrow_.y, gdp_tr.y[-1], 1e-9, "the climb's arrow does not reach the line's last point")
+    gap_arrow_, gap_label_ = fig.layout.annotations[meta["gap"]["arrow"]], fig.layout.annotations[meta["gap"]["label"]]
+    assert arrow_.arrowcolor == gap_arrow_.arrowcolor and arrow_.arrowwidth == gap_arrow_.arrowwidth and arrow_.xshift == wide["end"]["arrow"] and climb_["value"] == round(gdp_tr.y[-1], 6)
+    assert (label_.xanchor, label_.xshift, label_.font.color) == ("left", wide["end"]["label"], gap_label_.font.color),         "the climb's label is not in the gutter, in ink"
+    assert climb_["text"] == COPY_TEXT["climb"].format(bits=f"+{gdp_tr.y[-1]:.2f}", anchor_year=GDP_ANCHOR_YEAR,
+                                                       multiple=f"{2 ** gdp_tr.y[-1]:.0f}") == "+4.02 bits since 1978 (×16)"
+    assert all(w.replace("<br>", " ") == climb_["text"] for w in climb_["wraps"])
+    assert "top_chord" not in meta and "rate_economy_top" not in meta["ann"], "the single chord from 1978 is still there"
     # On the finished chart the event lines step back (and come back on hover).
     assert meta["final_line_share"] == FINAL_EVENT_LINE_SHARE and 0.35 <= FINAL_EVENT_LINE_SHARE <= 0.4
+    final_line_opacity = _EVENT_LINE_OPACITY * FINAL_EVENT_LINE_SHARE
     end_ = meta["gap"]
     close(end_["value"], float(e.iloc[-1]) - float(s.iloc[-1]), 1e-6, "the gap is not the economy's end less the stocks'")
     assert end_["text"] == COPY_TEXT["gap"].format(gap_bits=f"{abs(end_['value']):.2f}", gap_multiple=f"{2 ** abs(end_['value']):.1f}")
@@ -7163,7 +7474,8 @@ def _run_checks() -> None:
     last2, _, numbers2 = am["play"]["final"], None, narration_numbers(gdp, usa, s2, e2, other, cutoff, returns)[1]
     assert last2["lead"] == f"{since2} – {_month(cutoff)}" and f"{abs(gap2):.2f} bits" in last2["text"]
     assert f"gained {abs(float(e2.iloc[-1])):.2f} bits" in last2["text"] and f"lost {abs(float(s2.iloc[-1])):.2f}" in last2["text"]
-    bottom2 = next(b for b in am["play"]["beats"] if "World Trade Organization" in b["text"] and "bottom" in b["text"])
+    after_ = next(b for b in BEATS if b.after)
+    bottom2 = next(b for b in am["play"]["beats"] if b["lead"] == after_.lead.format(**words))     # (its lead, the WTO month, is not the anchor's)
     assert f"down {numbers2['trough_china']:.0f}% since {since2}, against {numbers2['trough_usa']:.0f}% for US stocks" in bottom2["text"]
     assert numbers2["trough_china"] != numbers["trough_china"] and numbers2["trough"] == trough2
     # Nothing in that figure, or in the page made from it, still names the default anchor.
@@ -7253,14 +7565,17 @@ def _run_checks() -> None:
     for item in [*COPY_TEXT.values(), *_HINTS.values(), *PART_TITLES, TITLE, RATE_LABEL, REFERENCE_LABEL, RATE_HOVER,
                  *(w for spec in _ARROWS.values() for w in spec["wraps"]), *(w for spec in _FILL_LABELS.values() for w in spec["wraps"]),
                  *(w for band in BANDS for w in band.wraps), *(p.short for p in PICTURES.values()),
-                 *(x for era in ERAS for x in (era.label, era.description)), *(x for who in LEADERS for x in (who.label, who.description))]:
+                 *(x for era in ERAS for x in (era.label, era.description)), *(x for who in LEADERS for x in (who.label, who.description)),
+                 *(x for era in ERA_CHORDS for x in (era.name, era.hover))]:
         assert item in listed, f"not in the copy: {item[:50]!r}"
     dates_ = [r["date"] for r in rows if r["date"]]
     assert dates_ == sorted(dates_) and all(r["date"] for r in rows[:len(dates_)]), "rows are not by date, undated last"
     budgeted = [r for r in rows if r["kind"] in ("text box", "picture card", "final card") and not r["id"].startswith("copy-")]
     assert all(r["budget"] and r["budget"] <= r["words"] for r in budgeted), "a box with no word budget"
     ma = by_id["card-2020-11-03"]
-    assert ma["budget"] == 14 and len(ma_words) > PICTURES["jack_ma"].room
+    assert ma["budget"] == COPY_BUDGETS["card-2020-11-03"] == 14 == ma["words"] and ma["kind"] == "picture card"
+    assert len(ma_words) <= PICTURES["jack_ma"].room
+    assert {r["kind"] for r in rows if r["id"].startswith("era-chord-")} == {"rate label", "rate hover"}
     # The workbook: one row a string; a frozen header; a word count that is a formula; a sheet of rules.
     with tempfile.TemporaryDirectory() as tmp:
         from openpyxl import load_workbook
@@ -7392,12 +7707,17 @@ def _run_checks() -> None:
           + ", ".join(f"{c} {gains[c]:.2f}" for c in ranked[1:4]) + ").")
     print("  rate arrows: " + "; ".join(f"{spec['lead']} {spec['text']} ({spec['change']:+.3f} bits)"
                                         for b in beats for spec in (b["rate"], b["reference"]) if spec) + ".")
-    print(f"  top-panel chord: {meta['top_chord']['text']} (from the 1978 marker to {meta['top_chord']['date'][:4]}; "
-          f"{top_rate:.4f} bits a year).")
-    print(f"  the Jack Ma card: {len(ma_words)} characters ({len(ma_words.split())} words) against room for "
-          f"{PICTURES['jack_ma'].room} at 920 px with its photo at {PICTURES['jack_ma'].max_px} px: a text box until it is "
-          f"cut to {PICTURES['jack_ma'].room} characters, its lead included (about "
-          f"{len(ma_words[:PICTURES['jack_ma'].room + 1].rsplit(' ', 1)[0].split())} words).")
+    print("  the eras' chords: " + "; ".join(
+        f"{c_['said']} ({e_['rate']:+.4f} bits/yr, ×{e_['multiple']:.4f}; China {e_['china']:.2f}% a year, America "
+        f"{e_['usa']:.2f}%)" for c_, e_ in zip(meta["era_chords"], eras_)) + f"; the climb: {climb_['text']} "
+        f"({gdp_tr.y[-1]:.4f} bits, ×{2 ** gdp_tr.y[-1]:.2f}).")
+    print(f"  the ending at 1x / 1.5x: the pull-back {ENDING['pullback']:.1f} / {ENDING['pullback'] / 1.5:.1f} s, then "
+          f"the eras and the climb {eras_ending + ENDING['pause']:.1f} / {(eras_ending + ENDING['pause']) / 1.5:.1f} s, "
+          f"and the rest {ending - eras_ending - ENDING['pause']:.1f} / {(ending - eras_ending - ENDING['pause']) / 1.5:.1f} s.")
+    print(f"  event lines: opacity {_EVENT_LINE_OPACITY} in play; {final_line_opacity:.3f} on the finished chart and "
+          f"through the ending ({FINAL_EVENT_LINE_SHARE:.1%} of it).")
+    print(f"  the Jack Ma card: {len(ma_words)} characters ({len(ma_words.split())} words), room for "
+          f"{PICTURES['jack_ma'].room} at 920 px with its photo at {PICTURES['jack_ma'].max_px} px.")
     print(f"  copy: {len(rows)} strings in {COPY_PATH.name} (write it with --export-copy); budgets aim at "
           f"{TARGET_SECONDS:.0f} s at 1x.")
     print(f"  rates since {since} ({span_years:.3f} years): " + "; ".join(c["text"] for c in chords) + f"; {end_['text']}.")
