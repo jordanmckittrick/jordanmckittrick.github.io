@@ -1,0 +1,81 @@
+---
+title: "8: A Coordinate System for Your Beliefs"
+subtitle: ""
+date: 2027-04-30
+categories: []
+# image: TODO.jpg
+
+format:
+    html:
+        code-fold: true
+        code-summary: "Show code"
+        code-tools: true
+
+draft: true
+
+---
+
+
+### Introduction
+
+
+
+
+### $q^*$ is not the only information projection
+[THIS MATERIAL WAS IN THE POST CALLED "STRANDED", BUT I CUT IT AND PASTED IT HERE, AS I THINK IT'S MORE RELEVANT TO THIS POST THAN TO STRANDED, THE FOCUS OF WHICH IS MARKET INCOMPLETENESS.]
+We have already remarked that $q^*$ is the reverse information projection of $p$ onto $\mathcal{Q}_{++}$, where we can think of $\mathcal{Q}_{++}$ as the set of (strictly positive) beliefs associated with the all-cash portfolio. That is to say, if we define a _$w$-slice_ to be 
+$$
+\mathcal{M}_{(\cdot, w)} := \lbrace m(q,w) : q \in \mathcal{Q}_{++} \rbrace,
+$$
+then we see that  $\mathcal{M}_{(\cdot, \text{cash})} = \mathcal{Q}_{++}$, which is a direct application of the definition of $m$ in @eq-tilted_measure. We can also define a _$q$-slice_ to be the set of all beliefs associated with the particular risk-neutral measure $q$:
+$$
+\mathcal{M}_{(q, \cdot)} := \lbrace m(q,w) : w \in \mathcal{A}_{++} \rbrace.
+$$
+In the hypothetical case where $G$ is a complete market (i.e. $\operatorname{rank} G = M = K$), $w$-slices and $q$-slices take on an especially simple form. This is because the second part of the FTAP says that in a complete market there is only one risk-neutral measure, which I'll denote $\tilde{q}$. Therefore we have $\mathcal{Q} = \lbrace \tilde{q} \rbrace$ and hence $\mathcal{M}_{(\cdot, w)} = \big \lbrace m(\tilde{q}, w) \big \rbrace$, i.e. each $w$-slice contains just a single point. In addition, it is found that $\mathcal{M}_{(\tilde{q}, \cdot)} = \Delta_{++}^{K-1}$: let $p \in \Delta_{++}^{K-1}$, then since $G$ is invertible, if we just take $w = r G^{-1} \operatorname{diag}\frac{1}{q^*}p$ then it is found that $m(q^*, w) = p$ and that $w^T \mathbb{1} = 1$.
+
+By the non-negativity of KL divergence, @eq-growth_shortfall_plus_misfit_equals_total_gap implies that $D(p \| m(q,w))$ is an upper bound on both the growth shortfall and the misfit, and by respectively taking $q = q^*$ and $w = w^*$ these upper bounds hold with equality (since $m(q^*, w^*) = p$). We have
+$$
+D(p \| m(q^*, w)) = \min_{m \in \mathcal{M}_{(\cdot, w)}} D(p \| m)
+$$ {#eq-w_slice}
+and
+$$
+D(p \| m(q, w^*)) = \min_{m \in \mathcal{M}_{(q, \cdot)}} D(p \| m).
+$$ {#eq-q_slice}
+Notice that when $w$ is the risk-free asset
+$$
+\begin{aligned}
+D(p \| \mathcal{M}_{(\cdot, w)}) &= D(p \| \mathcal{M}_{(\cdot, \text{cash})}) \\ 
+&= D(p \| \mathcal{Q}) \\ 
+&= D(p \| q^*), \\ 
+\end{aligned}
+$$ meaning that one's edge is the growth shortfall that arises from holding all cash rather than the optimal portfolio.
+
+In addition, because $D$ is strictly convex in its second argument, we see that $m(q^*, w)$ and $m(q, w^*)$ are unique minimizers. Furthermore, since $q \mapsto m(q,w)$ and $w \mapsto m(q,w)$ are both injective maps, we see that $q^*$ and $w^*$ are themselves unique in achieving the minimum. It is convenient to adopt the following notation:
+$$
+\begin{aligned}
+D(p \| \mathcal{M}_{(\cdot, w)}) = \min_{m \in \mathcal{M}_{(\cdot, w)}} D(p \| m) \\
+D(p \| \mathcal{M}_{(q, \cdot)}) = \min_{m \in \mathcal{M}_{(q, \cdot)}} D(p \| m).
+\end{aligned}
+$$
+
+Thus, growth shortfall and misfit are just the KL divergence from $p$ to these respective projections. We can therefore write the total KL divergence from an arbitrary $m$ to $p$ as the sum of two KL divergences, where each uses one of these projections as its model:
+$$
+\boxed{\rule[-1ex]{0pt}{4ex} D(p \| m(q,w)) = D(p \| \mathcal{M}_{(\cdot, w)}) + D(p \| \mathcal{M}_{(q, \cdot)})}
+$$ {#eq-decomposition_of_arbitrary_KL_divergence_as_a_sum_involving_two_reverse_information_projections}
+Note that @eq-decomposition_of_arbitrary_KL_divergence_as_a_sum_involving_two_reverse_information_projections reduces to the decomposition formula for $D(p \| q)$ (@eq-decomposition_formula) by letting $w = \text{risk-free asset}$.
+
+
+INSERT A FIGURE SIMILAR TO THE ONE IN THE STRANDED POST BUT INSTEAD OF USING THE $w^*$-slice, USE $\mathcal{Q}$ AND THE  $q$-slice THAT RUNS THROUGH $\tilde{q}$. THIS IS TO SHOW THAT THE GROWTH SHORTFALL AND THE MISFIT ARE BOTH REVERSE INFORMATION PROJECTIONS OF $p$.
+
+
+
+
+
+$$
+\underbrace{D \left( p \Big \| \mathcal{M}^G_{(q^*_{G'}, \cdot)} \right)}_{\text{misfit for } G} =\underbrace{D \left( p \Big \| \mathcal{M}^{G'}_{(\cdot, w_G^*)} \right)}_{\text{growth shortfall for } G'}.
+$$
+
+TEXT FROM STRANDED THAT I CUT AND PASTED HERE: "It's worth remarking that if we solve @eq-general_growth_rate_formula for $D(p \| m(q,w))$, then we see it decomposes into a $q$-dependent and a $w$-dependent term." [This is probably better suited for this post rather than the Stranded post as its not the growth rate that is the focus but rather the KL distance from m to p.]
+
+
+Consider Taylor expanding the stranded growth as a function of $q_{G'}^*$. This will give you a Fisher information term which might be interesting.

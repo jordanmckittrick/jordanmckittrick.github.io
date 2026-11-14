@@ -1,10 +1,16 @@
 ---
-title: "2: You Can't Bet on China"
-subtitle: "The information-theoretic cost of incompleteness in markets"
-date: 2026-09-20
-categories: [quantitative finance, information theory, incomplete markets, risk-neutral measure, log-optimal investing]
-bibliography: references.bib
-image: a-thousand-li-of-rivers-and-mountains(section).jpg # shannons_demon_fiend.svg
+title: "3: You Can't Bet on China"
+subtitle: ""
+date: 2026-11-30
+categories: [finance, incomplete markets]
+image: a-thousand-li-of-rivers-and-mountains(section).jpg
+
+# Files referenced from raw HTML (the scroll-viewer widget) aren't seen by
+# Quarto's automatic dependency scanner, so declare them explicitly here or
+# they won't be copied into _site/ and will 404 in the built page.
+resources:
+  - "a-thousand-li-of-rivers-and-mountains(scroll).jpg"
+  - "a-thousand-li-of-rivers-and-mountains(complete).jpg"
 
 format:
     html:
@@ -13,416 +19,226 @@ format:
         code-tools: true
 
 draft: true
-
 ---
- 
-
 
 # Introduction
 
-Consider two separate scenarios:  
+INSERT INTRODUCTION
 
-1. You disagree vehemently with the market's implied probabilities for the future. Assuming you're right and the market's wrong, do you have an edge? If so, how much? (1.6)
-1. A new asset is introduced to the market. How much would you be willing to pay to have the privilege of trading it? If you believe the asset is going to the moon, would you be willing to pay quite a lot? Or is it really that simple? 
+::: {#fig-thousand-li} 
+{{< include _scroll_viewer.qmd >}}
 
-At a surface level, these two scenarios and their associated questions bear no connection to each other; nonetheless, they are not only closely related, but also their answer falls out of the same information-theoretic framework, which admits a tidy geometrical interpretation and concise formulas. This post is fundamentally about the financial cost of market incompleteness, which is the problem of not being able to bet on every possible future event. This includes the one of the most momentous economic events of the last half century: the rise of China.
+Wang Ximeng, *A Thousand Li of Rivers and Mountains*, 1113. The Palace Museum, Beijing. [At nearly forty feet long, this priceless work of art is a hand scroll painted on silk using azurite (blue) and malachite (green) that was designed to be unfurled slowly, revealing the vast Chinese landscape and scenes from the daily lives of ordinary people living during the Song Dynasty. Less well known than other major dynasties, such as the Han and Qing Dynasties, the Song Dynasty (960 - 1279) was a period of immense wealth and incredible achievement in culture, science, technology, and administration, which cumulatively mark it as one of the most accomplished empires in human history. [View full resolution&nbsp;↗](<a-thousand-li-of-rivers-and-mountains(complete).jpg>){target="_blank" rel="noopener"}]{.caption-note}
+:::
 
-![Wang Ximeng, _A Thousand Li of Rivers and Mountains_ (small section), 1113. The Palace Museum, Beijing.](a-thousand-li-of-rivers-and-mountains(section).jpg)
 
 
 
 
+# Life (and death) under Mao
+::: {.epigraph}
+“There is great chaos under heaven; the situation is excellent.”
 
-# Incompleteness in financial markets
+— Mao Zedong
+:::
 
-##### The origins of hedge funds
+There is no doubt that one of the most consequential economic events over the last half century has been the rise of China from a deeply impoverished nation of nearly a billion peasants to an economic juggernaut capable of rivaling the United States. This radical transformation came on the heels of the turbulent and tyranical rule of the communist dictator and former revolutionary Mao Zedong, whose death on September 9, 1976, almost exactly fifty years ago, marked the beginning of a new chapter for China. The degree of destruction and despair wrought by Mao during the twenty seven years beginning with the Communists' victory over the Nationalists on October 1, 1949 and lasting until his death in 1976 is rivalled by very few men in history and is still largely underappreciated in the West.
 
-The idea of a hedge fund dates back to 1949 when the American sociologist Alfred Winslow Jones established a small investment partnership that sought to hedge market risk by shorting stocks and using leverage alongside his more traditional long positions. Jones sought "pure alpha" without any exposure to the broader market. By allowing short positions and leverage into his portfolio, Jones expanded the set of possible portfolio returns, and by choosing his leverage and long and short positions carefully, his portfolio reflected his outlook better than any long-only portfolio possibly could. By expanding his set of tools, Jones had reduced the problem of *incompleteness*, which is academic jargon that refers to the problem where not every contingency can be hedged and not every outlook can be reflected by a portfolio. Jones discovered that shorting allowed him to hedge the risk that he wanted, creating a novel payoff structure not available to long-only investors. 
 
-Jones made progress in reducing the problem of incompleteness, but he didn't eliminate it. For example, there is no portfolio that can accurately express the view "On net, climate change will benefit Canada and Russia but will harm Mediterranean Europe over the next thirty years" or the view "North Korea will become a thriving capitalist democracy in the next fifteen years". Instead, practitioners are left trying to cobble together portfolios that very imperfectly express their views. A portfolio manager with the latter view might, for example, be bullish on South Korean companies, believing they will benefit from a thriving neighbor to the north, but this proxy portfolio is clearly imperfect. Clearly, no amount of shorting, leverage, clever stock picking, or shrewd derivatives trading can construct a payoff structure in which the portfolio generates a handsome return if the thesis turns out to be true and a dire loss if not. In other words, there's no clean way to bet on this thesis.
+#### Pre GLF
 
-One of the most consequential economic changes over the last half century has been the rise of China from a deeply impoverished nation of hundreds of millions of peasants to an economic juggernaut capable of rivaling the United States. 
+In the initial years after winning the Chinese Civil War in 1949, Mao ruthlessly consolidated power and began to socialize the war-ravaged Chinese economy, which had been characterized by peasant farming. Millions of landowners were divested of their property, which was forcibly redistributed to peasants, and Mao implemented his vision of violent class struggle across the country. Markets, private property, and urban entrepreneurship were increasingly brought to heel. 
 
-Milton Friedman quotes from https://miltonfriedman.hoover.org/internal/media/dispatcher/271059/full?utm_source=chatgpt.com
+1. CAMPAIGN TO SUPPRESS COUNTERREVOLUTTIONARIES (1950-1952): killing quotas of 1 in 1000; local officials demonstrate their zeal by killing two or three times above the quota;
+1. KOREAN WAR (1950-53): 
+1. LAND REFORM CAMPAIGN (1950-1953): division into 5 socio-economic bands from landlords to farm laborers; nearly half of China's cultivatable land is forcibly redistributed to peasants; trained operatives called "work teams" sent to rural villages to spark bottom-up unrest and "speak bitterness"; struggle sessions, mob violence, and public execution of landlords
+1. 3 ANTI-CAMPAIGN and 5 ANTI-CAMPAIGN (1951-1952): culminated in mass suicide among those who had previously achieved some modicum of success in business, management, or government administration, esp in Shanghai, where there were over 600 confirmed such suicides in just two months
+1. MUTUAL AID TEAMS (1951 - 1954) of 3-10 housefolds formed, ownership is still private; this was essentially small-scale pooled labor during peak seasons
+1. UNIFIED PURCHASE AND SALE SYSTEM (1953): the government establishes itself as the sole buyer of grain (a monopsony), and farmers were forced to sell grain to the state and below-market prices in order to subsidize cities, and thereby facilitate industrial growth
+1. AGRICULTURAL COLLECTIVIZATION (1953-1956): peasants assembled into large cooperatives and peasants stripped of the land that had just received from the land reform
+1. LOWER STAGE APC (1953 - 1955): 20-40 households per APC (basically a small village); village land was pooled but farmers still receive private dividend payments, and private plots still allowed;
+1. FAMINE (1954 - 1955): due to floods along the Yangzte River and draconian grain procurement programs; the government temporarily backed off from its procurement, but only after hundreds of thousands had died; poor waterworks along the Yangzte and Huwai Rivers created by the CCP struggled to control the flow of water and exacerbated the problem
+1. DEEPENING OF COLLECTIVIZATION (1955-56): 
+1. FIRST 5-YEAR PLAN (1953-1957): emphasizes industry over agriculture and consumer goods
+1. DESTALINIZATION (1956-)
+1. 100 FLOWERS BLOOM (1956) + ANTI-RIGHTIST CAMPAIGN (1957)
+1. HIGHER STAGE APC (1956 - 1958): 100-300 households (a whole village) collectivized their land and resources; dividends abolished and payment was only for labour performed; this stage marked the complete liquidation of private property in rural areas except for small private plots, cooking wear, etc.; replaced with giant communes 
+1. HUKOU SYSTEM (1958): formal implementation of household registration, largely as a reaction of rural-to-urban migration caused by rural economic policies that caused widespread harship as well as food shortages in urban areas, so registration was needed so everyone could be rationed a sufficient amount of food
+1. GLF (MAY 1958 - 1962)
 
-1. "one of the great economic experiments of our time is under way in China"
-1. "“The reforms – the attempt to introduce market elements, the opening up of contacts with the
-West, the encouragement of foreign investment, and so on – are in a desirable direction. But the
-test of whether they will be carried out and what their effects will be is still for the future.
-1. “The potential is enormous. The present level is extremely low.…
-1. “My own conjecture is that there will be considerable progress in the next few years as some
-of the newly announced policies work themselves through the system."
+- millions of people were killed in the early 1950s during the Campaign to Suppress Counterrevolutionaries and the Land Reform Campaign
+- psychological manipulation and coercion began almost from the beginning in 1949
+- shortages of food and basic supplies in rural villages occurred years before the start of the GLF.
+- civil society stamped out; churches and religious organized suppressed and snuffed out;
+- proliferation of re-education and labour camps
+- consolidate power, defeat remaining local warlords and opposition from the GMD; dissolution of civil society, institutions and organizations 
+- children were not spared from political violence, and children as six were executed
+- "carefully cultivated Auschwitz of the mind" (a quote found in Dikotter's book Tragedy of Liberation)
+- traditional societal structure, which had evolved over millenia, was systematically gutted; the authority of clans and elders was undermined and replaced by the national governemnt
+- fear of "capitalist tendencies" leads to gradual collectivization of land 1953 - May 1958, as peasants have their new land stolen from them
 
 
+In spite of the chaos, by the early 1950s agricultural and industrial production levels had reached pre-war levels, so in 1953 Mao launched a more ambitious campaign in his first Five Year Plan. He quickly became unsatisfied, however, with the pace of China's transformation towards complete socialization of the Chinese economy, so in 1955 Mao decided to accelerate the collectivization of agriculture and the growth of the state in economic affairs. Emboldened by an ongoing crackdown on "rightists" in 1957 and inspired by a meeting with Nikita Khrushchev later that year, in May of 1958 Mao embarked on what is likely the most disastrous economic experiment in human history: the Great Leap Forward.
 
 
-"...financial practitioners are working in incomplete markets full of unhedgeable risk-factors." -- [Masaaki Fujii](https://arxiv.org/search/q-fin?searchtype=author&query=Fujii,+M), [Akihiko Takahashi](https://arxiv.org/search/q-fin?searchtype=author&query=Takahashi,+A) 
+#### The Great Leap Forward
 
-FLESH THIS OUT SLIGHTLY MORE
+The Great Leap Forward was Mao's rapid and brutal campaign to industrialize the Chinese economy by forced nationalization of industry and collectivization of agriculture. It abolished private ownership of farms, livestock, equipment, and any other means of production. Peasants who failed to meet unrealistic quotas for crops were punished. Village social structure and the family unit were systematically dismantled, as peasants were forced into massive communes often numbering 20,000-30,000 people and ate -- when there was food -- in shared cantines. Private kitchen gear and utensils were confiscated and used for scrap metal.  The goal was to free up labour from household chores and to enforce a strict communal ethos on villages, at a time when the vast majority of Chinese were rural villagers. As part of his initiative to produce more steel than the United Kingdom by the early 1970s -- which was encapsulated by the slogan "Surpass Britain and catch up with America!" -- Mao and the Central Committee of the Chinese Communist Party (CCP) set impossible steel quotas so that the excess could be funneled to the cities to industrialize. Peasants were given no option to fail, so out of sheer desperation they began throwing virtually every source of metal, from bolts and nails to door knobs and agricultural equipment, into makeshift, backyard foundries, which were fueled from forests that were stripped down overnight. The result of these efforts? Useless pig iron.
 
-There are many examples of incomplete markets, e.g stagflation vs. soft landing (both could generate the same bond yield), the average short-term interest rate over the next thirty years,  
+1. May 1958: official launch of the GLF at the 8th Party Congress
+1. mid-late summer 1958: establishment of people's communes and mass mobilization; rural workers often directed to work on infrastructure projects rather than farming
+1. Summer 1958: production exagerated by local officials and leadership intensifies efforts
+1. late summer 1958: further collectivization
+1. fall 1958: backyard blast furnaces established to meet unrealistic steel quotas; establishment of cantines
+1. late 1958: first signs of extreme economic distress appear in some regions
+1. spring 1959: despite widespreads reports of grain shortages, the government continues to procure excessive amounts of grain from villages
+1. 2 Jul - 16 Aug 1959: Lushan conference; Peng purged for criticisms
+1. 1960: peak famine, millions die in an utter calamity
+1. spring-summer 1960: anti-sparrow campaign is curtailed and other minor adjustments are enacted
+1. Jan 1961: Ninth Plenum; leadership agrees to prioritize economic recovery over ambitious production targets; pragmatism increasingly emphasized over ideology
+1. late 1961: famine begins to ease
+1. 1958-1962: 15-45 millions people die of starvation
 
-##### Betting on China
+- what: Mao's disastrous economic policy that led to the starvation of tens of millions of people in which Mao discarded the comparatively slow approach to economic development characterized by Soviet-style 5-year plans and sought far more rapid industrialization; backyard steel production; basic welfare of peasants was subordinated to unrealistic production goals and communist ideology
+- who: Mao primarily
+- why: Mao wanted to accelerate the reforms enacted since 1949; wanted to catch up to the UK in steel production in just 15 years; wanted to rapidly industrialize to transition from socialism to communism; Mao believed rapid industrialization was largely a matter of will and ideological zeal rather than careful bureaucratic management and technocratic expertise; Mao had also grown distrustful of the Soviets, whom he believed had been taken over by bourgeois forces -- China could follow its own path;
+- causes of mass starvation: significantly reduced output due to labour diversion and collectivization (e.g. weakened incentives, no price mechanism, etc), diversion of resources of countryside to cities, coercion of villagers, abolition of all private property, melting of agricultural tools for scrap metal, destruction of sparrow population, top-down control of the economy, unrealistic quotas, suppression of criticism, feedback, and information, 
+- communes: massive expansion of advanced APCs, not only incorporated agriculture but also industry, government, and education with massive mess halls/cantines; communes ended the idea of a township, and the commune became the government in a certain sense; people were grouped according to military organization, e.g. regiments, i.e. militarization of society; home cooking was banned; backyard blast furnaces were created; communes implemented Marx's "from each...to each..." whereby payment for labour was largely replaced by a system of payment for "need" in the form of rations regardless of work performed; a commune was society, economy, and government wrapped up into one amorphous entity
+- the Anti-Rightist Deviation campaign of 1957 had taught people not to question Mao's directives
 
-In fact, there is a very famous recent example of a view that couldn't be expressed well by the set of tradable assets. Betting on Chinese growth is not the same as investing in its stock market, which is a (relatively poor) proxy. There not only does not exist an asset that pays if and only if the Chinese economy continues to boom but also there doesn't even exist a decent proxy.
 
-##### Figure: Chinese stock market vs. S&P 500 since 1990 + GDP/capita growth
+::: {#fig-glf-propaganda layout-ncol=2}
 
-I'll get Claude to make this, but I need to find the data.
+![Wu Shaoyun, Zhang Yuqing, and Lu Zezhi, [公社如巨龙，]{.nowrap}[生产显威风]{.nowrap} \[The commune is like a giant dragon; production shows its might\], 1959. IISH, BG E13/593.](commune.jpg){#fig-commune fig-alt="..."}
 
+![Zhang Ruji, Wang Shuhui, and Shao Guohuan, [鼓足干劲争上游，]{.nowrap}[东方跃进西方忧]{.nowrap} \[Go all out and aim high; the East leaps forward, the West is worried\], 1958. IISH, BG E16/33.](greater_faster_better_cheaper.jpg){#fig-dragon-boat fig-alt="..."}
 
+REWRITE THIS: Two Great Leap Forward posters. (a) Commune members ride a dragon through clouds, hoisting a basket of the harvest, with smokestacks and a "Leap Forward Gate" (跃进门) behind them. It was published in September 1959, as the famine was beginning. (b) A dragon boat sails past Western figures shipwrecked on rocks labelled "economic crisis" (经济危机). The sails read 多快好省, "more, faster, better, cheaper," Daft Punk's *Harder, Better, Faster, Stronger* forty-three years early. Images courtesy of chineseposters.net; (a) translation adapted.  
+:::  
 
 
 
 
-# Set up
 
-##### The gross returns matrix
-Let $G \in \mathbb{R}^{K \times M}$ denote a matrix of gross returns for $M$ assets over $K$ states, where $K > M$. For our running example, I'll choose $K = 3$ and $M = 2$. I'll assume that $G$ has full column rank, i.e. $\text{rank} G = M$. By a gross return, I mean that if one invests an amount of capital $S^j$ in the $j^{th}$ asset, then after one period one has capital $S^j G_{ij}$ remaining in the $j^{th}$ asset, assuming the $i^{th}$ state was realized. It is typically more convenient to work with gross returns than net returns, which are given by $G_{ij} - 1$. I'll assume the first asset is risk-free with gross return $r$, i.e. $G_{i1} = r$ for every $1 \leq i \leq K$. 
+ so     that led to what is likely the greatest famine in history: it is thought that by the time it ended in 1962, over 15 million people had died, likely far more [CITATION]. The sheer scale of the devastation, which was perhaps even more severe than that suffered by the Soviet Union during World War II, led Mao to step back from economic governance of the country in 1962, allowing the relative pragmatists Liu Shaoqi and Deng Xiaoping to take over. 
 
-##### The probability simplex
-I'll let $p = (p_1, ..., p_K)$ denote the probability vector, which describes the likelihood that each of  the $K$ contingent states will be realized on any given period. $p$ is stationary, i.e. it is independent of time/period. Without loss of generality, I'll assume  $p_i > 0$ for all $1 \leq i \leq K$, since if $p_i = 0$ for some state $i$, then we could just drop that state from consideration. This implies that $p$ resides within the interior of $\Delta^{K-1}$, the probability simplex of $K-1$ dimensions. We may think of $p$ as known (given to us by, say, an oracle) or, more realistically, estimated based on research. In any case, it represents our belief as to the likelihood of future events.
+#### Recovery
 
-##### The portfolio weights vector
-Let $w \in \mathbb{R}^M$ with the budget constraint $\sum_j w_j = 1$ denote our portfolio weights vector. I'll let $\mathcal{A}$ denote the set of all such vectors. Unless stated otherwise, I will not impose a long-only constraint on the portfolio weights vectors. Note that $\mathcal{A}$ is just the infinite plane containing the probability simplex on $M - 1$ dimensions. 
+1. mid summer 1959: Lushan conference, in which Peng Dehuai criticizes the GLF and is purged
+1. late summer 1959: backlash against critics in "Anti-Right Deviation" campaign
+1. 1960: walk back campaign to destroy sparrow population
+1. 1961: further reforms led by Liu and Deng stem some of the destruction caused by Mao's policies
+1. 3 Freedoms and 1 Guarantee: private plots, free markets, and self-responsibility + household quotas. Led by Liu and Deng. 3/1 was successful in stabilizing the economy. Famine subsides; 3/1 formed the basis for the Household Responsibility System, which emerged in the late 1970s; in both cases, people do not own land but instead are allocated land that they are responsible for
+1. Mao viewed 3/1 with deep suspicion, believing it to be a revisionist course along the "capitalist road"
+1. 11 Jan 1962: 7000 Cadres Conference, Mao's self criticism, Liu's 30/70 speech
+1. end of 1962: the worst of the GLF policies and consequences of those policies are now a thing of the past
 
-The gross return of a portfolio in the $i^{th}$ state is $Y_i(w) = \sum_{j=1}^M w_j G_{ij}$. It is occasionally useful to adopt the notation $Y = Gw \in \mathbb{R}^K$. We require $Y > 0$, for if $Y_i = 0$ for any $1 \leq i \leq K$,  then we will eventually be ruined, as $p_i > 0$ for all $i$ by assumption.  
 
-##### An assumption about $G$: no arbitrage
-This is important: in what follows, I'll assume $G$ admits no *arbitrage*. By no arbitrage I mean that there does not exist any $w \in \mathbb{R}^M$ such that
-$$
-\begin{aligned}
-(1) \quad &\mathbb{1}^T w \leq 0, \\ (2) \quad &Gw \geq 0, \\ (3) \quad &Gw \neq 0.
-\end{aligned}
-$$
-The first condition says that we don't have to put any money down; the second that we don't lose money in any of the $K$ states; and together with the second, the third implies that there is at least one state in which we have a positive portfolio return. For example, the matrix
-$$
-G = \begin{pmatrix} 
-1 & 1 \\ 
-1 & 1.2 \\ 
-1 & 1.9 
-\end{pmatrix}
-$$
-admits an arbitrage opportunity using $w = (-1,1)$, which is easily verified. If all three of the above conditions do hold, we say there is an arbitrage opportunity, i.e. an opportunity for risk-free profit. Without the assumption of a risk-free profit, the problem of choosing an optimal portfolio is less interesting and also less realistic, as whenever true arbitrage opportunities exist, they are fleeting because traders pounce on them until markets equilibrate, eliminating the opportunity.
+#### The Cultural Revolution
 
-##### Our goal: maximize the growth rate
-Our expected log return, i.e. the *growth rate*, is
+1. 1966: 3/1 is branded as "revisionist" by Mao
+1. 1967: Liu and Deng arrested
+1. 1969: Liu dies in prison
 
-$$
-\begin{aligned}
-W(w) = \sum_{i=1}^K p_i \ln Y_i(w),
-\end{aligned} \tag{0.1}
-$$
+Only four years later, in 1966 Mao launched his Cultural Revolution to rid Chinese civilization of "bourgeois elements", which lasted until his death. Fueled by communist ideology, this campaign led to the deaths of up to two million more people, as son turned on father and husband on wife. Perhaps most disturbingly, from 1967-1968 divisions between provincial communist leadership and more zealous elements culminated in the Guangzhi Massacre, in which over 100,000 people were lynched and murdered, and, at least in Wuxuan County, *eaten*, in what is the most famous example of ideology-driven cannibalism in modern history [CITATION]. JORDAN, EMPHASIZE THAT THE CULTURAL REVOLUTION NOT ONLY INSTILLED FEAR BUT STIFLED CREATIVITY, INDUSTRY, ETC
 
-in nats. Our goal is to maximize the growth rate $W$ over $\mathcal{A}$. I let $w^*$ denote the optimum point in $\mathcal{A}.$ Such an optimum exists because ... The concavity of $W$ implies that .... This is our goal because:
-1. It is $W(w)$ that drives the long-run performance of a portfolio, as I showed in the first post.
-2. Maximizing $W(w)$ also maximizes expected performance relative to the performance of the optimal portfolio $\mathbb{E}_p[Y(w)/Y(w^*)]$ [CITATION NEEDED].
-3. Anything else, or is the above enough for now?  Markov consequence? Competitive optimality?
 
+#### Whatever You Say, Man
 
+It was not immediately clear when Mao died in September 1976 that there would be any meaningful change of policy, nor was it initially clear where ultimate power lay. Hua Duofang, a strong supporter of Mao, was Mao's chosen successor, but he lacked the broad political support from the upper echelons of the Chinese state that he needed to truly secure his position as Paramount Leader. Opposed to Hua was the Gang of Four, which was led by Mao's widow who wished to consolidate power for herself, and three very powerful hardline CCP officials. After they declared their opposition to Hua's authority and anyone who might wish to depart from Mao's vision for China, Hua had them arrested on October 6 and had himself declared as Chairman of the Chinese Communist Party the very next day. 
 
+Though a firm supporter of Mao and Maoism, Hua recognized the excesses of some of Mao's policies, especially the Cultural Revolution, and the need for China to nurse its wounds and rebuild. He rehabilitated thousands of politically persecuted intellectuals and professionals, restored the national university entrance exam (which rewarded merit rather than ideological purity), reappraised scientists as vital to China's future rather than enemies of class struggle, and embarked on a mission to implement the Four Modernizations, which consisted of agriculture, industry, defense, and science and technology. Though Hua had solved the problem of the Gang of Four, he understood that he lacked complete legitimacy in the eyes of some of the less ideological elements of the CCP, especially the military, who had urged Hua to reverse Mao's purge of Deng, as they believed Deng's pragmatic leadership was vital to China's recovery from the Cultural Revolution. In what was arguably Hua's most consequential decision, in mid 1977 he relented, contravening Mao's purge of Deng and restoring Deng to his prior political positions. 
 
+Even if he was less zealous than Mao, Hua was still a firm communist who believed in a command economy. He supported collectivization, state-run industry, bans on private property, and state-directed economic priorities. In this vein, in February 1977 Hua publicly vowed to uphold whatever policies Mao had instituted and carry through whatever instructions Mao had ordered, in what came to be termed the "two whatevers". This helped to legitimize him as a natural successor to Mao, but it was also contradicted by his reforms, especially the restoration of Deng later several months later, as Deng had been stripped of his authority by Mao. It also worried less zealous officials within the party and military who cared less about ideological purity and more about competent administration.
 
+By the end of 1978, however, after less than two years of careful and strategic political maneuvering, the rehabilitated Deng managed to wrest ultimate control of the Chinese state from Hua and become China's Paramount Leader, and unlike Hua, Deng was a pragmatist who favored practical solutions over ideological purity, as the epigraph above attests. This pragmatic outlook had led to his prior expulsion from the Chinese Communist Party at the outset of the Cultural Revolution, as his advocacy for practical solutions to China's extreme poverty, which included a small degree of privatization of agricultural land, were seen as an attack on Mao's communist ideology. Deng was then stripped of all of his authority within the Party and was bannished to Jiangxi province to do manual labour in a tractor factory. Nonetheless, by the end of 1978, this "number two capitalist roader" (an epithet used to describe Deng as the second most egregious proponent of capitalism) had definitively, though gradually and peacefully, displaced Hua as the most powerful man in China.
 
-# Deriving the growth rate formula
-
-##### The first order condition
-Our goal is to maximize $W(w)$ subject to the budget constraint $\sum_{j=1}^M w_j = 1$. To solve this problem, we introduce the Lagrangian with multiplier $\lambda$ given by
-$$
-\begin{aligned}
-L(w, \lambda) = \sum_{i=1}^K p_i \ln Y_i(w) - \lambda \left(\sum_{j=1}^M w_j - 1 \right).
-\end{aligned}
-$$
-Setting the gradient with respect to $w$ equal to zero yields a condition for the multiplier: $\sum_{i=1}^K p_i \frac{G_{ij}}{Y_i(w^*)} = \lambda$. Upon multiplying by $w_j^*$ and summing over all $M$ assets, we find that $\lambda = 1$; hence, we obtain the first-order condition (FOC):
-$$
-\begin{aligned}
-\boxed{\rule[-1ex]{0pt}{4ex} \sum_{i=1}^K p_i \frac{G_{ij}}{Y_i(w^*)} = 1}
-\end{aligned} \tag{1.1}
-$$
-which is to hold for every $1 \leq j \leq M$. 
-##### The equivalent risk neutral measure
-Upon multiplying both sides of (1.1) by $r$, we find: 
-
-$$
-\begin{aligned}
-\sum_{i=1}^K \left(p_i \frac{r}{Y_i(w^*)}\right) G_{ij} = r,
-\end{aligned} \tag{1.1.1}
-$$
-which also holds for every $j$. Notice, however, that since $G_{i1} = r$, we have by (1.1), $\sum_{i=1}^K p_i \frac{r}{Y_i(w^*)} = 1$. Hence, $q^* \in \mathbb{R}^K$ defined by
-
-$$
-\begin{aligned}
-q^*_i = p_i \frac{r}{Y_i(w^*)}
-\end{aligned} \tag{1.2}
-$$
-is a probability distribution. In addition, we see from (1.1.1) that it is a *risk-neutral* distribution, which is to say the expected gross return of every asset under $q^*$ is exactly equal to $r$. Notice as well that this definition renders $q^*$ and $p$ equivalent as probability measures (i.e. $q^*_i > 0 \iff p_i > 0$). 
-
-Interestingly, the risk-neutral probability measure $q^*$ has emerged very naturally -- almost inevitably -- by virtue of the FOC for the maximization of the growth rate. This is interesting because in traditional mathematical treatments of asset management, risk-neutral measures are nowhere to be seen. For example, risk-neutral measures do not make an appearance in either Markowitz's mean-variance theory, the Capital Asset Pricing Model, or the factor-based approach of Fama and French. [CITATION!] In traditional financial theory, it is said that it is the *physical* distribution $p$ that matters, and risk-neutral distributions are left to discussions about pricing derivatives, such as call options. I should note, however, that more theoretical and advanced treatments of asset pricing, e.g.  [JOHN COCHRANE'S TEXT], define prices in terms of a stochastic discount factor, from which risk-neutral measures emerge as a consequence; nonetheless, standard mathematical treatments rarely mention risk-neutral measures. By contrast, in our treatment, risk-neutral measures emerge from the mathematics almost inescapably.
-
-Solving (1.2) for $Y_i(w^*)$ and substituting into (0.1) we see that the optimum growth rate is, up to the constant $\ln r$, given by the information divergence from the model distribution $q^*$ to the true distribution $p$:
-
-$$
-\begin{aligned}
-W(w^*) &= \ln r + D(p||q^*)
-\end{aligned} \tag{1.3}
-$$
-
-##### An FOC equivalence theorem
-FOC has a solution with $Y(w^*) > 0$ <---> q exists <---> no arbitrage <---> the optimization problem has a unique solution...
-##### The tilted measure
-If $q$ is some other equivalent risk-neutral measure (not necessarily $q^*$), we can define a new probability distribution that is a tilted version of $q$:
-$$
-\begin{aligned}
-m_i(q, w) = q_i \frac{Y_i(w)}{r}.
-\end{aligned} \tag{1.4}
-$$
-$m$ is a bijective map from $(\mathcal{Q}, \mathcal{W})$ to the interior of the simplex. INSERT ARGUMENT AS TO WHY. THEREFORE "story + portfolio = coordinate system for beliefs"
-
-At this point, I may as well go ahead and define $\mathcal{M}_{w^*}$ as the image of the linear map $q \mapsto m(q, w^*)$, where $q \in \mathcal{Q}$ and where $\mathcal{Q}$ is the set of all risk-neutral probability measures (which may or may not be equivalent to $p$).  The linear map is defined by the $K$ by $K$ diagonal matrix whose $i^{th}$ diagonal entry is $Y_i(w^*) / r.$ Elsewhere it might be useful to refer to the map $w \mapsto m(q^*, w)$, where $w \in \mathcal{W}$. I'll let $\mathcal{M}_{q^*}$ refer to the image of this map.
-
-##### A formula for the growth rate
-Solving (1.4) for $Y_i(w)$ and substituting into (0.1) yields a formula for the growth rate $W(w)$:
-$$
-\begin{aligned}
-\boxed{\rule[-1ex]{0pt}{4ex} W(w) = \ln r + D(p || q) - D(p || m(q,w))}
-\end{aligned} \tag{1.5}
-$$
-which I note is independent of one's choice for $q$. We can now rewrite our expression for $W(w^*)$ as
-$$
-\begin{aligned}
-W(w^*) = \ln r + D(p || q) - D(p || m(q,w^*)).
-\end{aligned} \tag{1.5.1}
-$$
-The non-negativity of Kullback Leibler divergence implies that for every risk-neutral measure $q$ and every $w$,
-$$
-\begin{aligned}
-W(w) \leq \ln r + D(p || q);
-\end{aligned} \tag{1.5.2}
-$$
-hence, $W(w) \leq \ln r + \min_{q \in \mathcal{Q}} D(p || q)$, Note that we don't have to separately require that $\mathcal{Q}$ contain only distributions *equivalent* to $p$, as any $q$ such that $p_i > 0$ and $q_i = 0$ for some $i$ would render $D(p||q) = \infty$, so such a $q$ would be unhelpful anyway.
-
-##### The decomposition formula
-Applying equation (1.5.1) twice, once with $q^*$ and once with some arbitrary $q \in \mathcal{Q}$, we see that
-$$
-\begin{aligned}
-W(w^*) = \ln r + D(p || q) - D(p || m(q,w^*)) = \ln r + D(p || q^*) - D(p || m(q^*,w^*)),
-\end{aligned}
-$$
-but the last term $D(p || m(q^*,w^*))$ is identically zero, as it is readily seen that $m(q^*,w^*) = p$. This implies that we can decompose $D(p || q)$ as:
-$$
-\begin{aligned}
-\boxed{\rule[-1ex]{0pt}{4ex} D(p ||q) = D(p ||q^*) + D(p ||m(q, w^*))}
-\end{aligned} \tag{1.6}
-$$
-
-##### Art: *The Slave*
-Michelangelo, *Awakening Slave*, 1525-1530. Galleria dell'Accademia di Firenze.
-
-
-
-
-
-
-# The Q polytope
-
-##### $q^*$ is the reverse information projection
-In equation (1.6), the non-negativity of KL divergence implies that $D(p ||q^*) \leq D(p ||q)$ for every $q$; thus, we see that
-$$
-\begin{aligned}
-q^* = \arg \min_{q \in \mathcal{Q}} D(p || q),
-\end{aligned} \tag{2.0}
-$$
-where the reader will recall $\mathcal{Q}$ denotes the set of all risk-neutral probability measures. Put differently, $q^*$ is the reverse information projection of $p$ onto $\mathcal{Q}$. 
-##### The solution space of $G^T q = r\mathbb{1}$
-Recall that a risk-neutral measure $q \in \mathbb{R}^K$ is a probability measure ($q^T \mathbb{1} = 1$, $q_i \geq 0$ for all $1 \leq i \leq K$) satisfying
-$$
-\begin{aligned}
-G^T q = r\mathbb{1},
-\end{aligned} \tag{2.1}
-$$
-i.e. some probability measure $q$ is a risk-free probability measure if the expectation under $q$ of every asset is identically equal to the risk-free rate: $\sum_{i=1}^{K} q_i G_{ij} = r$ for all $1 \leq j \leq M$.  
-
-Since $K > M$, $q$ is not unique, and the various solutions to (2.1) form an affine subspace of $\mathbb{R}^K$, i.e. if $q_1$ and $q_2$ both solve (2.1) then for every $\alpha \in \mathbb{R}$, $\alpha q_1 + (1 - \alpha)q_2$ also solves (2.1):
-$$
-\begin{aligned}
-G^T (\alpha q_1 + (1 - \alpha)q_2) &= \alpha G^T q_1 + (1-\alpha)G^T q_2 \\
-&= \alpha r \mathbb{1} + (1 - \alpha) r \mathbb{1} \\
-&= (\alpha + (1 - \alpha)) r \mathbb{1} \\
-&= r \mathbb{1}.
-\end{aligned}
-$$
-In addition, the solution space for (2.1) is equal to $\tilde{q} + \operatorname{null} G^T$, for some arbitrary solution $\tilde{q}$. To see this, let $u \in \operatorname{null} G^T$, and we see that 
-$$
-\begin{aligned}
-G^T (\tilde{q} + u) &= G^T \tilde{q} + G^T u \\
-&= G^T \tilde{q} + 0 \\
-&= G^T \tilde{q};
-\end{aligned}
-$$
-hence,  the solution set to (2.1) contains every point in $\tilde{q} + \operatorname{null} G^T$. Conversely, if $\tilde{q}$ and $q$ both solve (2.1), then
-$$
-\begin{aligned}
-G^T (\tilde{q} - q) &= G^T \tilde{q} - G^T q \\
-&= r \mathbb{1} - r \mathbb{1} \\
-&= 0,
-\end{aligned}
-$$
-so $\tilde{q} - q \in \operatorname{null} G^T$ and $q = \tilde{q} + u$ where $u \in \operatorname{null}G^T$; hence, every solution to (2.1) is contained in by $\tilde{q} + \operatorname{null}G^T$. We have therefore shown that the solution space is identically equal to $\tilde{q} + \operatorname{null}G^T$ for any arbitrary solution $\tilde{q}$. 
-
-The solution space therefore has dimension equal to $\dim \operatorname{null} G^T$, which, by the rank-nullity theorem is $\dim \operatorname{null}G^T = K - M$:
-$$
-\begin{aligned}
-\dim \operatorname{null} G^T &= \dim \mathbb{R}^K - \dim \text{range}G^T \\
-&= K - \dim \text{range}G^T \\
-&= K - \text{rank} G^T \\
-&= K - \text{rank} G \\
-&= K - M.
-\end{aligned} \tag{2.2}
-$$
-In summary, the solution space to (2.1) is an affine subspace of $\mathbb{R}^K$ with exactly $K-M$ dimensions that is given by $\tilde{q} + \operatorname{null}G^T$ for some solution $\tilde{q}$. 
-INSERT A SENTENCE OR TWO ABOUT HOW $\operatorname{null} G^T = (\text{col}G)^{\perp}$, which is another way of seeing that the more of the $K$-dimensional space that $G$ spans (e.g. by adding assets as columns), the more constraints are placed on $\operatorname{null} G^T$.
-##### The geometry of $\mathcal{Q}$
-Note that since the first column of $G$ is $r \mathbb{1}$, (2.1) automatically imposes $\sum_{i=1}^K q_i = 1$. It remains to be shown, however, that there exists a member of $\mathcal{Q}$ also satisfying $q_i > 0$ for all $i$, which would not only imply $\mathcal{Q} \cap \Delta^{K-1}$ is non-empty but also has a non-empty interior, where $\Delta^{K-1}$ is the $K-1$-dimensional probability simplex. The first part of the Fundamental Theorem of Asset Pricing (FTAP) provides exactly what we need: such a measure exists if and only if there is no arbitrage.
-
-Since we are assuming there is no arbitrage, by the FTAP, there exists some equivalent risk-neutral probability measure, which we can call $\tilde{q}$, and by our work in the previous subsection we see that there are infinitely many such risk-neutral measures, which together form the affine subspace of $\mathbb{R}^K$ given by $\tilde{q} + \operatorname{null} G^T$. In our running example, $K=3$ and $M=2,$ so $\mathcal{Q}$ is the intersection of $\Delta^2$ and the line given by $\tilde{q} + \operatorname{null} G^T$. $q^*$ is the member of $\tilde{q} + \operatorname{null} G^T$ that is, in an information-theoretic sense, closest to $p$. More specifically, $q^* = \arg \min_{q \in \mathcal{Q}} D(p || q)$.
-
-##### Figure: the simplex showing geometry for unconstrained $w$
-
-The figure will be of a 2D probability simplex. The physical distribution $p$ will be in the interior somewhere. For a given 3 by 2 submatrix $G$, which has one risk-free asset and one risky asset, I will show $\mathcal{M}_{w^*}$ (a line segment), $\mathcal{M}_{q^*}$, the $\mathcal{Q}$ polytope (a line segment), $q^*$, and $\tilde{q}$. Both the polytope and $\mathcal{M}_{w^*}$ will be periwinkle with the shade varying according to $D(p||q)$ and $D(p || m(q, w^*))$, though it's important that neither become too light, or else it will be too difficult to see. When the user hovers over a risk-neutral measure $q \in \mathcal{Q}$, the corresponding point $m(q, w^*)$ will be highlighted and a little box will appear that shows the value of these two Kullback Leibler divergences. This is meant to illustrate the growth-rate formula (1.5.1). I should probably also show a point on $\mathcal{M}_{q^*}$. If the user hovers over any of the line segments, the relevant points should be highlighted and the box should indicate the KL divergences and the value of the growth rate, no?
-
-##### If you want an edge, disagreeing with the market ain't enough
-
-In equation (1.3) we showed that the excess growth rate, $W(w) - \ln r$, is given by 
-$$
-\begin{aligned}
-D(p || q^*) = \min_{q \in \mathcal{Q}} D(p || q)
-\end{aligned} \tag{2.3}
-$$
-If this figure is positive, then we might claim to have an "edge". The left-hand side makes it clear that we have an edge if and only if $p \neq q^*$, while the right-hand makes plain that we have an edge if and only if $p \not \in \mathcal{Q}$. 
-
-We are now in a position to shed more insight into when there is or is not an edge. Since we know there's an edge if and only if $p \not \in \mathcal{Q}$, we can simply check if $p \not \in q + \operatorname{null} G^T$ for some $q \in \mathcal{Q}$, where $q$ might be the risk-neutral measure given by the market. We can think of $p - q$ as the "disagreement" between $p$ and $q$. Let
-$$
-\begin{aligned}
-p - q = u + v,
-\end{aligned}
-$$
-where $u \in \operatorname{col} G$ and $v \in \operatorname{null} G^T$. This decomposition is allowed because the direct sum $\operatorname{col} G \oplus \operatorname{null} G^T$ spans $\mathbb{R}^K$. We therefore see that $p \not \in \mathcal{Q}$ if and only if $u \neq 0$; thus, disagreeing with the market's risk-neutral measure is not enough: there's an edge if and only if there is a component of the disagreement contained within $\operatorname{col} G$. Put differently, *it is not enough to simply disagree with the market: we have an edge if and only if our disagreement is tradable.* 
-
-
-##### The effect of constraints on shorting and leverage
-ADD A SENTENCE OR TWO ABOUT HOW CONSTRAINING THE FEASIBLE SET FOR $w$ gives $\mathcal{Q}$ some width, thus expanding $\mathcal{Q}$ into a $K - 1$-dimensional region defined by inequalities. I'll need to talk about $\mathcal{Q}_c$, which is the $w$-constrained version of $\mathcal{Q}$. Should I talk about how $\mathcal{M}_{w^*}$ and $\mathcal{M}_{q^*}$ will be different now?
-
-##### Figure: the simplex showing geometry for constrained $w$
-
-The figure will be the same as above except $\mathcal{Q}$ will be replaced with some $\mathcal{Q}_c$, a $K-1$-dimensional region. I suppose $\mathcal{M}_{w^*}$ and $\mathcal{M}_{q^*}$ will be different now (they'll be regions, no?), so what should I do about them? I suppose I should show $q_c^*$, which is the same idea as $q^*$ except it's for $\mathcal{Q}_c$. I should probably also $q^*$ and how that's farther from $p$ than is $q_c^*$.
-
-
-![Albrecht Dürer, _Salvator Mundi_, ca. 1505. The Metropolitan Museum of Art.](salvator-mundi.jpg)
-
-
-![Eduard Manet, _The Funeral_, ca. 1867. The Metropolitan Museum of Art.](the-funeral.jpg)
-
-
-![Leonardo da Vinci, _Adoration of the Magi_, 1482. Uffizi Gallery.](adoration-of-the-magi.jpg)
-
-
-![Michelangelo, _Awakening Slave_, 1482. The Gallery of the Academy of Florence.](awakening-slave.jpg)
-
-
-
-
-# Market incompleteness
-
-##### What is incompleteness?
-Recall that $Y = Gw \in \mathbb{R}^K$ is the portfolio gross returns vector. Because we have assumed that $K > M$ and that $G$ has full column rank, the image of $G$ is an $M$-dimensional subspace of $\mathbb{R}^K$. This implies that $G$ does not span $\mathbb{R}^K$, meaning not every vector in $\mathbb{R}^K$ can be achieved. We say such markets are *incomplete*. A crucial feature of incomplete markets is that, if there exists a risk-neutral measure, it isn't unique. This follows from the fact that $\dim \operatorname{null} G^T > 0$. In our running example, $\dim \operatorname{null} G^T = 3 - 2 = 1$ (by equation (2.2)), so $\mathcal{Q}$ is a line segment within the 2-simplex: it isn't a unique point.
-
-##### The cost of incompleteness
-For incomplete markets, when we solve the convex optimization problem for $w^*$, which in general must be accomplished numerically, we are missing out on superior performance that we are unable to capture. From equations (1.3) and (2.0) we have shown the following optimization duality:
-$$
-\begin{aligned}
-\max_{w \in \mathcal{A}} W(w) = \min_{q \in \mathcal{Q}} \big(\ln r + D(p || q) \big).
-\end{aligned} \tag{3.1}
-$$
-This implies that the maximization of $W$ depends crucially on $\mathcal{Q}$. In particular, the minimum achieved on the right-hand side of (3.1) decreases monotonically as the set $\mathcal{Q}$ expands (obviously). By decreasing the number of assets that can be traded, we are in effect eliminating columns from $G$, which in turn expands $\operatorname{null} G^T$, and since $\mathcal{Q}$ is a translate of $\operatorname{null} G^T$ that intersects the probability simplex, this tends to decrease the right-hand side of (3.1). We have, in effect, a see-saw.
-
-Let $\tilde{G} \in \mathbb{R}^{K \times K}$ be a gross returns matrix of full rank without any arbitrage. Because $\tilde{G}$ is of full rank, its span equals all of $\mathbb{R}^K$ so the market consisting of its $K$ assets is complete. I'll let $\tilde{\mathcal{A}}$ denote the set of all $w \in \mathbb{R}^K$ such that $\mathbb{1}^T w = 1$. In addition, let $\tilde{\mathcal{Q}} = \lbrace \tilde{q} \rbrace$, where $\tilde{q}$ is the unique probability measure solving to ${\tilde{G}}^T \tilde{q} = r \mathbb{1} \in \mathbb{R}^K$. Because of the First FTAP, no arbitrage implies the risk-neutral equivalent measure $\tilde{q}$ exists, and because of the Second FTAP, completeness implies that $\tilde{q}$ is unique.
-
-Now, suppose $G$ is a submatrix of $\tilde{G}$ found by selecting only $M < K$ columns from $\tilde{G}$, discarding the rest. Because $K > M$, $\operatorname{null} G^T \neq \emptyset$, so the polytope $\mathcal{Q} = \mathcal{Q} (G)$ contains not only $\tilde{q}$ but also infinitely many other risk-neutral measures. By the monotonicity of the maximization problem as a function of the feasible set, $\max_{w \in \tilde{\mathcal{A}}} W(w) \geq \max_{w \in \mathcal{A}} W(w)$ since $\tilde{\mathcal{A}} \supset \mathcal{A}$. This is obvious and important, but not particularly enlightening. 
-
-In addition, by a similar monotonicity argument, 
-$$
-\begin{aligned}
-D(p || q^*) = \min_{q \in \mathcal{Q}(G)} D(p || q) &\leq \min_{q \in \tilde{\mathcal{Q}}} D(p || q) = D(p || \tilde{q}),
-\end{aligned}
-$$
-so we can express the decline in the maximum growth rate, which can be thought of as growth that is inaccessible, forgone or *stranded*. Define the stranded growth $\sigma$, which is a function of $\tilde{G}$ and a submatrix $G$, as 
-$$
-\begin{aligned}
-\sigma &= \min_{q \in \mathcal{Q}(\tilde{G})} D(p || q) - \min_{q \in \mathcal{Q}(G)} D(p || q) \\
-&= D(p || \tilde{q}) - D(p || q^*).
-\end{aligned} \tag{3.2}
-$$
-Note that, because of duality, $\sigma = \max_{w \in \tilde{\mathcal{A}}} W(w) - \max_{w \in \mathcal{A}} W(w)$, hence the name *stranded growth*. Finally, by applying (1.6) with $q = \tilde{q}$ we arrive at a simple formula for the stranded growth due to market incompleteness:
-$$
-\boxed{\rule[-1ex]{0pt}{4ex} 
-\begin{aligned}
-\sigma &= D(p ||m(\tilde{q}, w^*)),
-\end{aligned} \tag{3.3}
-}
-$$where $w^* \in \mathcal{A}$ is the optimum portfolio vector using the submatrix $G$ corresponding to the incomplete market. In words, the decline in the maximum achievable growth rate is the disagreement, as an information divergence, between one's belief $p$ and the tilted risk-neutral measure $m$, which has been constructed using the unique risk-neutral measure $\tilde{q}$ from the complete market together with the portfolio $w^*$ optimized for the incomplete one.
-
-##### Diversification
-
-Traditional finance theory describes diversification as a practical manifestation of the maxim not to put all of one's eggs in one basket. It is fundamentally a call for prudence. In this context, diversification means spreading one's investments over a sufficiently large menu of assets and asset classes, e.g. domestic bonds, large-cap value stocks, commodities, equities in developing markets, etc. 
-
-Mathematically, the goal of diversification is to reduce the variance of one's portfolio without having to sacrifice very much expected return by choosing investments whose correlation with each other is relatively low or whose individual variance is relatively small. For the Capital Asset Pricing Model, the Sharpe ratio quantifies the tradeoff between the expected return and the portfolio variance (or the standard deviation to be precise). The goal, therefore, is to construct a portfolio that maximizes this ratio:
-$$
-\begin{aligned}
-SR(w) = \frac{w^T \mu}{\sqrt{w^T \Sigma w}},
-\end{aligned}
-$$
-where $\mu$ is the mean vector of *net* returns and $\Sigma$ the corresponding covariance matrix.
-
-The log-optimal approach to investing, by contrast, maximizes the growth rate $W(w)$. We have seen that by reducing the number of assets that can be traded, the maximum attainable growth rate, $W(w^*)$, in general declines. Conversely, when the number of assets traded increases, $W(w^*)$ increases concurrently, so long as each of the gross returns vectors, $\gamma$, of the additional assets don't already satisfy $\mathbb{E}_{\mathcal{Q}}[\gamma] = r$.  For the traditional investor, diversification is a variance-reduction technique; whereas, for the log-optimal investor, it is a growth-maximization technique. In future posts, I plan to investigate the consequences of these different approaches in greater detail.
-
-
-![Jean-Baptiste Greuze, _Broken Eggs_, 1756. The Metropolitan Museum of Art.](broken-eggs.jpg)
-
-
-
-##### The information-theoretic value of adding an asset to a portfolio
-
-We have established that, in a certain sense, if we restrict ourselves to trading only $M < K$ assets, then we're leaving money on the table. But, how much? Of course this will depend on which $M$ of the $K$ assets we trade, there being $\binom{K}{M}$ possibilities. Figuring out which $M$ to choose is a difficult question and is likely an $NP$-hard problem. Nonetheless, we can make some empirical observations as to the statistical properties of the leftover $M$ assets that we choose to keep in our portfolio.
-
-##### Figure 2: the value of adding assets to a portfolio
-
-The horizontal axis is to be the number of risky assets held, starting at zero where only the risk-free asset it held, and ending at $K$ assets held. For every $0 < M < K-1$, I can show the growth rate of every portfolio with that many assets held, of which there are K choose M. There are $(K-1)!$ paths through this figure, one for each ordering of  which collectively trace out a "bridge" from $(0, \ln r)$ to $(K-1, W(\tilde{w}))$, where $\tilde{w}$ denotes the optimal choice when every asset is available to be traded. The paths will be in periwinkle. I should highlight the "greedy" path somehow, perhaps in a different color, shade, or texture.
-
-##### How to minimize the effect of incompleteness by trading options
-
-Let $x \in \mathbb{R}^K$ denote an arbitrary vector of returns measured in, say, dollars. $x_i$ represents the dollar payoff if state $i$ is realized. Let $\psi \in \mathbb{R}^K$ be a pricing vector, where $\psi_i$ represents the value of a dollar if state $i$ were to occur. The total value (or cost) of $x$ is then $\pi(x) = \psi^T x$. 
-
-Letting $q = \tilde{q}$ in equation (1.6) we see that
-$$
-\begin{aligned}
-\boxed{\rule[-1ex]{0pt}{4ex} D(p ||\tilde{q}) = D(p ||q^*) + D(p ||m(\tilde{q}, w^*))}
-\end{aligned}
-$$
-which we can think of as $\text{edge} + \text{stranded} = \text{constant}$: a conservation law. 
-
-FINISH THIS SECTION!
-
-
-
-
-
-
-# Other things to potentially say, add, note, or emphasize
-
-1. When it comes to determining whether there's a potential trading opportunity/edge, It's not the market's actual risk-neutral measure $\tilde{q}$ that matters; it's the risk-neutral measure $q^*$ that is closest to one's belief $p$ where $q^*$ is constrained to come from $\mathcal{Q}$.
-2. Add a provenance note. See Claude's suggestion under "Canonical sources — and a provenance finding you need to know about". It wants you to mention "SDF entropy" and it says "Your defensible contributions are the incompleteness framing (Q\mathcal{Q} Q as a polytope, edge as a projection), the exact decomposition (1.6), the completion accounting, and the exposition. Say so in a provenance note; it costs a paragraph and buys credibility."
-3. Claude says "References to check: **Backus, Chernov & Zin (2014, _Journal of Finance_), "Sources of Entropy in Representative Agent Models"**; **Bansal & Lehmann (1997), "Growth-Optimal Portfolio Restrictions on Asset Pricing Models"**; **Alvarez & Jermann (2005, _Econometrica_)**; **Stutzer (1996)**" referencing (1.5.2). See Claude's section "Canonical sources — and a provenance finding you need to know about"
-4. Edge = $D(p ||q^*)$.
-5. $(q,w)$ can be thought of as $\text{story} \times \text{portfolio}$.
-6. The post is fundamentally about information you cannot trade on: "Your edge is not how much you disagree with the market — it's how much of your disagreement lands on something you can buy. Information theory prices the difference exactly."
 
+# Reform and Opening Up
+::: {.epigraph}
+"It doesn't matter if a cat is black or white, so long as it catches mice."
+
+— Deng Xiaoping
+:::
+
+
+When Deng came to power, people were cautiously optimistic, e.g. Friedman and Lee Kuan Yew. Everyone was familiar with the Asian Tigers by that point.
+
+
+In contrast to Hua's "two whatevers", Deng and his allies championed a new epistemology, summarized by his 1978 essay entitled "Practice is the Sole Criterion of Truth". 
+
+STATISTICS ABOUT CHINA'S POVERTY IN, SAY IN 1978 OR 1980. 
+
+In 1978, the year Deng Xiaoping became paramount leader, China's life expectancy at birth was 63 years (WB_WDI_SP_DYN_LE00_IN), \[INSERT 2-3 SENTENCES ABOUT THIS PROFOUND CHANGE, e.g. GDP changes or other measures or economic growth\].
+
+Although many people doubted that a nation deeply committed to Marxism-Leninism-Maoism could reinvent itself into a thriving market economy, as early as 1980 some astute observers noticed the sincerity of the commitments Chinese leadership had made to economic liberalization beginning in the late 1970s. One such observer was Milton Friedman. Quoting a report he wrote in 1980 on Deng Xiaoping's efforts to unshackle the Chinese economy from paralyzing top-down control, Friedman remarked years later that he had viewed Chinese economic liberalization as "one of the great economic experiments of our time". In that same report, he elaborated further: "The reforms – the attempt to introduce market elements, the opening up of contacts with the West, the encouragement of foreign investment, and so on – are in a desirable direction....The potential is enormous. The present level is extremely low....My own conjecture is that there will be considerable progress in the next few years as some of the newly announced policies work themselves through the system."[^2] The Singaporean leader Lee Kuan Yew was even more optimistic, saying in 1980 "\[INSERT LEE KUAN YEW'S OBSERVATIONS\]"\[\^3\]
+
+MENTION THAT THE ECONOMY SOFTENED 1989-1991 as Deng ceded power to more hardline communists, Tiananmen Sq. Massacre, etc. (cite, eg, % GDP growth figures from WB WDI)
+
+
+[^2]: Friedman, Milton. “Impressions of China and Hong Kong on a Recent Visit” (speech, April 29, 1994), Hoover Institution, Collected Works of Milton Friedman.
+
+\[\^3\] INSERT CITATION FOR LEE KUAN YEW    
+
+![Milton Glaser, *Milton Friedman*, 1969. National Portrait Gallery, Smithsonian Institution; gift of Time magazine.](milton-friedman.jpg){#fig-friedman width="60%" fig-align="center" fig-alt="INSERT ONE!"}
+
+2-3 PARAGRAPHS ABOUT CHINA'S ECONOMIC EXPLOSION 
+
+
+1. Dec 1978: Third Plenum of the 11th, and Deng emerges on top
+1. 1980: establishment of 4 SEZs, allowing not only a dedicated place with greater adherence to free-market principles but also allowed for foreign joint ventures
+1. 1978 - 1983: pilot phase for urban economic reform in which some free market principles were gradually phased in for SOEs for certain regions of the country
+1. 1983 - 1985: before 100% of profit had to be remitted to the state; however, this was gradually phased out in favor of a tax
+1. Oct 1984: 3rd plenary of the 12th Central Committee and the Decision on Reform of the Economic Structure
+1. 1987: the HRS was mirrored in urban areas for industry under the Contract Responsibility System (CRS); far more complex than the HRS; any excess revenue earned and/or product produced above state-mandated quotas could be used for private uses, e.g. investment or pay rises; dual-track pricing
+1. mid 1988: Deng attemps immediate price reform, causing a run on banks; inflation spikes
+1. late 1988: fearing inflation and civil unrest, conservatives roll back Deng's reforms
+1. 1989: Tiananmen Square
+1. 
+1. 1990s: phase II of privitization in which Zhu Rongji oversaw the privitization of small and medium size SOEs, leading to millions of layoffs but which laid the foundations for a renewed economic boom under Jiang.
+
+- private sector competition against SOEs permitted in the form of TVEs (Town Village Enterprises)
+- abolition of the "Iron Rice Bowl"
+- Household Responsibility System formally introduced in late 1970s
+- Deng's approach was one of pragmatic experimentation. Experiments that were deemed successful were expanded. The command economy was not abolished overnight; Deng's approach and that of his successors was that of gradual reform.
+- dual-track pricing eventually led to arbitrage, corruption, and inflation; together with dissatisfaction over a continued lack of political rights, this culminated in the Tiananmen Square protests in 1989
+- 199
+
+
+
+
+
+
+# You Can't Bet on China
+
+OLD: "Instead, practitioners are left trying to cobble together portfolios that very imperfectly express their views. A portfolio manager who is sanguine about China's future, for example, might be bullish on Chinese companies, believing they will benefit from a thriving economy, but this requires the stock market to be a robust proxy for economic growth. In other words, no amount of shorting or leverage can construct a payoff structure in which the portfolio generates a handsome return if and only if the thesis turns out to be true. There is, therefore, no clean way to bet on this thesis. (In more precise language, there is no combination of tradable assets and portfolio vector whose payoff would be an Arrow Debreu security for this event.) The problem is with the menu of tradable securities: there simply is no security that pays if and only if the event (long-run economic growth) comes to fruition. Such market incompleteness leads to lower profits.""
+
+
+Those who had successfully predicted the meteoric rise of the Chinese economy were unable to profit from their clairvoyance, as there was -- and is \[CHECK THIS -- YOU MIGHT BE WRONG!\] -- no asset whose value tracks the Chinese economy. Instead, bullish prognosticators have often relied on investments in the Chinese stock market. Unfortunately, as the last several decades have shown, the Chinese stock market has been a very poor proxy for Chinese economic growth.
+
+\[INSERT FIGURE FOR CHINESE ECONOMIC INDICATORS VS ITS STOCK MARKET VS USA'S STOCK MARKET VS WORLD STOCK MARKET\]
+
+```{python}
+#| label: fig-china-vs-us
+#| fig-cap: "China's economy and China's stocks, each measured against America's. Every quantity is China's divided by America's, so the United States is the numéraire, and every change is in bits. 1 bit = ln 2 ≈ 0.693 nats: one doubling. Top: real GDP per capita, up 4.02 bits (×16) since 1978. That is the change, not the level: in 2025 China's GDP per capita was still ×0.20 of America's, 2.30 bits (about 2.3 doublings) short, in constant 2015 US\\$ at market exchange rates; purchasing-power parity would show a smaller gap. Bottom: MSCI China ÷ MSCI USA (periwinkle) against the same economy line re-based to December 1998 (lime), shaded periwinkle where the stocks outpace the economy and grey where they lag it. The stock ratio fell to −0.78 bits (×0.58) in January 2002, peaked at +1.66 bits (×3.2) in October 2007, and touched its low of −0.84 bits (×0.56) in August 2024; by June 2025, the last month both datasets cover, the economy ratio was up 2.23 bits (×4.7) and the stock ratio down 0.57 bits (×0.67). Later stock data are not shown. Sources: World Bank, World Development Indicators (CC BY 4.0), GDP per capita in constant 2015 US\\$; MSCI, MSCI China and MSCI USA net total return indexes in US dollars."
+from china_figure import build_china_figure, china_figure_html
+from IPython.display import HTML
+
+HTML(china_figure_html(build_china_figure()))
+```
+
+\[INSERT A PARAGRAPH EXPLAINING WHY ITS STOCK MARKET HAS BEEN A POOR PROXY FOR ECONOMIC GROWTH\]
+
+- According to Ben Felix in "Why Economic Growth Doesn't Always Mean Higher Returns", the term "emerging markets" was coined in 1981 to encourage people to invest in foreign markets.
+- Jay Ritter's papers:
+  - 2005: "Economic Growth and Equity Returns"
+  - 2012: "Is Economic Growth Good for Investors"
+  - 2022: "What Matters More for Emerging Markets Investors: Economic Growth or EPS Growth?"
+
+Data for US and Chinese economic growth: https://data.worldbank.org/indicator/NY.GDP.MKTP.KD?locations=CN-US
+
+Data for US and Chinese market capitalization from the World Bank: https://data.worldbank.org/indicator/CM.MKT.LCAP.CD?locations=CN-US
+
+Data for US and Chinese stock market performance from MSCI: https://www.msci.com/indexes/index/302400/msci-china-index
+
+Claude wants you to mention that an inability to bet on China was made worse by the fact that foreign investors couldn't buy mainland Chinese A-shares until recently: "The first is the **access point**. Foreign investors could not buy mainland A-shares at all until the QFII programme opened in 2002; access broadened with Stock Connect in 2014; MSCI only began including A-shares in 2018. This is incompleteness in the most literal possible form. The security existed and was not a column of your G. A Western investor in 1985 who was exactly right about China could not act on it even through the imperfect proxy, because the proxy was legally out of reach. This is a sharper illustration than "the proxy was noisy.""\

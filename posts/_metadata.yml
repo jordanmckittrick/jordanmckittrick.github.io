@@ -3,3 +3,4 @@ author: "Jordan McKittrick"
 toc: true
 freeze: auto
 title-block-banner: false
+bibliography: ../references.bib

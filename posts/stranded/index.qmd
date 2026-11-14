@@ -1,0 +1,792 @@
+---
+title: "2: Stranded"
+subtitle: "Measuring the cost of market incompleteness using information theory"
+date: 2026-11-16
+categories: [quantitative finance, information theory, incomplete markets, risk-neutral measure, log-optimal investing]
+image: gardanne-1920px.jpg
+
+format:
+    html:
+        code-fold: true
+        code-summary: "Show code"
+        code-tools: true
+
+draft: false
+
+---
+
+
+
+# Introduction
+
+Consider two seemingly unrelated scenarios:
+
+1.  You disagree vehemently with the market's implied probabilities for the future. Assuming you're right and the market's wrong, do you have an edge? If so, how much?
+2.  A new asset is introduced to the market. Would trading it improve your long-run performance? If so, how much growth are you forgoing if you decline to trade it?
+
+ Knowing that this post will be about information theory, you may suspect that the answer to the first question is the Kullback-Leibler (KL) divergence $D(p \| q)$ between your forecast $p$ of the probabilities of future states and a risk-neutral probability measure, $q$. This would imply that you have an edge whenever $p \neq q$ since $D$ is zero if and only if $p = q$. You may also suspect that trading an additional asset would improve your long-run performance if and only if you could construct a portfolio with a higher Sharpe ratio. Neither claim is in general correct. 
+
+In spite of their apparent differences, these questions are closely related, as their answers fall out of the same information-theoretic framework, which I will derive in this post. The unifying thread is the idea of market *incompleteness*, which is the problem of not being able to bet on every possible future event. Because incompleteness implies the non-uniqueness of risk-neutral measures, this post can be thought of as an investigation into the implications of this non-uniqueness for the portfolio manager.
+
+Both answers turn out to involve information projections. In particular, I'll show that the rate at which you can beat cash in the long run is $\min_{q \in \mathcal{Q}}D(p \| q)$, where $\mathcal{Q}$ is the set of all risk-neutral measures. The naive answer $D(p \| q)$ overestimates your edge by an amount I call the _misfit_, a phantom edge that can't be captured by any portfolio. I derive these results and shed further light on them in @sec-what_your_disagreement_with_the_market_is_worth. Then in @sec-what_a_missing_asset_is_worth I show that the value of a new asset is precisely the misfit that adding it eliminates. I call this particular kind of misfit the _stranded_ growth, which is evaluated at the optimal portfolio from the original market and the risk-neutral measure closest to $p$ from the enlarged market. The stranded growth is positive if and only if the risk-neutral measure in the original market that is closest to $p$ misprices the new asset. I also derive an approximation for the stranded growth in terms of the new asset's appraisal ratio, and I demonstrate that while the stranded growth is related to the maximum Sharpe ratio, a new asset can increase the maximum Sharpe ratio while leaving the maximum growth rate unchanged, and _vice versa_.
+
+
+
+
+
+# Stranded at sea
+
+Following the end of the Napoleonic Wars and the restoration of the Bourbon monarchy, on June 17, 1816 the French frigate *La Méduse* set sail for Saint-Louis to re-establish French colonial rule over its former colony Senegal. Captaining the ship was Hugues Duroy de Chaumareys, an aristocratic royalist émigré. By 1816 de Chaumareys had not captained a ship for two decades, and, eager to please the impatient colonial governor of Senegal who was on board with him, de Chaumareys chose to ignore warnings from his officers and depart from the standard course, instead opting to take a more direct route that would bring the ship dangerously close to the shallow seas off the coast of Mauritania. 
+
+On July 2, *La Méduse* ran aground roughly 30 miles off the coast. For three days her crew tried to dislodge the ship, but de Chaumareys refused to unburden her by jettisoning her cargo, which included 14 heavy cannons. To make matters worse, they had run aground during a spring high tide, so no later tide would rise high enough to float her off. It became clear that the ship would never dislodge, so on July 5 the captain called for her evacuation. There were not enough lifeboats for the over 400 people on board, however, so they salvaged timber from the ship to construct a makeshift raft for the 147 people who could not fit into a lifeboat. The 20-by-7-meter raft was thrown together haphazardly. It included a rudimentary sail but no rudder, and it was partially submerged under the weight of 147 people. The plan was for the lifeboats to tow the raft to shore.
+
+For reasons that remain unclear, shortly after launch the towline connecting the raft with the lifeboats was severed. It was later alleged that this was a deliberate decision taken to ease the burden of those in the lifeboats. In any case, the 146 men and one woman onboard the raft were suddenly adrift 30 miles off the coast of West Africa in open ocean on a partially submerged raft, with woefully inadequate provisions, no oars, no rudder, and a sail that hardly worked. Many of the horrors that ensued over the next 13 days were so lurid that I will not share them here. When the raft was finally rescued on July 17 by the _Argus_, another French ship accompanying *La Méduse*, only fifteen of the original 147 people were still alive. Five of the fifteen survivors would die from exhaustion shortly after reaching shore [@miles2007wreck]. 
+
+
+
+![Théodore Géricault, *The Raft of the Medusa*, 1819. Musée du Louvre. [The painting depicts the raft's survivors waving to the _Argus_ on the distant horizon. Géricault's assiduous preparation for this painting is the stuff of legend. He interviewed survivors, read published accounts, visited asylums and hospitals, studied the anatomy of corpses at a morgue -- even bringing decaying body parts home with him for further inspection -- and had a replica of the raft constructed by one of the raft's survivors. He prepared hundreds of preparatory studies, and when he was finally ready to put paint to canvas, he shaved his head and locked himself in his studio for eight months until he was done. When he emerged, the 27-year-old Géricault had created a 16-by-23-foot masterpiece that would shock the French establishment. What I find most interesting about this painting, however, isn't Géricault's talent or his obsessiveness (there are many talented eccentrics in the history of art); it is the scene Géricault chose to depict: he chose the precise moment when hope, uncertainty, tragedy, and death violently collide.]{.caption-note}](the-raft-of-the-medusa-3840px.jpg){#fig-ship fig-alt="INSERT ONE!" fig-align="center" width="100%"}
+
+
+
+
+
+
+
+
+
+# The setup
+
+### The basics
+Let $G \in \mathbb{R}^{K \times M}$ denote a matrix of gross returns for $M$ assets over $K$ possible future states of the world, where $K > M$. I'll refer to $G$ as "the market". By a gross return, I mean that if you invest one dollar in the $j^{th}$ asset, then after one period that dollar has become $G_{ij}$ dollars, assuming the $i^{th}$ state is realized. I'll let $G_j$ denote the random gross return (payoff per dollar invested) of the $j^{th}$ asset, which pays $G_{ij}$ if the $i^{th}$ state is realized. I'll assume that the first asset, "cash," is risk-free with gross return $r$, i.e. the first column of $G$ is $r\mathbb{1}$. I also assume that $\operatorname{rank} G = M$, equivalently the linear map $G: \mathbb{R}^M \rightarrow \mathbb{R}^K$ is injective.
+
+I'll let $p = (p_1, ..., p_K)$ denote the probability vector that describes the likelihood of each of the states. Without loss of generality, I'll assume $p_i > 0$ for all $1 \leq i \leq K$ (since otherwise we would just eliminate zero-probability states from consideration), so $p$ resides within $\Delta^{K-1}_{++} = \lbrace y \in \Delta^{K-1} : y_i > 0 \text{ for all } i \rbrace$, the set of strictly positive distributions, which is the relative interior of the probability simplex of $K-1$ dimensions, $\Delta^{K-1}$. We may think of $p$ as known (given to us by, say, an oracle) or, more realistically, estimated based on research. In any case, it represents our belief as to the likelihood of future events. We will assume that $p$ reflects reality, unless stated otherwise.
+
+I'll let $\mathcal{A} = \lbrace w \in \mathbb{R}^M : \sum_{j=1}^M w_j = 1 \rbrace$ denote the set of all fully invested portfolios. The gross return of a portfolio $w$ in the $i^{th}$ state is $Y_i(w) = \sum_{j=1}^M w_j G_{ij}$. I let $Y(w)$ denote the random scalar equal to $Y_i(w)$ in state $i$.
+
+We sample rows from $G$ i.i.d. according to $p$, and we fully reinvest our money after each period, rebalancing the portfolio weights so as to remain fixed at some $w \in \mathcal{A}$. Note that if $Y_i(w) \leq 0$ for any $1 \leq i \leq K$, then we will eventually be ruined, as $p_i > 0$ for all $i$ by assumption, so it is useful to define $\mathcal{A}_{++} = \lbrace w \in \mathcal{A} : Gw > 0 \rbrace$. 
+
+I will assume that $G$ admits no arbitrage, meaning there is no position (unnormalized dollar holdings) $x \in \mathbb{R}^M$ such that you can never lose money ($Gx \geq 0$), you have a chance at making money ($Gx \neq 0$), and you don't need to invest anything ($x^T \mathbb{1} \leq 0$).
+
+A market is said to be _incomplete_ if $G$ is not a surjective map: there exist payoffs (elements of the codomain $\mathbb{R}^K$) that can't be reached by any position $x \in \mathbb{R}^M$. It is precisely the fact that $\operatorname{rank} G < K$ that causes market incompleteness. 
+
+
+
+
+
+### Risk-neutral measures
+
+The first part of the Fundamental Theorem of Asset Pricing (FTAP) says that a market admits no arbitrage if and only if there exists a strictly positive pricing vector $\psi \in \mathbb{R}^K$ such that $G^T \psi = \mathbb{1}$, where $\psi_i$ is the price today of a claim that pays $\$1$ tomorrow if the $i^{th}$ state is realized and pays nothing otherwise [@harrison1981martingales]. This means that the price of the $j^{th}$ asset is also $\$1$ for all $1 \leq j \leq M$. The prices are all exactly $\$1$ because $G$ contains gross returns rather than absolute payoffs. Therefore, the first part of the FTAP says that no arbitrage is equivalent to the existence of some strictly positive probability measure $q$ such that $G^T q = \frac{1}{c}\mathbb{1}$, where $c = \sum_{i=1}^K \psi_i$. Whenever there is a risk-free rate (as is our case), we have $c = 1/r$; hence, no arbitrage is equivalent to the existence of some strictly positive probability measure $q$ such that $G^T q = r\mathbb{1}$. Now, define $\mathcal{Q} = \mathcal{Q}(G)$ to be the set of all probability measures $q$ that exist within the affine space given by
+$$ 
+G^T q = r\mathbb{1}.
+$$ {#eq-risk_neutral_affine_space} 
+By the rank nullity theorem, this affine space has dimension $K - M$. Elements of $\mathcal{Q}$ are called _risk-neutral probability measures_ and are said to be _consistent with market prices_. They are said to be risk-neutral because every asset has the same expected gross return, namely $r$, the same as cash, so an investor who is indifferent to risk and who believes $q$ to be the true distribution would be indifferent to the $M$ assets. In addition, let $\mathcal{Q}_{++} = \lbrace q \in \mathcal{Q} : q > 0 \rbrace$, the elements of which are called _equivalent martingale measures_ (EMMs). Relative to cash, assets are priced correctly under all $q \in \mathcal{Q}$, meaning $\mathbb{E}_q \left[ \frac{G_j}{r} \right] = 1$ for all $j$, which follows from @eq-risk_neutral_affine_space. The unit of account, in this case cash, is called a _numeraire_. 
+
+
+It follows from the injectivity of $G$ and Jensen's inequality that for every $q \in \mathcal{Q}_{++}$, there exists some $j$ such that $\mathbb{E}_q \left[\frac{G_j}{Y(w)} \right] \neq 1$ when $w \in \mathcal{A}_{++}$ isn't cash. There is, however, a different measure that prices assets correctly using $w \in \mathcal{A}_{++}$ as the numeraire, which I define in @sec-the_tilted_measure.
+
+A _stochastic discount factor_ (SDF) is defined as a random scalar $\xi$ satisfying $\mathbb{E}_p [\xi G_j] = 1$ for all $j$. It is straightforward to show that there exists a _strictly positive_ SDF $\xi$ if and only if there exists some $q \in \mathcal{Q}_{++}$; their relationship is simple: $\xi_i = \frac{q_i}{r p_i}$. This implies that if $p \in \mathcal{Q}$, then $\frac{1}{r}$ is a (strictly positive) SDF for $p$.
+
+Using this terminology, the first part of the FTAP says that the condition of no arbitrage is equivalent to the existence of at least one EMM. Given no arbitrage, the second part of the FTAP says that an EMM is unique if and only if the market is complete. We could replace "EMM" in each of these statements with "strictly positive SDF." Our market is incomplete, so there are infinitely many EMMs. This post is about the consequences of this non-uniqueness.
+ 
+
+
+
+
+
+
+### Our goal
+The expected log return, i.e. the *growth rate*, is defined for all $w \in \mathcal{A}$ as
+
+$$\begin{aligned}
+W(w) = \sum_{i=1}^K p_i \ln Y_i(w),
+\end{aligned}$$ {#eq-definition_of_growth_rate}
+
+in nats (1 nat = $1 / \ln 2$ bits). Our goal is to maximize $W$ over $\mathcal{A}$ because the growth rate determines the long-run, almost-sure performance of a portfolio, as I showed in [my first post](../shannons-demon/index.qmd). This is called _log-optimal investing_, which is also known as growth-optimal investing and Kelly investing [@kelly1956new]. In order to emphasize the dependence on the distribution $p$, I will sometimes write $W_p(w)$ for the growth rate. I define $W_p(w) = -\infty$ whenever $w \not \in \mathcal{A}_{++}$, since $p_i > 0$ for all $i$ by assumption. We can achieve at least $W_p = \ln r$ by using the risk-free asset; thus our goal is to improve upon this minimum level of performance. I let $w_p^*$ denote the optimizer (or just $w^*$ when $p$ is understood), which is called the *log-optimal* portfolio. In a future post, I will prove that such an optimum exists if and only if there is no arbitrage, so since we are assuming no arbitrage, we know there will be an optimum [see also @vecer2026numeraire, Lemma 9 and Theorem 10]. In addition, the optimum is unique, as shown below.
+
+![Albrecht Dürer, *Salvator Mundi*, ca. 1505. The Metropolitan Museum of Art. [Writing in his *Naturalis Historia* (Section 35.145) over fourteen centuries before Dürer, the Roman author Pliny the Elder observed that incomplete works of art are often more admired than completed ones because the viewer can see the preliminary outlines used to scaffold the painting and perceive the thoughts of a master at work ("*in maiore admiratione esse quam perfecta; quippe in iis liniamenta reliqua ipsaeque cogitationes artificum spectantur*"). In this work, Dürer's "*liniamenta*" -- the underlying drawing beneath the paint's surface -- are clearly visible in Christ's face and also his right hand.]{.caption-note}](salvator-mundi.jpg){#fig-jesus fig-alt="INSERT ONE!" fig-align="center" width="65%"}
+
+
+
+
+
+
+
+# What your disagreement with the market is worth {#sec-what_your_disagreement_with_the_market_is_worth}
+This section answers the first question: if your forecasted probability measure is $p$, how much is your edge? It turns out that although $D(p \| q)$ plays an important role, it is not the edge, only an upper bound on it. 
+
+
+
+
+
+### The first-order condition
+Now we're ready to get down to work. Recall that our goal is to maximize $W(w)$ subject to the budget constraint $\sum_{j=1}^M w_j = 1$. To solve this problem, we introduce the Lagrangian with multiplier $\lambda$ given by 
+$$
+\begin{aligned}
+\mathcal{L}(w, \lambda) = -\sum_{i=1}^K p_i \ln Y_i(w) + \lambda \left(\sum_{j=1}^M w_j - 1 \right).
+\end{aligned}
+$$ 
+Setting the gradient with respect to $w$ equal to zero yields a condition for the multiplier: $\sum_{i=1}^K p_i \frac{G_{ij}}{Y_i(w^*)} = \lambda$. Upon multiplying both sides by the portfolio weights and summing over all $M$ assets, we find that $\lambda = 1$; hence, we obtain a necessary, first-order condition (FOC) for a portfolio to be optimal: 
+$$
+\sum_{i=1}^K p_i \frac{G_{ij}}{Y_i(w^*)} = 1,
+$$ {#eq-foc} 
+which is to hold for every $1 \leq j \leq M$. From the FOC we see that for all $w \in \mathcal{A}$
+$$
+\mathbb{E}_p \left[ \frac{Y(w)}{Y(w^*)}\right] = 1.
+$$ {#eq-optimal_portfolio_defines_an_SDF}
+Conversely, suppose some portfolio $w' \in \mathcal{A}_{++}$ satisfies the FOC so that $\mathbb{E}_p \left[ \frac{Y(w)}{Y(w')} \right] = 1$ for all $w \in \mathcal{A}$. It then follows from Jensen's inequality that $W(w') \geq W(w)$ for all $w$, hence $w'$ optimizes the growth rate: the FOC is also sufficient for optimality. Thus, a portfolio optimizes the growth rate if and only if it satisfies the FOC. Moreover, since the growth rate is a strictly concave function of $w$ whenever $G$ is injective, we see that the optimizer is unique. The optimality of $w^*$ together with Jensen's inequality reveals that for any $w \in \mathcal{A}_{++}$
+$$
+\mathbb{E}_p \left[ \frac{Y(w^*)}{Y(w)} \right] \geq 1,
+$$
+which is another sense in which $w^*$ is an optimal portfolio.
+
+The positivity of $Y(w^*)$ together with @eq-optimal_portfolio_defines_an_SDF implies that $\frac{1}{Y(w^*)}$ is an SDF under the law of $p$. In other words, measured in units of the log-optimal portfolio (i.e. $w^*$ is the numeraire), every portfolio is correctly priced under the belief $p$, where the reader will recall that the price of every asset (and therefore portfolio) is $1$ [@long1990numeraire]. In addition, because $w^*$ is unique, it follows from Jensen's inequality that $\frac{1}{Y(w^*)}$ is the only positive SDF that can be expressed as the inverse of a portfolio's gross return.
+
+
+
+
+
+### A special risk-neutral probability measure
+Upon multiplying both sides of @eq-foc by $r$, we find:
+
+$$
+\begin{aligned}
+\sum_{i=1}^K \left(p_i \frac{r}{Y_i(w^*)}\right) G_{ij} = r,
+\end{aligned}
+$$
+which also holds for every $j$. Moreover, since the first column of $G$ is $r\mathbb{1}$, we have by @eq-foc, $\sum_{i=1}^K p_i \frac{r}{Y_i(w^*)} = 1$. This leads us to define the function $q^*: \Delta^{K-1}_{++} \rightarrow \mathcal{Q}_{++}$ whose $i^{th}$ component is given by
+$$
+\begin{aligned}
+q_i^* = p_i \frac{r}{Y_i(w_p^*)}.
+\end{aligned}
+$$ {#eq-q_star} 
+We see that $q^*$ is the measure induced by $p$ when we switch the numeraire from the optimal portfolio to the risk-free asset: $\mathbb{E}_{q^*}[Y(w) / r] = 1$ holds for every $w$, where $1$ is the price of every asset (and therefore every portfolio).
+
+
+
+
+
+
+### The edge
+Solving @eq-q_star for $Y_i(w^*)$ and substituting into @eq-definition_of_growth_rate we see that the optimum growth rate is, up to the constant $\ln r$, given by the information divergence from the model distribution $q^*$ to the true (well, *believed*) distribution $p$:
+
+$$\begin{aligned}
+\boxed{\rule[-1ex]{0pt}{4ex} W(w^*) = \ln r + D(p\| q^*)}
+\end{aligned}$$ {#eq-optimal_growth_rate}
+where the Kullback-Leibler (KL) divergence is defined, for any two distributions $\mu$ and $\nu$ on the $K$ states, by $D(\mu \| \nu) = \sum_i \mu_i \ln \frac{\mu_i}{\nu_i}$ in nats, where $0 \ln \frac{0}{\nu_i} = 0$ and where $D(\mu \| \nu) = \infty$ if $\mu$ is not absolutely continuous with respect to $\nu$, i.e. if there exists some $i$ such that both $\mu_i > 0$ and $\nu_i = 0$. KL divergence measures how well $\nu$ models $\mu$ (lower KL is better; 0 is perfect), and in base-2 represents the expected excess number of bits needed to code/represent the output of a random source $\mu$ using a code optimized for $\nu$. It is therefore a measure of the inefficiency of using $\nu$ as your model when $\mu$ is the true measure.
+
+If $W(w^*) - \ln r > 0$, then we have an _edge_, which measured in nats per period is given by $D(p \| q^*)$. 
+
+Of course, our belief $p$ is only a best guess for some true distribution $\tau$, so our true growth rate will not be $W_p(w_p^*)$; instead it will be $W_{\tau}(w_p^*)$. To find an expression for $W_{\tau}(w_p^*)$, we can use our definition of $q^*$ to solve for $Y_i(w_p^*)$, which when plugged into the growth rate formula (@eq-definition_of_growth_rate) yields
+$$
+\begin{aligned}
+W_{\tau}(w_p^*) &= \ln r + D(\tau \| q_p^*) - D(\tau \| p), \\
+\end{aligned}
+$$ {#eq-definition_of_growth_rate_with_misspecified_true_distribution}
+where I write $q_p^*$ to emphasize that $q^*$ is a function of $p$. @eq-definition_of_growth_rate_with_misspecified_true_distribution implies that you can beat cash if and only if your belief $p$ is closer to reality than your pricing measure $q_p^*$. This generalizes a similar formula in Section 6.1 of @cover2006elements to the case where markets are incomplete.
+
+
+
+
+
+
+### An alternative characterization of $q^*$ {#sec-an_alternative_characterization_of_the_special_measure}
+We started off this section asking whether the edge was $D(p \| q)$ and we discovered that it is in fact $D(p \| q^*)$. We can now use our formula for the edge to shed light on the nature of $D(p \| q)$ for $q \in \mathcal{Q}_{++}$ [see also @vecer2026numeraire, Remark 11]:
+$$
+\begin{aligned}
+D(p \| q^*) &= \sum_i p_i \ln \left( \frac{p_i q_i}{q_i^* q_i} \right) \\
+&= D(p \| q) - \sum_i p_i \ln \left( \frac{q_i^*}{q_i} \right) \\
+&= D(p \| q) - \sum_i p_i \ln \left( \frac{p_i}{q_i Y_i(w^*) / r} \right) \\
+& \leq D(p \| q),
+\end{aligned}
+$$ {#eq-KL_from_q_star_is_never_greater_than_arbitrary_q}
+where the inequality follows from the fact that $\sum_i q_i Y_i(w^*) / r = 1$ (since $\mathbb{E}_q[Y(w)] = r$ holds for any risk-neutral measure $q \in \mathcal{Q}$ and $w \in \mathcal{A}$), which implies that the sum is a KL divergence, and thus is never negative. The above inequality continues to hold when $q_i = 0$ for some $i$; thus, we have deduced that for every $q \in \mathcal{Q}$, $D(p \| q)$ is an upper bound on the edge, implying
+$$
+\begin{aligned}
+W(w^*) \leq \ln r + D(p \| q),
+\end{aligned}
+$$ {#eq-definition_of_growth_rate_bound}
+which is a specific instance of a more general inequality involving stochastic discount factors [@bansal1997growth]. Now, from @eq-definition_of_growth_rate_bound and recalling @eq-optimal_growth_rate, we see that [@vecer2026numeraire, Lemma 9 and Theorem 10]
+$$
+\max_{w \in \mathcal{A}} W(w) = \ln r + \min_{q \in \mathcal{Q}} D(p \| q),
+$${#eq-max_growth_rate_min_KL_duality}
+hence, since $D(p \|q)$ is strictly convex in its second argument, our special risk-neutral measure is the reverse information projection of our belief onto $\mathcal{Q}$:
+$$
+q^* = \arg \min_{q \in \mathcal{Q}} D(p \| q),
+$$ {#eq-q_star_is_the_minimizer}
+where "reverse" refers to the fact that the optimization occurs over the second argument [@csiszar2003information].
+
+In @eq-q_star we defined $q^*$ as the measure induced from $p$ by changing numeraire from the log-optimal portfolio to the risk-free asset, and then we derived @eq-q_star_is_the_minimizer. We could have gone the other way, however, and defined $q^*$ in terms of @eq-q_star_is_the_minimizer and then deduced that $q^*$ is given by @eq-q_star [see also @vecer2026numeraire, Theorem 10 and its proof]. We are therefore entitled to think about $q^*$ in terms of numeraires or in terms of information theory; they are equivalent:
+$$
+q_i^* = p_i \frac{r}{Y_i(w_p^*)} \iff q^* = \arg \min_{q \in \mathcal{Q}} D(p \| q).
+$$
+
+
+
+
+
+### You have to be able to trade your disagreement
+We are now in a position to offer more insight into when there is or is not an edge. Because we have an edge if and only if $D(p \| q^*) > 0 \iff p \neq q^* \iff p \not \in \mathcal{Q}$, to see if we have an edge, we can simply check if $\mathbb{E}_p[G_j] \neq r$ for some $j$: check if, under your beliefs, any asset has a nonzero expected excess return. This is equivalent to asking whether $p$ is not in the affine space defined by @eq-risk_neutral_affine_space, i.e. $p \not \in q + \operatorname{null} G^T$ for any $q \in \mathcal{Q}$. Think of $p - q$ as the "disagreement" between $p$ and $q$. Because $(\operatorname{col} G)^{\perp} = \operatorname{null} G^T$, the decomposition of this disagreement given by 
+$$\begin{aligned}
+p - q = u + v,
+\end{aligned}$$ 
+where $u \in \operatorname{col} G$ and $v \in \operatorname{null} G^T$, is unique, and therefore $u$ is independent of our choice for $q$, since for any $q, q' \in \mathcal{Q}$, $q - q' \in \operatorname{null} G^T$. We therefore have a positive edge if and only if $u \neq 0$; thus, disagreeing with any particular risk-neutral measure is not enough: there's an edge if and only if there is a component of the disagreement contained within $\operatorname{col} G$. Put differently, *it is not enough to simply disagree with the market: you have an edge if and only if your disagreement is tradable.*
+
+
+
+![Leonardo da Vinci, *Adoration of the Magi*, 1481-1482. Uffizi Gallery. [Leonardo was famously a perfectionist, though it is likely his perfectionism stemmed less from dissatisfaction with his work and more from his insatiable curiosity, which led him to ask questions and begin new projects at an incalculable pace. His oeuvre, most of which is incomplete, leads us to ask whether art is better thought of as a process than as a finished state. A news article for the website of the Uffizi Gallery goes even further, arguing, "A singular fate has sealed the fate of almost all of Leonardo da Vinci's works. None of them, it seems, in the current state of studies, have ever been completed by the artist; all have remained, to varying degrees, unfinished" (<https://www.uffizi.it/news/il-restauro-dell-adorazione-dei-magi-di-leonardo-da-vinci-capire-il-non-finito>).]{.caption-note}](adoration-of-the-magi.jpg){#fig-magi fig-alt="INSERT ONE!" fig-align="center" width="60%"}
+
+
+
+
+
+
+
+### The tilted measure (change of numeraire) {#sec-the_tilted_measure}
+Recall that in @sec-an_alternative_characterization_of_the_special_measure I mentioned $\sum_i q_i Y_i(w^*) / r = 1$. This motivates us to define a new probability measure: $m: \mathcal{Q}_{++} \times \mathcal{A}_{++} \rightarrow \Delta^{K-1}_{++},$ where
+$$
+\begin{aligned}
+m_i(q, w) = q_i \frac{Y_i(w)}{r}.
+\end{aligned}
+$$ {#eq-tilted_measure}
+
+Notice that $q$ and $m$ are equivalent as probability measures (i.e. $m_i = 0 \iff q_i = 0$). Whereas $q$ has the risk-free asset (with gross return $r$) as its associated numeraire, $m$ has the portfolio $w$ (with gross return $Y(w)$) as its associated numeraire. This implies
+$$
+\mathbb{E}_m \left[ \frac{G_j}{Y(w)} \right] = 1,
+$$ {#eq-w_satisfies_the_FOC_for_m}
+for all $j$, meaning that $m$ prices every asset correctly using $w$ as the numeraire. Because we established earlier that a portfolio $w$ satisfies the FOC (@eq-foc) if and only if it is optimal, @eq-w_satisfies_the_FOC_for_m implies $w$ is the optimal portfolio for $m$. We also see that $q = \arg \min_{q' \in \mathcal{Q}}D(m(q,w) \| q')$ since $q$ is a change of numeraire from the optimal $w$ (under the law $m$) to cash, analogous to our definition of $q^*$. The measure $m(q,w)$ is the unique belief under which $w$ is the optimal portfolio and whose projection onto $\mathcal{Q}$ is $q$.
+
+Finally, notice that by setting $q = q^*$, we can chain our two change-of-numeraire formulas, $q^*$ followed by $m$, in which case $m(q^*, w)$ can be understood as the measure induced by $p$ when we switch numeraire from $w^*$ to some arbitrary $w$. It follows that $m(q^*, w^*) = p$.
+
+
+
+
+
+### The decomposition formula for naive edge
+We can now express the equality embedded within @eq-KL_from_q_star_is_never_greater_than_arbitrary_q as
+$$
+\begin{aligned}
+\boxed{\rule[-1ex]{0pt}{4ex} D(p \| q) = D(p \| q^*) + D(p \| m(q, w^*))}
+\end{aligned}
+$$ {#eq-decomposition_formula}
+which can be thought of as
+$$
+\text{naive edge} = \text{edge} + \text{misfit},
+$$
+where I'm defining _misfit_ as $D(p \| m(q, w^*))$, i.e. how poorly $m(q, w^*)$ models your actual belief $p$. We can also think of it as a phantom edge, as it bridges the gap between the growth we might intuitively think we can achieve and what we can actually achieve. The misfit arises from using a belief which differs from $p$ only because it uses a different risk-neutral measure, as both $m(q, w^*)$ and $p = m(q^*, w^*)$ agree on the optimum portfolio.
+
+
+
+
+
+### The growth-rate formula
+By now we have seen that $m(q^*, w^*) = p$ and that $m(q, w^*)$ is the tilted measure used to define the misfit. In addition, I remarked that $m(q^*, w)$ is the measure resulting from $p$ due to changing numeraire from $w^*$ to some arbitrary $w$. There is a deeper significance though:
+$$
+W(w^*) - W(w) = \mathbb{E}_p \left[ \ln \frac{Y(w^*)}{Y(w)} \right] = D(p \| m(q^*, w)).
+$$ {#eq-definition_of_growth_shortfall}
+In other words, $D(p \| m(q^*, w))$ is the _growth shortfall_. This implies that the edge is the growth shortfall of the all-cash portfolio: $D(p \| m(q^*, \text{cash})) = D(p \| q^*)$.
+
+To see the broader, information-theoretic meaning of $m(q,w)$ for arbitrary $q$ and $w$, we can solve @eq-tilted_measure for $Y_i(w)$ and substitute it into @eq-definition_of_growth_rate to yield a formula for the growth rate $W_p(w)$, which holds for every $q \in \mathcal{Q}_{++}$ and $w \in \mathcal{A}_{++}$: 
+$$\begin{aligned}
+\boxed{\rule[-1ex]{0pt}{4ex} W_p(w) = \ln r + D(p \| q) - D(p \| m(q,w))}
+\end{aligned}
+$$ {#eq-general_growth_rate_formula}
+which is independent of the choice of $q$ [see also @vecer2026numeraire, eq. 11, where $r=1$]. This generalizes the final boxed equation in [my first post](../shannons-demon/index.qmd#the-connection-to-information-theory) to account for market incompleteness. 
+
+
+### Naive growth
+Combining these results we see that if we think of $\ln r + D(p \| q)$ as _naive growth_, then we really have three tiers of growth given by $W(w) \leq W(w^*) \leq \ln r + D(p \| q)$:
+$$
+W(w) \xrightarrow{D(p \| m(q^*, w))} W(w^*) \xrightarrow{D(p \| m(q, w^*))} \ln r + D(p \| q),
+$$ {#eq-three_tiers_of_growth_rate}
+where
+$$
+D(p \| m(q^*, w)) + D(p \| m(q, w^*)) = D(p \| m(q, w)).
+$$ {#eq-growth_shortfall_plus_misfit_equals_total_gap}
+The growth shortfall in @eq-three_tiers_of_growth_rate is under the control of the investor, as you simply need to improve the portfolio; however, no amount of portfolio optimization can eliminate the misfit, which is a product of the market itself, since $\mathcal{Q}$ is a function of $G$. From @eq-general_growth_rate_formula and @eq-growth_shortfall_plus_misfit_equals_total_gap we therefore see that the misfit acts as a floor on the gap between our hoped-for growth rate, $\ln r + D(p \| q)$, and our actual growth rate and that the floor is achieved by taking $w = w^*$. 
+
+Let $\mathcal{M}_{q,\,\cdot}$ denote the image of the function $w \mapsto m(q, w)$. As the image of a linear function over a convex set, $\mathcal{M}_{q,\,\cdot}$ is itself a convex set. This, together with the strict convexity of KL divergence in its second argument, implies that $m(q, w^*)$ is unique as an optimizer; thus, $m(q, w^*)$ is the reverse information projection of $p$ onto $\mathcal{M}_{q, \cdot}$, i.e. 
+$$
+m(q, w^*) = \arg \min_{m' \in \mathcal{M}_{q,\,\cdot}} D(p \| m').
+$$ {#eq-the_reverse_information_projection_of_p_onto_the_q_slice}
+Moreover, because $G$ is injective, so is $w \mapsto m(q, w)$, and therefore $w^*$ is the only portfolio that achieves the minimum.
+
+
+
+
+
+
+```{python}
+#| label: fig-simplex-unconstrained
+#| fig-cap: "The simplex for the running example: $r = 0.97$, $a = (2, 1, 0.4)$, $p = (0.5, 0.2, 0.3)$, with missing third asset $\\gamma = (0.5, 0.7, 1.7)$. The navy curves are the level sets of $x \\mapsto D(p \\| x)$. The curve that is tangent to the risk-neutral segment $\\mathcal{Q}$ at $q^*$ shows $q^*$ is the reverse information projection of $p$ onto $\\mathcal{Q}$, with divergence $D(p \\| q^*) = 0.1233$ nats. $\\mathcal{Q}$ and associated $\\mathcal{M}_{\\cdot,\\, w^*} = \\{ m(q, w^*) : q \\in \\mathcal{Q}_{++} \\}$ are drawn in ink. Orange marks the belief $p$, periwinkle the projection $q^*$, and lime the complete-market measure $\\tilde{q}$ (with associated $\\tilde{m}$) which is pinned down by adding $\\gamma$. At $q = \\tilde{q}$ the misfit $D(p \\| \\tilde{m}) = 0.2763$ nats, with $D(p \\| \\tilde{q}) = D(p \\| q^*) + D(p \\| \\tilde{m})$. The log-optimal allocation has $W(w^*) = 0.0929$ nats per period."
+import numpy as np
+from simplex_figure import (build_simplex_figure, simplex_figure_html, optimal_fraction,
+                            manufactured_measure, tilted_measure, growth_rate, kl_divergence,
+                            check_readout)
+from IPython.display import HTML
+
+r, a, p, gamma = 0.97, (2.0, 1.0, 0.4), (0.5, 0.2, 0.3), (0.5, 0.7, 1.7)
+fig = build_simplex_figure(r=r, a=a, p=p, gamma=gamma)
+
+# The caption's numbers, recomputed from the same inputs the figure uses.
+f_star = optimal_fraction(r, a, p)
+q_star = manufactured_measure(f_star, r, a, p)
+q_tilde = np.linalg.solve(np.column_stack([np.full(3, r), a, gamma]).T, np.full(3, r))
+m_tilde = tilted_measure(q_tilde, f_star, r, a)
+d_star, d_misfit = kl_divergence(p, q_star), kl_divergence(p, m_tilde)
+assert round(d_star, 4) == 0.1233, d_star                          # D(p || q*)
+assert round(growth_rate(f_star, r, a, p), 4) == 0.0929            # W(w*)
+assert round(d_misfit, 4) == 0.2763, d_misfit                      # D(p || m~)
+assert abs(kl_divergence(p, q_tilde) - (d_star + d_misfit)) < 1e-10  # @eq-decomposition_formula
+html = simplex_figure_html(fig)
+# The readout at every slider position: its total is the sum of its two displayed
+# terms, and within 1e-4 of D(p || q).
+check_readout(fig, p, html)
+HTML(html)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# What a missing asset is worth {#sec-what_a_missing_asset_is_worth}
+
+I'll now answer the second question by measuring the extra growth rate achieved by trading an additional asset. I'll also contrast the results I derive with a more familiar approach involving Sharpe ratios. In general, trading an additional asset shrinks $\mathcal{Q}$, so the machinery we developed in the previous section turns out to be very pertinent for figuring out how much growth we forgo by not trading it.
+
+
+### The seesaw
+Both sides of the duality expressed by @eq-max_growth_rate_min_KL_duality implicitly depend on $G$, the left side via the definition of the growth rate, and the right side via the definition of $\mathcal{Q}$. In particular, the minimum achieved on the right-hand side of @eq-max_growth_rate_min_KL_duality never decreases as the set $\mathcal{Q}$ contracts.
+
+Let $G' \in \mathbb{R}^{K \times (M+1)}$ be $G$ with one added column, $\gamma$, which is linearly independent of the columns of $G$. As with $G$, we assume the market defined by $G'$ admits no arbitrage. Observe that $\mathcal{Q}(G') = \lbrace q \in \mathcal{Q}(G): \mathbb{E}_q[\gamma] = r \rbrace$, and since we are assuming $\gamma$ is linearly independent of all the columns in $G$, we have $\mathcal{Q}(G') \subsetneq \mathcal{Q}(G)$. We have, in effect, a seesaw: expand the number of tradable assets (columns in $G$), contract the set $\mathcal{Q}$ -- and *vice versa*. 
+
+
+
+
+
+
+### Stranded growth
+I'll let $q^*_G = \arg \min_{q \in \mathcal{Q}(G)} D(p \| q)$ and analogously for $q^*_{G'}.$  If $\mathbb{E}_{q^*_G}[\gamma] = r$ happens to hold, i.e. if $\gamma$ is correctly priced under $q_G^*$, then $q_G^*$ is a member of $\mathcal{Q}(G')$; therefore, since $q_{G}^*$ is the minimizer over the superset $\mathcal{Q}(G)$, we have $q_{G'}^* = q_{G}^*$ and our edge remains at $D(p \| q_{G'}^*) = D(p \| q_G^*)$: $\gamma$ is not a binding constraint for the minimization over $\mathcal{Q}$. On the other hand, if $\mathbb{E}_{q^*_G}[\gamma] \neq r$, then $q_G^* \not \in \mathcal{Q}(G')$ -- $\gamma$ acts as a further constraint for the minimization over $\mathcal{Q}$ -- and therefore $q^*_{G'} \neq q^*_G$. By the uniqueness of the reverse information projection, we see that our edge increases to $D(p \| q_{G'}^*) > D(p \| q_{G}^*)$. Succinctly, $D(p \| q^*_{G'}) \geq D(p \| q^*_G)$ which is strict -- trading the new asset is beneficial -- if and only if 
+$$
+\mathbb{E}_{q^*_G}[\gamma] \neq r,
+$$ {#eq-condition_for_a_new_asset_to_be_helpful}
+which constitutes a simple criterion for whether or not to trade a new asset. By contrast, it has traditionally been considered beneficial to trade a new asset if doing so would expand the mean-variance frontier of the available assets. When there exists a risk-free asset, this reduces to the criterion $\alpha \neq 0$, where $\alpha$ is the intercept that arises from regressing the new asset's excess return on those of the risky assets of $G$ [@huberman1987mean]. These criteria are not equivalent, as seen in @tbl-sharpe-vs-growth.
+
+![Francisco José de Goya y Lucientes, *The Seesaw*, 1791-1792. Philadelphia Museum of Art. [The well-dressed, possibly aristocratic boy on the left seems carefree and unconstrained, whereas the ragamuffin on the right is more inhibited and likely does as he is told. The unconstrained boy sits lower. How apropos.]{.caption-note}](the-seesaw.jpeg){#fig-seesaw fig-alt="INSERT ONE!" fig-align="center" width="100%"}
+
+
+Suppose now that we start with $G'$ and remove $\gamma$ from it, leaving us with $G$, and let $w^*_G$ denote the log-optimal portfolio for the market $G$ and analogously for $G'$. From @eq-max_growth_rate_min_KL_duality we see that we can express the decline in the maximum growth rate -- which can be thought of as growth that is inaccessible, forgone, or *stranded* -- as 
+$$
+\begin{aligned}
+\sigma &= W(w_{G'}^*) - W(w_{G}^*) \\
+&= D(p \| q^*_{G'}) - D(p \| q^*_G).
+\end{aligned}
+$$ {#eq-definition_of_sigma}
+
+Let's focus now on the market $G$. Recall that $q_{G'}^* \in \mathcal{Q}(G)$ since $\mathcal{Q}(G') \subset \mathcal{Q}(G)$. Applying the decomposition formula (@eq-decomposition_formula), we find
+$$
+\begin{aligned}
+D(p \| q^*_{G'}) = D(p \| q^*_G) + D(p \| m(q^*_{G'}, w^*_{G})),
+\end{aligned}
+$$
+hence,
+$$
+\boxed{\rule[-1ex]{0pt}{4ex} \sigma = D \left( p \| m(q^*_{G'}, w^*_{G}) \right)}
+$$ {#eq-sigma}
+In words, the decomposition reads
+$$
+\text{expanded market edge} = \text{edge} + \text{stranded growth}.
+$$ 
+The stranded term is just the misfit from the decomposition formula that occurs when the market's risk-neutral measure comes from the expanded market $G'$ rather than $G$. In our running example, which is illustrated in @fig-simplex-unconstrained, adding the asset $\gamma = (0.5, 0.7, 1.7)$ to the base market completes the market, causing $\mathcal{Q}(G)$ to collapse to the singleton $\mathcal{Q}(G') = \lbrace \tilde{q} \rbrace$. In that case, $q^*_{G'}$ is trivially equal to $\tilde{q}$, so $\sigma = D(p \| \tilde{m}) \approx 0.276$ nats, where $\tilde{m} = m(q^*_{G'}, w^*_{G})$.
+
+If we swap our perspective from that of $G$ to that of $G'$, then we interpret $\sigma$ not as a misfit but as the growth shortfall that occurs when we use a portfolio optimized for $G$. To see this, note that $w_G^*$ can be embedded within $\mathbb{R}^{M+1}$ by simply appending a zero. If $\sigma > 0$, then, in this expanded market, $w_{G'}^*$ is optimal, not $w_G^*$, so by recalling the definition of growth shortfall (@eq-definition_of_growth_shortfall) we arrive once again at @eq-sigma.
+
+We now have two ways of understanding the stranded growth: from the perspective of $G$ it is a misfit; from that of $G'$ it is a growth shortfall. In either case, we can think of $\sigma$ as _the cost of incompleteness_ attributable to the removal of $\gamma$. Viewed from the opposite perspective, $\sigma$ is the increase in the growth rate that comes from trading the extra asset: $\sigma$ answers the second of the two questions from the Introduction. 
+
+
+
+
+
+### Comparison with Sharpe
+The most famous measure of a portfolio's risk-adjusted return is the Sharpe ratio: $SR(w) = \frac{\mathbb{E}[R(w)]}{\sqrt{\operatorname{Var}[R(w)]}}$, where $R(w) = Y(w) - r$ denotes the excess return over cash, and where the expectations are under $p$. Portfolio managers around the world aim to increase their portfolio's Sharpe ratio, as a higher Sharpe ratio is associated with greater returns per unit of risk -- at least if risk is defined as the standard deviation of excess returns.
+
+I define $S(G) = \max_{w \in \mathcal{A}} SR(w)$ to be the maximum achievable Sharpe ratio by trading the assets from $G$. Let $R_{\gamma}$ denote the new asset's excess return above cash, and let $e \in \mathbb{R}^{M-1}$ denote the excess return vector for the risky assets in $G$. Now, regress $R_{\gamma}$ on $e$:
+$$
+R_{\gamma} = \alpha + \beta^T e + \epsilon,
+$$
+where $\alpha$ and $\beta$ are chosen so that both $\mathbb{E}_p[\epsilon] = 0$ and $\epsilon$ is uncorrelated with $e$. We can create a hedged asset that is long the new asset and short $\beta$ units of the risky assets such that $R_{\gamma} - \beta^T e = \alpha + \epsilon$ is the excess return of the hedged asset, which is then uncorrelated with the $M-1$ other risky assets. @treynor1973how showed that 
+$$
+S(G')^2 = S(G)^2 + A^2,
+$$
+where $A = \frac{\alpha}{\text{std}(\epsilon)}$ is the appraisal ratio for the new asset. From this equation we see that an investor whose goal is to maximize his Sharpe ratio will trade the additional asset if and only if $\alpha \neq 0$.
+
+Under conditions where $S(G')^2, S(G)^2 \ll 1$ and where per-period returns are small, a Taylor approximation reveals $W(w_G^*) \approx \ln r + \frac{1}{2}S(G)^2$, and likewise for $G'$. By definition $\sigma = W(w_{G'}^*) - W(w_{G}^*)$, so, with the Treynor-Black identity, it follows that
+$$
+\boxed{\rule[-1ex]{0pt}{4ex} \sigma \approx \frac{1}{2}A^2}
+$$ {#eq-sigma_approximation}
+
+The approximation of @eq-sigma_approximation can break down when these conditions no longer hold. For example, in @tbl-sharpe-vs-growth I consider a base market, $G$, consisting of cash and one risky asset, $a$, and I analyze what happens by adding one of two new assets to the market, either $\gamma^{(1)}$ or $\gamma^{(2)}$, to create $G'$, which is either $[G \;\, \gamma^{(1)}]$ or $[G \;\, \gamma^{(2)}]$. In this example, $S(G)^2 \approx 0.24$, and $S(G')^2 \approx 0.24$ or $0.26$ for $\gamma^{(1)}$ and $\gamma^{(2)}$ respectively. In addition, $a$ is an extremely volatile asset, with a standard deviation of $71\%$, and with an expected excess return of $35\%$ per period. We have $\sigma - \frac{1}{2}A^2$ equal to $0.00694$ and $-0.00780$ for $[G \;\, \gamma^{(1)}]$ and $[G \;\, \gamma^{(2)}]$ respectively. This example is deliberately extreme in order to illustrate the concepts.
+
+Both $\gamma^{(1)}$ and $\gamma^{(2)}$ have an expected excess return of zero under $p$. I also consider two portfolio managers (PMs), the first of whom is a log-optimal investor. The second seeks to maximize his Sharpe ratio, but this does not identify a unique portfolio as Sharpe ratios are independent of leverage. To pin down a portfolio, our Sharpe-optimal PM chooses his leverage so as to maximize his growth rate -- the most charitable choice for comparison. The log-optimal PM asks whether the new asset is correctly priced under $q_G^*$ (@eq-condition_for_a_new_asset_to_be_helpful), the Sharpe-optimal PM whether $\alpha = 0$ [@huberman1987mean]. 
+
+Both PMs agree that the optimal portfolio for the base market is $(0.277, 0.723)$ for cash and the risky asset respectively. They agree because every portfolio that is long in $a$ will have the same Sharpe ratio, so the secondary optimization over leverage lands the Sharpe-optimal portfolio on the log-optimal one. Once a second risky asset becomes available to trade, however, their assessments diverge, as the log-optimal PM prefers to have $\gamma^{(1)}$ added to $G$, the Sharpe-optimal PM $\gamma^{(2)}$. The log-optimal PM trades $\gamma^{(1)}$, increasing his growth rate by $0.00694$ nats per period compared to $G$, but sees no use for $\gamma^{(2)}$ as trading it cannot increase his growth rate. Conversely, the Sharpe-optimal PM increases his Sharpe ratio by $0.0156$ by trading $\gamma^{(2)}$ compared to $G$, but he doesn't touch $\gamma^{(1)}$ as it can't be used to increase his Sharpe ratio.
+
+Judged by his own criteria, each PM is satisfied -- the log-optimal PM increases his growth rate, Sharpe-optimal his Sharpe ratio -- but judged by the other's criteria, they fare _worse_. In particular, when the log-optimal PM trades $\gamma^{(1)}$ he ends up decreasing his Sharpe ratio by 0.00767 (from 0.492 for $G$ to 0.485 for $[G \;\, \gamma^{(1)}]$), and when the Sharpe-optimal PM trades $\gamma^{(2)}$ he decreases his growth rate by 0.00616 nats per period (from 0.0929 for $G$ to 0.0867 for $[G \;\, \gamma^{(2)}]$). Whether their clients care will depend on which number they read.
+
+
+
+```{python}
+#| label: tbl-sharpe-vs-growth
+#| tbl-cap: "$G$: cash ($r = 0.97$) and risky asset ($a = (2, 1, 0.4)$), with $p = (0.5, 0.2, 0.3)$. $G'$: the same but with one of two candidate assets $\\gamma$ added. Both candidates have zero expected excess return. Within each column, $w^*$, $w_S$, and $q^*$ denote the log-optimal portfolio, Sharpe-optimal portfolio (the maximum-Sharpe portfolio, leveraged to maximize the growth rate), and the risk-neutral measure closest to $p$ in KL divergence, for that column's corresponding market. Growth quantities are in nats/period. The break-even access fee, $1 - e^{-\\sigma}$, is the largest fraction of wealth one could pay each period for the right to trade $\\gamma$ and be no worse off."
+#| code-fold: true
+import numpy as np
+from scipy.linalg import null_space
+from IPython.display import Markdown
+
+# ---- Base market: cash (gross r) and one risky asset a; belief p ----
+r = 0.97
+a = np.array([2.0, 1.0, 0.4])
+p = np.array([0.5, 0.2, 0.3])
+K = len(p)
+
+
+def log_optimal(G, p, tol=1e-12, max_iter=100):
+    """Log-optimal weights w (sum w = 1) for a K x M gross-return matrix G whose
+    column 0 is cash. Damped Newton on the risky weights x, w = (1 - sum x, x),
+    so Y = G w = r + (G[:, 1:] - r) x; backtracking keeps Y > 0. Returns w, Y and
+    the largest first-order-condition residual max_j |sum_i p_i G_ij / Y_i - 1|
+    (@eq-foc) over every asset, cash included."""
+    X = G[:, 1:] - G[:, [0]]
+    x = np.zeros(X.shape[1])
+    for _ in range(max_iter):
+        Y = G[:, 0] + X @ x
+        grad = X.T @ (p / Y)
+        if np.max(np.abs(grad)) < tol:
+            break
+        H = -(X * (p / Y**2)[:, None]).T @ X
+        step = np.linalg.solve(H, -grad)
+        t = 1.0
+        while np.any(G[:, 0] + X @ (x + t * step) <= 0):
+            t *= 0.5
+        x = x + t * step
+    w = np.concatenate([[1.0 - x.sum()], x])
+    Y = G @ w
+    return w, Y, float(np.max(np.abs(G.T @ (p / Y) - 1.0)))
+
+
+def kl(p, q):
+    return float(p @ np.log(p / q))
+
+
+def growth(Y, p):
+    """Growth rate E_p[ln Y] of payoff Y, or -inf if any Y_i <= 0."""
+    return float(p @ np.log(Y)) if np.all(Y > 0) else -np.inf
+
+
+def mean_cov(R, p):
+    """Mean vector and covariance matrix under p of the columns of R (K x n)."""
+    mu = p @ R
+    D = R - mu
+    return mu, (D * p[:, None]).T @ D
+
+
+def max_sharpe(R, p, r):
+    """Maximum Sharpe ratio sqrt(mu' Sigma^-1 mu) over the risky columns R, and
+    Sigma^-1 mu (mu = excess means over r), every positive multiple of which attains it."""
+    mu, S = mean_cov(R, p)
+    z = np.linalg.solve(S, mu - r)
+    return float(np.sqrt((mu - r) @ z)), z
+
+
+def sharpe(Y, p, r):
+    """Sharpe ratio E_p[Y - r] / std_p(Y - r) of payoff Y, all moments under p."""
+    ex = Y - r
+    return float((p @ ex) / np.sqrt(p @ (ex - p @ ex)**2))
+
+
+def sharpe_optimal(G, p, r, z):
+    """Sharpe-optimal weights: the tangency direction z (risky weights; every positive
+    multiple has the maximum Sharpe ratio) levered by the lam > 0 that maximizes the growth
+    rate E_p[ln(r + lam d)], d = (G[:, 1:] - r) z. Its derivative E_p[d / (r + lam d)]
+    decreases from S^2 / r > 0 at lam = 0 to -inf as lam nears the largest value keeping
+    every payoff positive, so bisection pins down its unique root to machine precision.
+    Returns w, Y and the derivative there."""
+    d = (G[:, 1:] - r) @ z                              # excess payoff per unit of lam
+
+    def deriv(lam):
+        return float(p @ (d / (r + lam * d)))
+
+    lo, hi = 0.0, float(np.min(-r / d[d < 0]))          # every payoff > 0 iff lam < hi
+    while (mid := 0.5 * (lo + hi)) not in (lo, hi):
+        lo, hi = (mid, hi) if deriv(mid) > 0 else (lo, mid)
+    x = lo * z
+    w = np.concatenate([[1.0 - x.sum()], x])
+    return w, G @ w, deriv(lo)
+
+
+G = np.column_stack([np.full(K, r), a])
+w_star, Y_star, foc = log_optimal(G, p)
+q_star = r * p / Y_star                                   # @eq-q_star
+W_base = float(p @ np.log(Y_star))
+sharpe_base, z_base = max_sharpe(a[:, None], p, r)
+assert foc < 1e-10, foc
+assert abs(q_star.sum() - 1) < 1e-12 and abs(q_star @ a - r) < 1e-12
+assert abs(W_base - (np.log(r) + kl(p, q_star))) < 1e-12  # @eq-optimal_growth_rate
+
+# The Sharpe test's SDF xi = (1 - b'(e - mu_e)) / r, b = Sigma^-1 mu_e, is linear in the
+# base risky assets' excess returns e. Like the growth test's SDF 1 / Y*, it prices every
+# base asset.
+e = G[:, 1:] - r
+mu_e, Sigma_e = mean_cov(e, p)
+xi = (1 - (e - mu_e) @ np.linalg.solve(Sigma_e, mu_e)) / r
+assert np.max(np.abs(p @ (xi[:, None] * G) - 1)) < 1e-12   # E_p[xi G_j] = 1
+
+# Sharpe-optimal: the tangency direction levered to maximum growth, as for the candidates.
+w_so_base, Y_so_base, deriv_base = sharpe_optimal(G, p, r, z_base)
+assert abs(deriv_base) < 1e-10 and np.all(Y_so_base > 0), deriv_base
+sharpe_so_base, sharpe_log_base = sharpe(Y_so_base, p, r), sharpe(Y_star, p, r)
+assert abs(sharpe_so_base - sharpe_base) < 1e-10          # leverage keeps the max Sharpe ratio
+W_so_base = growth(Y_so_base, p)
+sharpe_shortfall_base = sharpe_so_base - sharpe_log_base
+growth_shortfall_base = W_base - W_so_base
+# With one risky asset, levering it to maximum growth is the log-optimal problem itself,
+# so the two portfolios coincide and both shortfalls are 0.
+assert np.max(np.abs(w_so_base - w_star)) < 1e-10
+assert abs(sharpe_shortfall_base) < 1e-12 and abs(growth_shortfall_base) < 1e-12
+# Growth shortfall of the Sharpe-optimal portfolio, checked against
+# W(w*) - W(w) = D(p || m(q*, w)), m(q*, w) = q* Y(w) / r (@eq-definition_of_growth_shortfall).
+assert abs(growth_shortfall_base - kl(p, q_star * Y_so_base / r)) < 1e-10
+
+
+# ---- The two candidates: r + 0.3 * (unit direction orthogonal to u and v) ----
+def direction(u, v):
+    """Vector orthogonal to u and v, scaled to max|.| = 1, sign fixed so entry 2 < 0."""
+    e = null_space(np.vstack([u, v]))[:, 0]
+    e = e / np.max(np.abs(e))
+    return -e if e[1] > 0 else e
+
+
+candidates = {
+    r"$\gamma^{(1)}$": r + 0.3 * direction(p, p * a),            # E_p excess = 0, cov_p(., a) = 0
+    r"$\gamma^{(2)}$": r + 0.3 * direction(q_star, q_star * a),  # E_q* = r
+}
+
+results = {}
+for name, g in candidates.items():
+    G2 = np.column_stack([G, g])
+    w2, Y2, foc2 = log_optimal(G2, p)
+    assert foc2 < 1e-10, (name, foc2)
+    W_after = float(p @ np.log(Y2))                       # max growth rate with gamma, nats
+    sigma = W_after - W_base                              # gain in optimal growth, nats
+
+    # K = 3 states and 3 assets: the expanded market is complete, with unique
+    # risk-neutral measure q~ = q*_{G'}. No arbitrage iff every entry is positive.
+    q_tilde = np.linalg.solve(G2.T, np.full(K, r))
+    assert np.all(q_tilde > 0), (name, q_tilde)                    # no arbitrage
+    assert abs(sigma - (kl(p, q_tilde) - kl(p, q_star))) < 1e-10   # edge difference
+    assert abs(sigma - kl(p, q_tilde * Y_star / r)) < 1e-10        # @eq-sigma
+
+    mu, S = mean_cov(np.column_stack([a, g]), p)
+    sharpe2, z = max_sharpe(np.column_stack([a, g]), p, r)
+
+    # Regress gamma's excess return on the existing risky assets' (here just a's):
+    # gamma - r = alpha + beta' (a - r) + eps, with eps uncorrelated with a under p.
+    beta = np.linalg.solve(S[:-1, :-1], S[:-1, -1])
+    alpha = (mu[-1] - r) - beta @ (mu[:-1] - r)
+    eps = (g - r) - alpha - (G[:, 1:] - r) @ beta
+    A = alpha / np.sqrt(p @ eps**2)                       # appraisal ratio; E_p[eps] = 0
+    assert abs(sharpe2**2 - (sharpe_base**2 + A**2)) < 1e-12       # Treynor-Black
+
+    # The two tests are gamma's pricing errors: the Sharpe test's alpha under xi, and the
+    # growth test's E_{q*}[gamma] - r under 1 / Y*.
+    assert abs(alpha - r * (p @ (xi * g) - 1)) < 1e-12
+    assert abs((q_star @ g - r) - r * (p @ (g / Y_star) - 1)) < 1e-12
+
+    # Sharpe-optimal: the tangency direction z levered to maximum growth.
+    w_so, Y_so, deriv = sharpe_optimal(G2, p, r, z)
+    assert abs(deriv) < 1e-10 and np.all(Y_so > 0), (name, deriv)
+    sharpe_so, sharpe_log = sharpe(Y_so, p, r), sharpe(Y2, p, r)
+    assert abs(sharpe_so - sharpe2) < 1e-10, (name, sharpe_so)    # leverage keeps the max
+    W_so = growth(Y_so, p)
+    # Growth shortfall, checked as for the base market (@eq-definition_of_growth_shortfall),
+    # with the expanded market's q* = q~.
+    growth_shortfall = W_after - W_so
+    assert abs(growth_shortfall - kl(p, q_tilde * Y_so / r)) < 1e-10
+    results[name] = dict(
+        g=g, corr=S[0, 1] / np.sqrt(S[0, 0] * S[1, 1]), ex_p=mu[1] - r,
+        ex_q=q_star @ g - r, alpha=alpha, A=A, sharpe_so=sharpe_so, sharpe_log=sharpe_log,
+        sharpe_shortfall=sharpe_so - sharpe_log, w_so=w_so, w=w2, W_after=W_after,
+        W_so=W_so, sigma=sigma, q_tilde=q_tilde, growth_shortfall=growth_shortfall)
+
+g1, g2 = results.values()
+assert abs(g1["ex_p"]) < 1e-12 and abs(g1["corr"]) < 1e-12   # by construction
+assert abs(g2["ex_q"]) < 1e-12                                # by construction
+assert abs(g2["ex_p"]) < 1e-12                       # follows from the FOC, q* = r p / Y*
+assert abs(g1["w_so"][2]) < 1e-12                    # Sharpe-optimal holds no gamma^(1)...
+assert abs(g1["growth_shortfall"] - g1["sigma"]) < 1e-10   # ...so it forgoes all of sigma
+assert g2["W_so"] < W_so_base                        # gamma^(2) lowers its growth rate
+# Each portfolio is best on its own metric: every shortfall >= 0 (to rounding, as the
+# base market's are 0).
+sharpe_shortfalls = [sharpe_shortfall_base] + [d["sharpe_shortfall"] for d in results.values()]
+growth_shortfalls = [growth_shortfall_base] + [d["growth_shortfall"] for d in results.values()]
+assert min(sharpe_shortfalls) > -1e-12 and min(growth_shortfalls) > -1e-12
+
+
+# ---- Table ----
+def num(x, sig=3):
+    return "0" if abs(x) < 1e-10 else f"{x:#.{sig}g}".rstrip(".").replace("-", "−")
+
+
+def vec(v, fmt=num):
+    return "(" + ", ".join(fmt(x) for x in v).replace("-", "−") + ")"
+
+
+# $G$ column: the "before" values, with weights on (cash, a).
+# A string is a group subheader; otherwise (label, base-market cell or None, candidate cell).
+rows = [
+    "The candidate",
+    (r"$\gamma$", None, lambda d: vec(d["g"], lambda x: f"{x:.4f}")),
+    (r"$\operatorname{corr}(\gamma, a)$", None, lambda d: num(d["corr"])),
+    (r"$q^*$", vec(q_star), lambda d: vec(d["q_tilde"])),
+    r"Does $\boldsymbol{\gamma}$ help?",
+    (r"Sharpe test: $\alpha$", None, lambda d: num(d["alpha"])),
+    (r"Growth test: $\mathbb{E}_{q^*_G}[\gamma] - r$", None, lambda d: num(d["ex_q"])),
+    r"Weights (cash, $\boldsymbol{a}$, $\boldsymbol{\gamma}$)",
+    (r"Sharpe-optimal", vec(w_so_base), lambda d: vec(d["w_so"])),
+    (r"Log-optimal", vec(w_star), lambda d: vec(d["w"])),
+    "Sharpe",
+    (r"$SR(w_S)$", num(sharpe_so_base), lambda d: num(d["sharpe_so"])),
+    (r"$SR(w^*)$", num(sharpe_log_base), lambda d: num(d["sharpe_log"])),
+    (r"$SR(w_S) - SR(w^*)$", num(sharpe_shortfall_base),
+     lambda d: num(d["sharpe_shortfall"])),
+    "Growth",
+    (r"$W(w^*)$", num(W_base), lambda d: num(d["W_after"])),
+    (r"$W(w_S)$", num(W_so_base), lambda d: num(d["W_so"])),
+    (r"$W(w^*) - W(w_S)$", num(growth_shortfall_base), lambda d: num(d["growth_shortfall"])),
+    r"Value of $\boldsymbol{\gamma}$",
+    (r"$\sigma$", None, lambda d: num(d["sigma"])),
+    (r"$\frac{1}{2}A^2$", None, lambda d: num(d["A"]**2 / 2)),
+    (r"Break-even access fee (%)", None, lambda d: num(100 * (1 - np.exp(-d["sigma"])))),
+]
+cols = ["$G$"] + [rf"$[G \;\, {name.strip('$')}]$" for name in results]
+md = ["| | " + " | ".join(cols) + " |", "|:--|" + "--:|" * len(cols)]
+for row in rows:
+    if isinstance(row, str):
+        md.append(f"| **{row}** |" + " |" * len(cols))
+    else:
+        label, base_cell, f = row
+        cells = [base_cell or "—"] + [f(d) for d in results.values()]
+        md.append("| " + label + " | " + " | ".join(cells) + " |")
+Markdown("\n".join(md))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Conclusion
+
+::: {.epigraph}
+There are no rules any more. I’m just numb to what would have been jaw-dropping events for me a year ago. At some point, maybe I’ll get hit by a whole wave of PTSD.
+
+— Terence Tao, quoted in @bumiller2026war
+:::
+
+
+
+The Fields Medal-winning mathematician Terence Tao recently remarked that with the latest AI models now apparently able to prove some of the most difficult mathematical theorems, mathematics has entered into an age of "proof abundance", which makes knowing the answer to a problem much cheaper. In this new age, Tao emphasizes the importance of insight, encouraging mathematicians to understand problems as "lighthouses: not destinations to be reached in and of themselves, but as useful guides to explore the mathematical landscape" nearby [@tao2026math2]. The problem itself is less important than how the process of grappling with that problem can illuminate mathematics. 
+
+An answer can play a role analogous to a problem. As an optimization problem with a strictly concave objective function, maximizing the growth rate in @eq-definition_of_growth_rate is, _per se_, straightforward: it requires no understanding of incompleteness, risk-neutral measures, numeraires, or any of the information-theoretic machinery that we developed. To find the optimal portfolio -- to answer the problem -- a few lines of Python code will do. Once we have found $w^*$, we can then calculate our edge, $W(w^*) - \ln r$, and other related quantities, such as the stranded growth, $\sigma = W(w_{G'}^*) - W(w_{G}^*)$. What's missing in all of this isn't the answer; it is a deeper understanding of the structure of that answer, which, _inter alia_, helps us to ask better questions and to understand how disparate concepts relate to each other. For example, in this post I have shown how, as far as $W(w^*)$ is concerned, $p$ only matters in relation to its distance from $\mathcal{Q}$, measured as a KL divergence. The important role of $\mathcal{Q}$ would stay hidden from the practitioner who only cares about "the answer."
+
+As we saw in @eq-max_growth_rate_min_KL_duality, the dual problem of maximizing the growth rate over all portfolios $w \in \mathcal{A}$ is the minimization of $D(p \| q)$ over $q \in \mathcal{Q}$, up to the additive constant $\ln r$. This switches our focus from portfolios to probability distributions, and, because the discrepancy is a KL divergence, to _data compression_. This is because the redundancy (the excess number of bits) of an ideal code optimized for a model $q$ when the data is generated by a source $p$ is precisely $D(p \| q) / \ln 2$ bits per symbol. The mean code length is then $\frac{1}{\ln 2}(H(p) + D(p \| q))$ bits, where $H(p) = -\sum_i p_i \ln p_i$ is the entropy of $p$. Saying there is an edge, i.e. $D(p \| q^*) > 0$, is therefore equivalent to saying no ideal code constructed from a risk-neutral measure can maximally compress the random data generated by $p$: the mean code length is greater than the entropic minimum. 
+
+We have seen that information theory provides precise answers to both of the questions posed in the Introduction. Here is a recap of some of the more important points: 
+
+1. If your belief $p$ is indeed the true distribution, then your edge is the redundancy of the code optimized for the closest risk-neutral measure to $p$ in KL divergence (@eq-optimal_growth_rate) -- and you have one if and only if at least one of your traded assets has a non-zero expected excess return under $p$. $D(p \| q)$ is what I've called the _naive edge_ because it overstates your (actual) _edge_ whenever $q \neq q^*$. The excess, called the _misfit_, is a phantom edge: it is the redundancy caused by using a code optimized for $m(q, w^*)$, which is the reverse information projection of $p$ onto $\mathcal{M}_{q,\,\cdot}$ (@eq-decomposition_formula).
+1. If your belief $p$ might not be the true distribution, then your edge is a competition between how well codes optimized for $p$ and $q^*_p$ respectively compress data drawn from the true distribution $\tau$ (@eq-definition_of_growth_rate_with_misspecified_true_distribution).
+1. Trading a new asset is helpful if and only if that asset is mispriced by $q_G^*$ (@eq-condition_for_a_new_asset_to_be_helpful). Improving the Sharpe ratio (or equivalently, having non-zero alpha) is neither necessary nor sufficient (@tbl-sharpe-vs-growth).
+1. The usefulness of a new asset depends not on how much it reduces market incompleteness but on how far it moves the reverse information projection $q^*$. The additional growth that comes from trading a new asset -- the stranded growth -- is the misfit from using the risk-neutral measure in the enlarged market that is closest to $p$ (in KL divergence) and the original market's optimal portfolio (@eq-sigma). The stranded growth is a misfit from the perspective of the original market or a growth shortfall from the perspective of the expanded market.
+1. Under certain assumptions, especially small per-period returns, the growth that is unlocked by trading an additional asset is well approximated by one half of the squared appraisal ratio of that asset (@eq-sigma_approximation).
+
+As in my first post, I have made a number of simplifying assumptions, which help to clarify the core issues and ideas, but which do not reflect markets as they exist in reality. Among them: returns are i.i.d.; $p$ is stationary and known (except the discussion surrounding @eq-definition_of_growth_rate_with_misspecified_true_distribution); $G$ has finitely many states; there are no demanding clients withdrawing their investments at inconvenient times; I have imposed no limits on leverage or shorting; I have not even mentioned transaction costs or trading frictions. In addition, my no-arbitrage assumption would need to be strengthened in continuous-time settings, as the equivalence between no arbitrage, the existence of an equivalent martingale measure, and the existence of a log-optimal portfolio no longer holds in general [see @delbaen1994general on no free lunch with vanishing risk; @karatzas2007numeraire on no unbounded profit with bounded risk].
+
+I have also assumed that our goal is to maximize the growth rate by rebalancing $w$ after each period. Not everyone will share this objective [@samuelson1979why].
+
+My first post was about the importance of the concavity of the logarithm appearing in the growth rate and how, as an extreme example, that concavity can be harnessed to profitably trade assets that are provably going to zero, without ever shorting anything. In that post I assumed a complete market, which of course is rarely the case in reality. In this post, I rolled back that assumption, generalized the results of the first post, and hopefully provided some useful insight into how growth rates depend on market incompleteness. I intend to roll back other assumptions in future posts.
+
+
+
+
+
+
+
+
+![Paul Cézanne, *Gardanne*, 1885-1886. The Metropolitan Museum of Art. [A lot of the canvas shows through in this painting, particularly in the bottom left. It is thought, however, that Cézanne deliberately left this painting unfinished, so it might be unfair to say this work is "incomplete". By 1885 Cézanne had abandoned impressionism and had begun experimenting with what came to be his signature style, which we can see here -- the faceted geometry and blocks of color, the flattened depth, and the multiple perspectives that inspired Picasso.]{.caption-note}](gardanne-1920px.jpg){#fig-gardanne fig-alt="INSERT ONE!" fig-align="center" width="65%"}
+
+
+
+
+
+
+
+
+
+
+
+
+# Provenance and further reading {.unnumbered}
+Most of the ingredients used here are known, at least those found in @sec-what_your_disagreement_with_the_market_is_worth, but are scattered across various literatures. The references I mention below (and the references therein) often discuss multiple overlapping topics, so if I recommend a source for one purpose below, keep in mind that it might have other material pertinent to this post. If you think I have missed any particularly important citations, please let me know.
+
+For further reading on the relationship between information theory and investing, a good first source is @cover2006elements. Chapter 6 considers the case of complete markets (indeed $G$ is diagonal there), where in Section 6.1 you can find a version of my @eq-definition_of_growth_rate_with_misspecified_true_distribution. Chapter 16 considers long-only log-optimal portfolios in further depth. Section 2 of that chapter derives an analogue of @eq-foc and @eq-optimal_portfolio_defines_an_SDF for long-only portfolios. By contrast, @breiman1961optimal is a classic and early source for log-optimal investing that emphasizes probabilistic properties rather than connections to information theory.
+
+The relationship between log-optimal investing and optimal portfolios as numeraires is investigated, among other places, in @long1990numeraire. A deeper look into changes of numeraires and their applications in finance can be found in @geman1995changes. The special relationship between log-optimal investing and numeraires is also considered in @korn2009numeraire and @karatzas2007numeraire.
+
+A proof of the Fundamental Theorem of Asset Pricing (FTAP) in a finite setting can be found in @harrison1981martingales.
+
+For a modern and comprehensive (though not especially technical) introduction to stochastic discount factors, numeraires, equivalent martingale measures, utility maximization, and related ideas, see @cochrane2005asset.
+
+Many of the results in @sec-what_your_disagreement_with_the_market_is_worth, such as @eq-general_growth_rate_formula and @eq-decomposition_formula, can be found (or are implicit) in a very recent arXiv preprint [@vecer2026numeraire]. Among other things, the author there compares the forward $\min_q D(q \| p)$ [Csiszár's "I-projection" @csiszar1975idivergence] and reverse information projections $\min_q D(p \| q)$ [the "reverse I-projection" of @csiszar2003information] in our context, finding that only the latter commutes with a change of numeraire. N.B.: Vecer uses "forward" and "reverse" differently than I do.
+
+Incompleteness complicates the analysis of markets; for more information in a discrete-time, finite setting see @he1991consumption. See also @harrison1981martingales. For the reader interested in generalizations of these ideas to continuous settings, a good reference is @kramkov1999asymptotic.
+
+The upper bound on the growth rate (@eq-definition_of_growth_rate_bound) is really just weak duality in optimization, where the KL divergence comes from the dual problem of maximizing the growth rate. For more on bounds on the growth rate see @bansal1997growth, who showed that the negative expectation of the log of an SDF is always an upper bound for the growth rate and that the bound is tight using the log-optimal portfolio as numeraire. In our setting any strictly positive SDF can be written as $\frac{q_i}{rp_i}$, whence their inequality immediately implies @eq-definition_of_growth_rate_bound. The upper bound $D(p \| q)$ appearing in @eq-definition_of_growth_rate_bound is a particular instance of what @backus2014sources call the entropy associated to an SDF that results whenever the SDF is proportional to $\frac{q}{p}$. That $D(p \| q)$ is an upper bound on what I'm calling the edge can also be found in @vecer2026numeraire.
+
+My derivation of the approximation for $\sigma$ in @sec-what_a_missing_asset_is_worth relies upon a result in @treynor1973how. 
+
+For the reader interested in learning more about Géricault's painting or the disaster it immortalized, a good place to start is Julian Barnes' "Shipwreck" [@barnes1989shipwreck]. In 1817 two of the survivors published a vivid, first-hand account of the disaster, which was translated into English the following year under the title _Narrative of a Voyage to Senegal in 1816_ [@savigny1818narrative]. For a thorough modern history, see Jonathan Miles' _The Wreck of the Medusa: The Most Famous Sea Disaster of the Nineteenth Century_ [@miles2007wreck]. For the reader more interested in Géricault's painting and the placement of a Black man at the apex of the human pyramid, see _The Raft of the Medusa: Gericault, Art, and Race_ [@alhadeff2002raft]. The shipwreck and its aftermath generated an enormous amount of documentation, which the French government makes publicly available [@shd2026meduse].
+
+Finally, the following material is potentially new, though I would not be surprised if it exists somewhere already in the literature. If you are aware of an adequate reference, please let me know by messaging me on LinkedIn so I can give credit where credit is due.
+
+1. @eq-sigma: an exact formula for the increase in the growth rate in terms of KL divergence, due to trading an additional asset, and its reading as both a misfit and a growth shortfall.
+1. The interpretation of the decomposition formula as "naive edge = edge + misfit". The decomposition formula itself is not new and can be found, for instance, in @vecer2026numeraire.
+
+
+
+
+
+# References {.unnumbered}
+
+::: {#refs}
+:::

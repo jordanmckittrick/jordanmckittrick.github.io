@@ -1,0 +1,75 @@
+---
+title: "4: _Hic Sunt Dracones_"
+subtitle: "Why the no-arbitrage condition is information theory in disguise"
+date: 2026-12-5
+categories: []
+image: dragons-from-psalter-map-middle-third.jpg
+
+format:
+    html:
+        code-fold: true
+        code-summary: "Show code"
+        code-tools: true
+
+draft: true
+
+---
+
+
+### Introduction
+
+# Art
+
+![Olaus Magnus, _Carta marina et descriptio septentrionalium terrarum_, 1539. LOCATION. [A woodcut, the original was not coloured. The map went missing for centuries before turning up mysteriously in Munich. Created during a diplmatic mission to Rome. Colored by AntoineLafréry, 1512-1577 I think. https://www.loc.gov/resource/gdcwdl.wdl_03037/?r=-0.055,-0.058,1.142,0.748,0]{.caption-note}](carta-marina-1920px.jpeg){#fig-carta-marina width="100%" fig-align="center" fig-alt="INSERT ONE!"} 
+
+![Gervase of Ebstorf, _Ebstorf map_, ca. 1234-1240. DAVID RUMSEY MAP COLLECTION?. [_Hic nulli habitant propter leones_
+]{.caption-note}](ebstorf-map-3571px.jpg){#fig-ebstorf-map width="100%" fig-align="center" fig-alt="INSERT ONE!"}
+
+![Unknown, _Psalter map_, ca. 1262-1280. British Museum. [The only mappa mundi known to have come from a psalter.]{.caption-note}](psalter-map-2543px.jpg){#fig-psalter-map width="60%" fig-align="center" fig-alt="INSERT ONE!"}
+
+
+![Kirchner, _from Arca Noe_, ca. 1675. LOCATION. [This picture comes from Kirchner's Arca Noe depicting the location where Kirchner believed the Garden of Eden was within Mesopotamia. The original was uncolored. ]{.caption-note}](topographia-uncolored.jpg){#fig-topographia width="100%" fig-align="center" fig-alt="INSERT ONE!"}
+
+![Carl Blechen, _Stormy Sea with Lighthouse_, 1826. Hamburger Kunsthalle. [CAPTION]{.caption-note}](stormy-sea-with-lighthouse-2059px.jpg){#fig-lighthouse width="100%" fig-align="center" fig-alt="INSERT ONE!"} 
+
+
+
+
+### No-arbitrage assumption
+This is important: in what follows, I'll assume $G$ admits *no arbitrage*, i.e. no risk-free opportunity for profit. More precisely, by no arbitrage I mean that there does not exist any $w \in \mathbb{R}^M$ such that either of the following two kinds of arbitrage occur:
+$$
+\begin{aligned}
+(\text{A1.1}) \quad &\mathbb{1}^T w < 0, \\ (\text{A1.2}) \quad &Gw = 0,
+\end{aligned} \tag{A1}
+$$
+or
+$$\begin{aligned}
+(\text{A2.1}) \quad &\mathbb{1}^T w \leq 0, \\ (\text{A2.2}) \quad &Gw \geq 0, \\ (\text{A2.3}) \quad &Gw \neq 0.
+\end{aligned} \tag{A2}$$ 
+
+Condition (A1.1) simply means that we get paid today, and (A1.2) means that tomorrow there is no money exchanged regardless of which state is realized: we get paid today to not exchange money tomorrow. More commonly, however, when people refer to "arbitrage" they are referring to condition (A2). Condition (A2.1) says that we don't have to put any money down (e.g. all of our investment money could be borrowed from a bank); (A2.2) that we don't lose money in any of the $K$ states; and together with (A2.2), (A2.3) implies that there is at least one state in which we have a positive portfolio return. For example, the matrix $$G = \begin{pmatrix} 
+1 & 1 \\ 
+1 & 1.2 \\ 
+1 & 1.9 
+\end{pmatrix}$$ 
+admits an arbitrage opportunity using $w = (-1, 1)$ (or any positive multiple of it), using condition (A2). If there exists some $w$ satisfying either condition (A1) or condition (A2), we say there is an arbitrage opportunity, i.e. an opportunity for risk-free profit.
+
+Recall that we are assuming that $G$ has full column rank ($=M$), so it is an injective map from $\mathbb{R}^M$ into $\mathbb{R}^K$. Therefore, without knowing anything else about $G$ we know that the first type of arbitrage, defined by (A1), cannot occur: because $G$ is an injective map, $Gw = 0$ implies $w=0$, hence $\mathbb{1}^T w = 0$. My no-arbitrage assumption, therefore, amounts to assuming arbitrage of type (A2) does not occur.
+
+
+
+
+# Notes and further reading {.unnumbered}
+
+The Fundamental Theorem of Asset Pricing (FTAP) is now foundational within academic finance, and its proof over increasingly abstract domains of validity has occupied researchers since the mid 1970s. Much of the initial groundwork was laid by Stephen A. Ross in [INSERT REFERENCE TO ROSS 1976], in which the idea of no-arbitrage pricing was developed, and especially [INSERT REFERENCE TO ROSS 1978], where it was proved that no arbitrage implies the existence of a strictly positive pricing kernel. An early and especially important proof of the FTAP for our finite-state setup can be found in [INSERT REFERENCE TO HARRISON AND KREPS 1979]. A more comprehensive introduction to the subject in continuous settings can be found in [INSERT REFERENCE TO HARRISON AND PLISKA 1981]. In continuous settings, the relationship between no arbitrage and the existence of a strictly positive pricing functional breaks down, and the no arbitrage condition must be strengthened in a subtle way to maintain the equivalence. For example, see [INSERT REFERENCE TO DELBAEN AND SCHACHERMAYER 1994].
+
+
+
+
+
+
+
+
+
+
+![Gerard David, _The Birth of Christ_, 1495. Museum of Fine Arts, Vienna. [Divine light radiates outward from Christ. Everything that is not oriented towards Christ is dark; thus, the picture is divided between an island of safety and salvation bathed in the light of Christ and an unknown darkness untouched by that light.]{.caption-note}](the-birth-of-christ-1570px.jpg){#fig-birth-of-christ width="60%" fig-align="center" fig-alt="INSERT ONE!"} 

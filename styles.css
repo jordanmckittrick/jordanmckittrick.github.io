@@ -13,11 +13,20 @@
 /* Figure captions: left-aligned, and no wider than the image above them.
    Scoped to figures Quarto generates (the .quarto-figure wrapper): plain
    markdown images, crossref'd floats, and code-cell output. Hand-built figures
-   such as the homepage hero keep their own styling. Table captions keep
-   Quarto's own centering (its selector is more specific). */
+   such as the homepage hero keep their own styling. Table captions need the
+   rule below: Quarto's centring of them is more specific than this one. */
 .quarto-figure > figure > figcaption {
   text-align: left;
   line-height: 1.475;   /* a touch tighter than body text (1.65) */
+}
+
+/* Table captions (tbl-cap, #tbl- floats): left-aligned like figure captions.
+   Quarto centres them with two rules, figure.quarto-float-tbl
+   figcaption.quarto-float-caption-top and -bottom. This selector has the same
+   specificity, covers both, and wins on load order since styles.css comes
+   after the theme. */
+figure.quarto-float-tbl figcaption.quarto-float-caption {
+  text-align: left;
 }
 
 /* Captions under images: the script in _quarto.yml sets each one's width to
@@ -103,4 +112,82 @@ figure .quarto-layout-row figure figcaption {
   display: grid;
   grid-template-columns: min-content;
   justify-content: center;
+}
+
+/* ── Essays listing (Quarto's default listing): uniform thumbnails ─────────
+   Scoped to .quarto-listing-default, which only exists on listing pages, so
+   post pages and the figures in them are untouched. Quarto's `image-height`
+   option isn't used: it fixes the height in px while the column width is a
+   fluid 30%, so the frame's shape would drift with the window width.
+   `aspect-ratio` keeps every frame exactly 3:2 at any width. */
+
+/* Same divider spacing at every width: 1.5em above each rule (padding) to
+   match Quarto's 1.5em below it (margin). Quarto sets no padding on desktop,
+   which is why tall images ran into the rule. */
+.quarto-listing-default > .quarto-post {
+  padding-bottom: 1.5em;
+}
+
+/* Every thumbnail in one 3:2 landscape frame, the column's full width;
+   images of another shape are centre-cropped to fill it. Both markups Quarto
+   emits are covered: an `image:` from front matter is a bare <img>, while an
+   image lifted from the post's body comes wrapped in <p class="card-img-top">
+   (with Bootstrap's .card-img corner rounding, reset here so all match). */
+.quarto-listing-default > .quarto-post .thumbnail a,
+.quarto-listing-default > .quarto-post .thumbnail p {
+  display: block;
+  margin: 0;
+}
+.quarto-listing-default > .quarto-post .thumbnail img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: center;
+  margin: 0;
+  border-radius: 0;
+}
+
+/* Side-by-side layout only (Quarto stacks the row below 768px): centre the
+   thumbnail vertically in its row instead of pinning it to the top. */
+@media (min-width: 768px) {
+  .quarto-listing-default > .quarto-post .thumbnail {
+    align-self: center;
+  }
+}
+
+/* Posts with no image: Quarto fills the slot with an empty grey
+   .listing-item-img-placeholder. Drop the slot and let the text run across
+   the image column. Browsers without :has() (pre-2023) just keep Quarto's
+   default placeholder. */
+.quarto-listing-default > .quarto-post .thumbnail:has(.listing-item-img-placeholder) {
+  display: none;
+}
+/* ...but keep the text's left edge in line with the other rows. In a row with
+   an image the columns overflow (Quarto's bases: date 33%, text 45%, image
+   30%, plus two 2em gaps) and the date column absorbs it, ending up
+   25% - 4em wide. Without the image there is no overflow, so the date column
+   would sit at its full 33% and push the text right. Giving the text column
+   the image's 30% plus one gap (45% + 30% + 2em) restores the same overflow,
+   so the date column shrinks to the same width as in every other row. */
+@media (min-width: 768px) {
+  .quarto-listing-default > .quarto-post:has(.listing-item-img-placeholder) .body {
+    flex-basis: calc(75% + 2em);
+  }
+}
+
+/* Epigraphs: a ::: {.epigraph} fenced div. The last paragraph is the attribution. */
+.epigraph {
+  max-width: 34rem;
+  margin: 0.5rem 0 2.5rem auto;
+  font-style: italic;
+  font-size: 0.95em;
+  color: var(--bs-secondary-color, #555);
+}
+.epigraph p { margin-bottom: 0.4rem; }
+.epigraph p:last-child {
+  text-align: right;
+  font-style: normal;
+  font-size: 0.9em;
 }

@@ -1,9 +1,8 @@
 ---
-title: "3: Money for Nothing, Chicks _Not_ for Free"
-subtitle: 
-date: 2026-10-20
+title: "6: Money for Nothing, _Leverage_ Not for Free"
+subtitle: "Why even true arbitrage ain't all it's cracked up to be"
+date: 2027-01-31
 categories: []
-bibliography: references.bib
 image: parable-of-the-hidden-treasure-by-rembrandt.jpg
 
 format:
@@ -19,4 +18,7 @@ draft: true
 
 ### Introduction
 
-![Rembrandt and workshop, _Parable of the Hidden Treasure_, ca. 1635. Museum of Fine Arts, Budapest.](parable-of-the-hidden-treasure-by-rembrandt.jpg)
+![Rembrandt, Gerrit Dou, and workshop of Rembrandt, _Parable of the Hidden Treasure_, ca. 1635. Museum of Fine Arts, Budapest.](parable-of-the-hidden-treasure-by-rembrandt.jpg){#fig-hidden-treasure width="100%" fig-align="center" fig-alt="TO DO!"} 
+
+
+"If the world was perfect, it wouldn't be." -- Yogi Berra

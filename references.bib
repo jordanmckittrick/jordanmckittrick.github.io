@@ -1,0 +1,469 @@
+% references.bib: the site-wide bibliography
+%
+% Every post reads this one file: posts/_metadata.yml sets
+% `bibliography: ../references.bib`. Each post's References list shows only
+% the works that post cites, so a work cited in several posts has one entry
+% and is formatted the same way everywhere.
+%
+% Entries with a "% VERIFIED:" comment were checked on 2026-11-14 against the
+% publisher, DOI landing page, Project Euclid, arXiv, a library catalogue, or
+% the source itself; the comment says what each was checked against. Entries
+% carrying "% UNVERIFIED:" could not be checked against the authoritative
+% page; the reason is given. Entries with neither comment have not been
+% checked; the section note above them says where they came from.
+%
+% Pandoc ignores text outside @entries, so these comment lines are safe.
+
+% ---------------------------------------------------------------------------
+% Information theory and log-optimal investing
+% ---------------------------------------------------------------------------
+
+% VERIFIED: Wiley catalogue page and library catalogues (Hoboken, NJ:
+% Wiley-Interscience, 2006, 2nd ed., ISBN 978-0-471-24195-9). Section 6.1 is
+% "The Horse Race"; Chapter 16 is "Information Theory and Portfolio Theory".
+@book{cover2006elements,
+  author    = {Cover, Thomas M. and Thomas, Joy A.},
+  title     = {Elements of Information Theory},
+  edition   = {2},
+  publisher = {Wiley-Interscience},
+  address   = {Hoboken, NJ},
+  year      = {2006},
+  isbn      = {978-0-471-24195-9}
+}
+
+% VERIFIED: Project Euclid (Proc. Fourth Berkeley Symp., Vol. 1:
+% Contributions to the Theory of Statistics, ed. Jerzy Neyman, 1961, pp. 65-78).
+@inproceedings{breiman1961optimal,
+  author    = {Breiman, Leo},
+  title     = {Optimal Gambling Systems for Favorable Games},
+  booktitle = {Proceedings of the Fourth {Berkeley} Symposium on Mathematical Statistics and Probability, Volume 1: Contributions to the Theory of Statistics},
+  editor    = {Neyman, Jerzy},
+  publisher = {University of California Press},
+  address   = {Berkeley, CA},
+  year      = {1961},
+  pages     = {65--78}
+}
+
+% VERIFIED: Wiley Online Library landing page for the DOI (BSTJ 35(4),
+% July 1956, pp. 917-926).
+@article{kelly1956new,
+  author  = {Kelly, Jr., John L.},
+  title   = {A New Interpretation of Information Rate},
+  journal = {Bell System Technical Journal},
+  volume  = {35},
+  number  = {4},
+  pages   = {917--926},
+  year    = {1956},
+  doi     = {10.1002/j.1538-7305.1956.tb03809.x}
+}
+
+% VERIFIED: EconPapers/RePEc record supplied by Elsevier (vol. 3, issue 4,
+% pp. 305-307); the ScienceDirect PII is 0378-4266(79)90023-2, which is the
+% DOI suffix.
+@article{samuelson1979why,
+  author  = {Samuelson, Paul A.},
+  title   = {Why We Should Not Make Mean Log of Wealth Big Though Years to Act Are Long},
+  journal = {Journal of Banking \& Finance},
+  volume  = {3},
+  number  = {4},
+  pages   = {305--307},
+  year    = {1979},
+  doi     = {10.1016/0378-4266(79)90023-2}
+}
+
+% ---------------------------------------------------------------------------
+% Information projections
+% ---------------------------------------------------------------------------
+
+% VERIFIED: dblp and the UTIA (Czech Academy of Sciences) record
+% (IEEE Trans. Inf. Theory 49(6): 1474-1490, 2003); DOI confirmed via a
+% Web of Science-derived record.
+@article{csiszar2003information,
+  author  = {Csisz{\'a}r, Imre and Mat{\'u}{\v{s}}, Franti{\v{s}}ek},
+  title   = {Information Projections Revisited},
+  journal = {{IEEE} Transactions on Information Theory},
+  volume  = {49},
+  number  = {6},
+  pages   = {1474--1490},
+  year    = {2003},
+  doi     = {10.1109/TIT.2003.810633}
+}
+
+% VERIFIED: Project Euclid landing page for the DOI (Ann. Probab. 3(1),
+% Feb. 1975, pp. 146-158).
+@article{csiszar1975idivergence,
+  author  = {Csisz{\'a}r, Imre},
+  title   = {{I}-Divergence Geometry of Probability Distributions and Minimization Problems},
+  journal = {The Annals of Probability},
+  volume  = {3},
+  number  = {1},
+  pages   = {146--158},
+  year    = {1975},
+  doi     = {10.1214/aop/1176996454}
+}
+
+% VERIFIED: arXiv (title and author as printed: "Jan Vecer", no diacritics).
+% Lemma 9, Theorem 10, Remark 11 and eq. (11) all exist in v1.
+% Primary class q-fin.MF as recorded by the author from the PDF.
+@misc{vecer2026numeraire,
+  author        = {Vecer, Jan},
+  title         = {Numeraire Invariance of Entropy-Projected Martingale Measures},
+  year          = {2026},
+  eprint        = {2609.08605},
+  archiveprefix = {arXiv},
+  primaryclass  = {q-fin.MF},
+  url           = {https://arxiv.org/abs/2609.08605}
+}
+
+% ---------------------------------------------------------------------------
+% Numeraires, SDFs, asset pricing
+% ---------------------------------------------------------------------------
+
+% VERIFIED: Crossref metadata (via colab.ws) and Wiley reference lists
+% (J. Financ. Econ. 26(1), July 1990, pp. 29-69).
+@article{long1990numeraire,
+  author  = {Long, Jr., John B.},
+  title   = {The Numeraire Portfolio},
+  journal = {Journal of Financial Economics},
+  volume  = {26},
+  number  = {1},
+  pages   = {29--69},
+  year    = {1990},
+  doi     = {10.1016/0304-405X(90)90012-O}
+}
+
+% VERIFIED: Cambridge Core and Crossref (J. Appl. Probab. 32(2), 1995,
+% pp. 443-458).
+@article{geman1995changes,
+  author  = {Geman, H{\'e}lyette and El Karoui, Nicole and Rochet, Jean-Charles},
+  title   = {Changes of Num{\'e}raire, Changes of Probability Measure and Option Pricing},
+  journal = {Journal of Applied Probability},
+  volume  = {32},
+  number  = {2},
+  pages   = {443--458},
+  year    = {1995},
+  doi     = {10.2307/3215299}
+}
+
+% VERIFIED: De Gruyter chapter page (book title, editors, chapter starts p. 303)
+% and the authors' offprint (Radon Series Comp. Appl. Math 8, 303-326).
+% DOI added. Series number moved from "volume" to "number": in BibLaTeX,
+% "volume" means a volume of a multi-volume book and renders as "vol. 8".
+@incollection{korn2009numeraire,
+  author    = {Korn, Ralf and Sch{\"a}l, Manfred},
+  title     = {The Numeraire Portfolio in Discrete Time: Existence, Related Concepts and Applications},
+  booktitle = {Advanced Financial Modelling},
+  editor    = {Albrecher, Hansj{\"o}rg and Runggaldier, Wolfgang J. and Schachermayer, Walter},
+  series    = {Radon Series on Computational and Applied Mathematics},
+  number    = {8},
+  publisher = {de Gruyter},
+  address   = {Berlin},
+  year      = {2009},
+  pages     = {303--326},
+  doi       = {10.1515/9783110213140.303}
+}
+
+% VERIFIED: EconPapers record with the DOI, and the published PDF
+% (Finance Stoch. 11(4), 2007, pp. 447-493). This paper introduced the term
+% "no unbounded profit with bounded risk" (NUPBR).
+@article{karatzas2007numeraire,
+  author  = {Karatzas, Ioannis and Kardaras, Constantinos},
+  title   = {The Num{\'e}raire Portfolio in Semimartingale Financial Models},
+  journal = {Finance and Stochastics},
+  volume  = {11},
+  number  = {4},
+  pages   = {447--493},
+  year    = {2007},
+  doi     = {10.1007/s00780-007-0047-3}
+}
+
+% VERIFIED: EconPapers (Elsevier data) and Crossref via Scilit
+% (Stoch. Process. Appl. 11(3), 1981, pp. 215-260).
+@article{harrison1981martingales,
+  author  = {Harrison, J. Michael and Pliska, Stanley R.},
+  title   = {Martingales and Stochastic Integrals in the Theory of Continuous Trading},
+  journal = {Stochastic Processes and their Applications},
+  volume  = {11},
+  number  = {3},
+  pages   = {215--260},
+  year    = {1981},
+  doi     = {10.1016/0304-4149(81)90026-0}
+}
+
+% VERIFIED: volume, pages and DOI (Math. Ann. 300, 1994, pp. 463-520).
+% The issue number has been removed: Crossref says 1, EuDML says 3 and
+% mathdoc says 2, so it can't be settled from here. Volume and pages are
+% enough to locate the paper.
+@article{delbaen1994general,
+  author  = {Delbaen, Freddy and Schachermayer, Walter},
+  title   = {A General Version of the Fundamental Theorem of Asset Pricing},
+  journal = {Mathematische Annalen},
+  volume  = {300},
+  pages   = {463--520},
+  year    = {1994},
+  doi     = {10.1007/BF01450498}
+}
+
+% VERIFIED: publisher and retailer catalogue records (Princeton University
+% Press, Revised Edition, 2005, ISBN 978-0-691-12137-6).
+@book{cochrane2005asset,
+  author    = {Cochrane, John H.},
+  title     = {Asset Pricing},
+  edition   = {Revised ed.},
+  publisher = {Princeton University Press},
+  address   = {Princeton, NJ},
+  year      = {2005}
+}
+
+% VERIFIED: Cambridge University Press data via RePEc, and Duke Scholars
+% (Macroecon. Dyn. 1(2), 1997, pp. 333-354, DOI as below).
+@article{bansal1997growth,
+  author  = {Bansal, Ravi and Lehmann, Bruce N.},
+  title   = {Growth-Optimal Portfolio Restrictions on Asset Pricing Models},
+  journal = {Macroeconomic Dynamics},
+  volume  = {1},
+  number  = {2},
+  pages   = {333--354},
+  year    = {1997},
+  doi     = {10.1017/S1365100597003039}
+}
+
+% VERIFIED: RePEc record supplied by Wiley and the LSE repository
+% (J. Finance 69(1), Feb. 2014, pp. 51-99).
+@article{backus2014sources,
+  author  = {Backus, David and Chernov, Mikhail and Zin, Stanley},
+  title   = {Sources of Entropy in Representative Agent Models},
+  journal = {The Journal of Finance},
+  volume  = {69},
+  number  = {1},
+  pages   = {51--99},
+  year    = {2014},
+  doi     = {10.1111/jofi.12090}
+}
+
+% ---------------------------------------------------------------------------
+% Incomplete markets
+% ---------------------------------------------------------------------------
+
+% VERIFIED: EconPapers (Wiley data) and Crossref via Scilit
+% (Math. Finance 1(3), July 1991, pp. 1-10). DOI CORRECTED: the draft had
+% ...tb00013.x; the correct DOI is ...tb00012.x.
+@article{he1991consumption,
+  author  = {He, Hua and Pearson, Neil D.},
+  title   = {Consumption and Portfolio Policies with Incomplete Markets and Short-Sale Constraints: The Finite-Dimensional Case},
+  journal = {Mathematical Finance},
+  volume  = {1},
+  number  = {3},
+  pages   = {1--10},
+  year    = {1991},
+  doi     = {10.1111/j.1467-9965.1991.tb00012.x}
+}
+
+% VERIFIED: Project Euclid landing page for the DOI
+% (Ann. Appl. Probab. 9(3), Aug. 1999, pp. 904-950).
+@article{kramkov1999asymptotic,
+  author  = {Kramkov, Dmitry and Schachermayer, Walter},
+  title   = {The Asymptotic Elasticity of Utility Functions and Optimal Investment in Incomplete Markets},
+  journal = {The Annals of Applied Probability},
+  volume  = {9},
+  number  = {3},
+  pages   = {904--950},
+  year    = {1999},
+  doi     = {10.1214/aoap/1029962818}
+}
+
+% ---------------------------------------------------------------------------
+% Sharpe ratios and spanning
+% ---------------------------------------------------------------------------
+
+% VERIFIED: RePEc record supplied by the University of Chicago Press, with
+% the DOI (J. Bus. 46(1), Jan. 1973, pp. 66-86).
+@article{treynor1973how,
+  author  = {Treynor, Jack L. and Black, Fischer},
+  title   = {How to Use Security Analysis to Improve Portfolio Selection},
+  journal = {The Journal of Business},
+  volume  = {46},
+  number  = {1},
+  pages   = {66--86},
+  year    = {1973},
+  doi     = {10.1086/295508}
+}
+
+% VERIFIED: Wiley Online Library landing page for the DOI
+% (J. Finance 42(4), Sept. 1987, pp. 873-888).
+@article{huberman1987mean,
+  author  = {Huberman, Gur and Kandel, Shmuel},
+  title   = {Mean-Variance Spanning},
+  journal = {The Journal of Finance},
+  volume  = {42},
+  number  = {4},
+  pages   = {873--888},
+  year    = {1987},
+  doi     = {10.1111/j.1540-6261.1987.tb03917.x}
+}
+
+% ---------------------------------------------------------------------------
+% Conclusion
+% ---------------------------------------------------------------------------
+
+% VERIFIED: the slide PDF (title "Math 2.0", Terence Tao, dated October 2026)
+% and Tao's blog posts of 10 Oct. 2026 (https://terrytao.wordpress.com/2026/10/10/math-2-0/)
+% and 17 Oct. 2026, which link to this URL. Venue and date from the Caltech
+% events calendar ("AIM Public Lecture Series: Terence Tao", Fri. 9 Oct. 2026,
+% Beckman Auditorium). "proof abundance" and the "lighthouses" passage are on
+% the slides "The era of proof abundance" and "Beyond problem-solving".
+% Tao notes the posted slides were revised slightly after the talk; the wording
+% was checked against the copy saved on 2026-11-14 (PDF dated 4 Nov. 2026).
+@misc{tao2026math2,
+  author       = {Tao, Terence},
+  title        = {Math 2.0},
+  howpublished = {Slides for a public lecture in the AIM Public Lecture Series, California Institute of Technology, Pasadena, CA, October 9, 2026},
+  year         = {2026},
+  month        = oct,
+  url          = {https://teorth.github.io/tao-web/slides/math-2-0-caltech-2026.pdf},
+  urldate      = {2026-11-14},
+  note         = {Posted on the author's blog, \emph{What's new}, October 10, 2026}
+}
+
+% VERIFIED (2026-11-14) against screenshots of the article page: headline as
+% currently displayed, byline "By Elisabeth Bumiller, Reporting from Los
+% Angeles", dated Oct. 16, 2026. The web headline was originally "'I'm on a War
+% Footing': Terry Tao and the Crisis in Math" (as linked from Tao's blog).
+% Corrected on Oct. 16, 2026 (Green-Tao theorem description; does not affect
+% the quotation). Print: Oct. 19, 2026, Section A, Page 1 of the New York
+% edition, headline "Math World on 'War Footing' Over Incursions by A.I. Models".
+% The epigraph's words match the article; "any more" is two words.
+@article{bumiller2026war,
+  author       = {Bumiller, Elisabeth},
+  title        = {Why One of the World’s Greatest Mathematicians Is on a ‘War Footing’},
+  journal      = {The New York Times},
+  entrysubtype = {newspaper},
+  date         = {2026-10-16},
+  url          = {https://www.nytimes.com/2026/10/16/us/math-ai-terence-tao.html},
+  urldate      = {2026-11-14}
+}
+
+% ---------------------------------------------------------------------------
+% The Medusa (Notes and further reading)
+% ---------------------------------------------------------------------------
+
+% VERIFIED: the Julian Barnes bibliography (first edition, London: Jonathan
+% Cape, 1989); "Shipwreck" is chapter 5. The essay also appeared in The New
+% Yorker, issue of 12 June 1989:
+% https://www.newyorker.com/magazine/1989/06/12/shipwreck
+@incollection{barnes1989shipwreck,
+  author    = {Barnes, Julian},
+  title     = {Shipwreck},
+  booktitle = {A History of the World in 10½ Chapters},
+  publisher = {Jonathan Cape},
+  address   = {London},
+  year      = {1989}
+}
+
+% VERIFIED: Wellcome Collection, TUM and NSW State Library catalogue records
+% (London: Printed for Henry Colburn, 1818; "by J. B. Henry Savigny and
+% Alexander Corréard"). English translation of "Naufrage de la frégate la
+% Méduse" (Paris, 1817).
+@book{savigny1818narrative,
+  author    = {Savigny, J. B. Henry and Corr{\'e}ard, Alexander},
+  title     = {Narrative of a Voyage to {Senegal} in 1816},
+  publisher = {Henry Colburn},
+  address   = {London},
+  year      = {1818}
+}
+
+% VERIFIED: Grove Atlantic catalogue page, Kirkus and Publishers Weekly
+% (New York: Atlantic Monthly Press, 2007, ISBN 978-0-87113-959-7).
+@book{miles2007wreck,
+  author    = {Miles, Jonathan},
+  title     = {The Wreck of the {Medusa}: The Most Famous Sea Disaster of the Nineteenth Century},
+  publisher = {Atlantic Monthly Press},
+  address   = {New York},
+  year      = {2007}
+}
+
+% VERIFIED: Open Library and the Museum voor Schone Kunsten Gent catalogue
+% (Munich: Prestel, 2002, ISBN 3-7913-2782-8). Catalogues print the title
+% WITH the accent: "Géricault".
+@book{alhadeff2002raft,
+  author    = {Alhadeff, Albert},
+  title     = {The Raft of the {Medusa}: {G}{\'e}ricault, Art, and Race},
+  publisher = {Prestel},
+  address   = {Munich},
+  year      = {2002}
+}
+
+% VERIFIED: page of the Service historique de la Défense (French Ministry of
+% the Armed Forces), Centre des archives de Rochefort. It presents the
+% archive's Méduse holdings and links to full digitized PDFs of the
+% court-martial dossier (cote MR 3 O 34, 41 pieces) and the frigate's 1816
+% crew roll (MR 3 E 2 849). "date" is the page's last-modified date; no
+% author is given.
+@online{shd2026meduse,
+  author       = {{Service historique de la Défense}},
+  title        = {La frégate {La Méduse} : une affaire rochefortaise},
+  organization = {Centre des archives de Rochefort},
+  date         = {2026-07-23},
+  url          = {https://www.servicehistorique.sga.defense.gouv.fr/ressources/la-fregate-la-meduse-une-affaire-rochefortaise},
+  urldate      = {2026-11-14},
+  langid       = {french},
+  note         = {Includes the digitized court-martial dossier (cote MR 3 O 34, 1816--1817) and the 1816 crew roll (MR 3 E 2 849)}
+}
+
+% ---------------------------------------------------------------------------
+% From "1: Shannon's Demon, Made Exact"
+% ---------------------------------------------------------------------------
+
+% Carried over unchanged from posts/shannons-demon/references.bib (2026-11-14).
+% These five entries have not been checked against a publisher or DOI page.
+% That post's other four entries were duplicates of works above (kelly1956,
+% breiman1961, cover_and_thomas_textbook, samuelson_1979); the checked
+% entries above replace them.
+
+@article{shannon_and_investment,
+  author  = {Cover, Thomas M.},
+  title   = {Shannon and Investment},
+  journal = {IEEE Information Theory Society Newsletter},
+  year    = {1998},
+  note    = {Special Golden Jubilee Issue (Summer 1998)}
+}
+
+@article{samuelson_1971,
+  author  = {Samuelson, Paul A.},
+  title   = {The Fallacy of Maximizing the Geometric Mean in Long Sequences of Investing or Gambling},
+  journal = {Proceedings of the National Academy of Sciences},
+  year    = {1971},
+  volume  = {68},
+  number  = {10},
+  pages   = {2493--2496}
+}
+
+@article{landauer_1961,
+  author  = {Landauer, Rolf},
+  title   = {Irreversibility and Heat Generation in the Computing Process},
+  journal = {IBM Journal of Research and Development},
+  year    = {1961},
+  volume  = {5},
+  number  = {3},
+  pages   = {183--191}
+}
+
+@article{bennett_1982,
+  author  = {Bennett, Charles H.},
+  title   = {The Thermodynamics of Computation---A Review},
+  journal = {International Journal of Theoretical Physics},
+  year    = {1982},
+  volume  = {21},
+  number  = {12},
+  pages   = {905--940}
+}
+
+@article{markowitz_1952,
+  author  = {Markowitz, Harry},
+  title   = {Portfolio Selection},
+  journal = {The Journal of Finance},
+  year    = {1952},
+  volume  = {7},
+  number  = {1},
+  pages   = {77--91}
+}
