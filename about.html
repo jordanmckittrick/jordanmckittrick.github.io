@@ -364,7 +364,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="about-contents"><main class="content" id="quarto-document-content">
 
 
-<p>I’m an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems. This website is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. I make no claims to novelty, though I’d be surprised if I don’t occasionally stumble into it. Needless to say, nothing I write on the subject of investing should be taken as financial advice. Feel free to borrow material as you see fit, though I’d be grateful if you would adequately cite this blog. Please reach out to me on LinkedIn if you find any mistakes, have any questions, or think this site can be improved.</p>
+<p>I’m an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, complex systems, and art. This website is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. I make no claims to novelty, though I’d be surprised if I don’t occasionally stumble into it. Needless to say, nothing I write on the subject of investing should be taken as financial advice. Feel free to borrow material as you see fit, though I’d be grateful if you would adequately cite this blog. Please reach out to me on LinkedIn if you find any mistakes, have any questions, or think this site can be improved.</p>
 <section id="education" class="level2">
 <h2 data-anchor-id="education">Education</h2>
 <ul>
@@ -863,7 +863,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">    #   href: mailto:you@yourfullname.dev</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>I'm an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, and complex systems. This website is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. I make no claims to novelty, though I'd be surprised if I don't occasionally stumble into it. Needless to say, nothing I write on the subject of investing should be taken as financial advice. Feel free to borrow material as you see fit, though I'd be grateful if you would adequately cite this blog. Please reach out to me on LinkedIn if you find any mistakes, have any questions, or think this site can be improved.</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>I'm an independent researcher with interests in quantitative finance, information theory, AI, Bayesian statistics, complex systems, and art. This website is where I think out loud about those topics, aiming to be as rigorous as I reasonably can without being unnecessarily academic. I make no claims to novelty, though I'd be surprised if I don't occasionally stumble into it. Needless to say, nothing I write on the subject of investing should be taken as financial advice. Feel free to borrow material as you see fit, though I'd be grateful if you would adequately cite this blog. Please reach out to me on LinkedIn if you find any mistakes, have any questions, or think this site can be improved.</span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">## Education</span></span>
@@ -905,6 +905,46 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </div>
   </div>
 </footer>
+<script>
+(function () {
+document.querySelectorAll("figcaption.quarto-float-fig").forEach(function (cap) {
+  var t = cap.firstChild;
+  if (!t || t.nodeType !== Node.TEXT_NODE) return;
+  var m = t.nodeValue.match(/^(\s*)(Figure\u00a0[^\s:]+:)/);
+  if (!m) return;
+  var b = document.createElement("strong");
+  b.className = "fig-label";
+  b.textContent = m[2];
+  t.nodeValue = t.nodeValue.slice(m[0].length);
+  cap.insertBefore(b, t);
+});
+document.querySelectorAll("figcaption.quarto-subfloat-caption").forEach(function (cap) {
+  var t = cap.firstChild;
+  if (!t || t.nodeType !== Node.TEXT_NODE) return;
+  var m = t.nodeValue.match(/^(\s*)(\([^\s)]+\))/);
+  if (!m) return;
+  var b = document.createElement("strong");
+  b.className = "subfig-label";
+  b.textContent = m[2];
+  t.nodeValue = t.nodeValue.slice(m[0].length);
+  cap.insertBefore(b, t);
+});
+var capObserver = new ResizeObserver(function (entries) {
+  entries.forEach(function (e) {
+    var cap = e.target.closest("figure").querySelector(":scope > figcaption");
+    if (cap) cap.style.width = e.target.getBoundingClientRect().width + "px";
+  });
+});
+document.querySelectorAll(
+  ".quarto-figure > figure > div > img.figure-img, .quarto-figure > figure > p > img.figure-img"
+).forEach(function (img) {
+  var cap = img.closest("figure").querySelector(":scope > figcaption");
+  if (!cap) return;
+  cap.classList.add("fig-cap-fit");
+  capObserver.observe(img);
+});
+})();
+</script>
 
 
 

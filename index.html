@@ -764,6 +764,46 @@ ul.task-list li input[type="checkbox"] {
     </div>
   </div>
 </footer>
+<script>
+(function () {
+document.querySelectorAll("figcaption.quarto-float-fig").forEach(function (cap) {
+  var t = cap.firstChild;
+  if (!t || t.nodeType !== Node.TEXT_NODE) return;
+  var m = t.nodeValue.match(/^(\s*)(Figure\u00a0[^\s:]+:)/);
+  if (!m) return;
+  var b = document.createElement("strong");
+  b.className = "fig-label";
+  b.textContent = m[2];
+  t.nodeValue = t.nodeValue.slice(m[0].length);
+  cap.insertBefore(b, t);
+});
+document.querySelectorAll("figcaption.quarto-subfloat-caption").forEach(function (cap) {
+  var t = cap.firstChild;
+  if (!t || t.nodeType !== Node.TEXT_NODE) return;
+  var m = t.nodeValue.match(/^(\s*)(\([^\s)]+\))/);
+  if (!m) return;
+  var b = document.createElement("strong");
+  b.className = "subfig-label";
+  b.textContent = m[2];
+  t.nodeValue = t.nodeValue.slice(m[0].length);
+  cap.insertBefore(b, t);
+});
+var capObserver = new ResizeObserver(function (entries) {
+  entries.forEach(function (e) {
+    var cap = e.target.closest("figure").querySelector(":scope > figcaption");
+    if (cap) cap.style.width = e.target.getBoundingClientRect().width + "px";
+  });
+});
+document.querySelectorAll(
+  ".quarto-figure > figure > div > img.figure-img, .quarto-figure > figure > p > img.figure-img"
+).forEach(function (img) {
+  var cap = img.closest("figure").querySelector(":scope > figcaption");
+  if (!cap) return;
+  cap.classList.add("fig-cap-fit");
+  capObserver.observe(img);
+});
+})();
+</script>
 
 
 
