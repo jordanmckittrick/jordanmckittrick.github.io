@@ -36,3 +36,8 @@ package = true
 [tool.uv.sources]
 finlib = { git = "https://github.com/jordanmckittrick/finlib" }
 
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+

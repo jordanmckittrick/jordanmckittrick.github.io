@@ -1,0 +1,47 @@
+---
+title: "A clean post"
+date: 2026-01-01
+image: pic.svg
+draft: false
+---
+
+# Setup {#sec-setup}
+
+Prices are in dollars (\$5 or \$10), and `$HOME` and `` a ` $ tick `` are code spans. The growth rate $W$ satisfies
+$$
+W = \sum_i p_i \log Y_i
+$$ {#eq-growth}
+which @eq-growth states, with $x \in [0, 1]$ and $$y = 2$$ inline.
+See [Setup](#sec-setup), [the next heading](#another-heading), the [sibling post](../linked/index.qmd), its [target](../linked/index.qmd#sec-target) and [its intro](../linked/index.qmd#an-auto-heading). Mail someone@example.com or see <https://example.com/@user>.
+
+As @smith2020first argued, and others agree [@smith2020first; @jones2021second, p. 3], this holds (see @fig-pic and @tbl-results, or [the docs](https://example.com)). A citation at the end of a sentence: @jones2021second. A year only: [-@smith2020first].
+
+## Another heading
+
+![A caption with $[0, 1]$ math and a [link](https://example.com).](pic.svg){#fig-pic fig-alt="A small grey square." width="50%"}
+
+::: {.epigraph}
+A quotation. — Someone, quoted in @smith2020first
+:::
+
+```{python}
+#| label: tbl-results
+#| tbl-cap: "Results for $x$; see @eq-growth."
+    # An indented comment, a TODO, an odd $ and [x](@sec-nowhere) are all fine in code.
+x = 1
+```
+
+<!-- TODO: an HTML comment is not rendered, so this is not a placeholder. -->
+
+```{python}
+#| label: fig-cell
+#| fig-alt: "A line rising from left to right."
+y = 2
+```
+
+As @fig-cell shows.
+
+# References {.unnumbered}
+
+::: {#refs}
+:::

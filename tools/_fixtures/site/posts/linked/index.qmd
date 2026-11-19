@@ -1,0 +1,12 @@
+---
+title: "A post that others link to"
+draft: true
+---
+
+## Target {#sec-target}
+
+Nothing here but [@jones2021second].
+
+## An auto heading
+
+Its anchor is generated from the title.

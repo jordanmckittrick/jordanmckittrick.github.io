@@ -1,0 +1,5 @@
+---
+title: "Nested parentheses"
+---
+
+This is well known (as shown in [@smith2020first]).

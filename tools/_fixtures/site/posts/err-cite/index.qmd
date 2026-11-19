@@ -1,0 +1,5 @@
+---
+title: "A missing citation"
+---
+
+As @nobody2000missing claims.

@@ -1,0 +1,14 @@
+---
+title: "Math errors"
+---
+
+An odd number of dollars: $x$ and $y.
+
+$$
+z = 1
+
+$$
+
+Some text in between.
+
+$$ a = b with no closing delimiter

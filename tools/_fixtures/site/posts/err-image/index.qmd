@@ -1,0 +1,19 @@
+---
+title: "Image errors"
+---
+
+![Missing file.](no-such-file.jpg){fig-alt="A painting."}
+
+![No alt text.](pic.svg)
+
+![Empty alt text.](pic.svg){fig-alt=""}
+
+![Placeholder alt text.](pic.svg){fig-alt="INSERT ONE!"}
+
+![LaTeX alt text.](pic.svg){fig-alt="The curve of $\alpha$ against \beta."}
+
+```{python}
+#| label: fig-no-alt
+#| fig-cap: "A figure cell with no alt text."
+z = 3
+```

@@ -1,0 +1,10 @@
+---
+title: "Indentation"
+---
+
+Some text.
+
+  # References {.unnumbered}
+
+  ::: {#refs}
+:::

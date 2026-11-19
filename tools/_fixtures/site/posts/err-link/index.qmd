@@ -1,0 +1,9 @@
+---
+title: "Link syntax errors"
+---
+
+# Intro {#sec-intro}
+
+A link with an at sign: [Intro](@sec-intro).
+
+A link with a space: [Intro] (#sec-intro).

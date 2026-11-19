@@ -1,0 +1,13 @@
+---
+title: "Unresolved cross-references"
+---
+
+# Intro {#sec-intro}
+
+An equation that isn't here: @eq-missing.
+
+A section that isn't here: [Missing](#sec-missing).
+
+An anchor the other post lacks: [there](../linked/index.qmd#no-such-anchor).
+
+A post that doesn't exist: [nope](../no-such-post/index.qmd).

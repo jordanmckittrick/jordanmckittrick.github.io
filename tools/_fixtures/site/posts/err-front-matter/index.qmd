@@ -1,0 +1,6 @@
+---
+title: "Its own bibliography"
+bibliography: references.bib
+---
+
+Some text.
