@@ -34,3 +34,31 @@ _environment.local
 .claude/
 
 **/*.quarto_ipynb
+
+# Scratch notebooks (the _*.ipynb notebooks already committed stay tracked)
+_*.ipynb
+
+# Stray render output (the real output is _site/)
+/posts/*/index.html
+/posts/*/index_files/
+/site_libs*/
+
+# LaTeX by-products
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.toc
+
+# Backups
+*.bak*
+
+# China figure: the pacing chart is written by china_figure.py's self-checks;
+# the copy workbooks are working files of the apply_copy.py rewrite workflow.
+posts/you-cant-bet-on-china/china_figure_pacing.png
+posts/you-cant-bet-on-china/china_figure_copy.xlsx
+posts/you-cant-bet-on-china/china_figure_copy.numbers
