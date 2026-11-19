@@ -3,7 +3,12 @@
 // Lighter accent so links stay readable on a dark background.
 $primary:   #a5b4fc;
 $link-color: #6fb1d6;
+// _quarto.yml sets the navbar background to white for both themes; in dark
+// mode, match the page background (darkly's $body-bg) instead.
+$navbar-bg: #222;
 
 /*-- scss:rules --*/
 body { line-height: 1.65; }
+// light.scss's #e8e8e8 navbar border stays active in dark mode; soften it.
+.navbar { border-bottom-color: $gray-700; }
 h1, h2, h3 { letter-spacing: -0.01em; }
