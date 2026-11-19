@@ -184,7 +184,16 @@ TITLE = "China ÷ United States"
 COPY_TEXT = dict(
     panel_economy="Economy",
     panel_stocks="Stocks",
-    kicker="Part {numeral} · {start_year}–{end_year}",
+    kicker="{part} · {start_year}–{end_year}",
+    # The intro card, before the Prelude's card whenever playback starts from the beginning. (The claim is
+    # computed: {catch_up_rivals} is "any other country" only while China's gain since 1978 ranks first.)
+    intro_title="China ÷ United States, {start_year}–{end_year}",
+    intro_text=("Since {catch_up_from}, China has closed more ground on America than {catch_up_rivals} in the World "
+                "Bank's records. Its stocks have not followed."),
+    # The card that opens the ending, once the view has pulled back.
+    score_kicker="{start_year}–{end_year}",
+    score_title="The Scorecard",
+    score_subtitle="First the economy, then the stocks.",
     hover_economy_1978="Economy compared to {anchor_year}: {change}",
     hover_stocks="Stocks compared to {since}: {change}",
     hover_economy="Economy compared to {since}: {change}",
@@ -200,7 +209,7 @@ COPY_TEXT = dict(
     gap="Gap: {gap_bits} bits (×{gap_multiple})",
 )
 # The three parts of the animation, as their title cards and the scrubber name them.
-PART_TITLES = ["Mao's Mayhem", "“Seeking Truth from Facts”", "An Investable China"]
+PART_TITLES = ["Mao's Mayhem", "“Seeking Truth from Facts”", "Betting on the Boom"]
 START_YEAR = 1960        # first GDP year drawn; playback starts here
 SHOW_MULTIPLE = True     # hover: append the multiple 2^x after each value, e.g. "+2.31 bits (×4.96)"
 
@@ -210,7 +219,7 @@ DEFAULT_SPEED = 1.5              # ... and where it starts
 EVENT_SLOWDOWN = 0.7             # passing a labelled event, the speed dips to this share of its act's base speed ...
 EVENT_WINDOW_YEARS = 0.25        # ... eased down and back up over this long either side of the event
 BOX_SLOWDOWN = 0.2               # while a text box is up, playback runs at this share of base speed ...
-BOX_SECONDS = (1.2, 0.27)        # ... for this long: so much, plus so much a word (a beat may trim it: Beat.trim)
+BOX_SECONDS = (1.2, 0.27)        # ... for this long: so much, plus so much a word (a beat may add to it: Beat.extra_s)
 PICTURE_SLOWDOWN = 0.1           # a picture card: slower ...
 PICTURE_SECONDS = (2.2, 0.27)    # ... and longer
 LAST_BOX_EXTRA = 0.5             # the box that closes the ending stays up this much longer than its words need
@@ -225,13 +234,20 @@ SLOW_LIMIT = (0.6, 1.5)          # the tempo rule: never under this share of bas
 # An act break, step by step: the title card and its scrim come up, hold, the x-axis moves to the
 # next act's range, the next ghosts appear, the card goes.
 TRANSITION = dict(card_in=0.7, hold=2.0, move=1.1, ghost=0.4, card_out=0.6)
+TITLE_READ = (1.5, 0.27)         # a card's subtitle adds so much to its hold, plus so much a word
+INTRO_EXTRA = 1.0                # the intro card holds for a box's reading time (BOX_SECONDS) and this much more
+START_SNAP_DAYS = 7              # play pressed this close to a part's start (a scrubber step is ~6 days) starts at its card
 # The ending. When the data ends the view pulls back to the whole chart, and the rest happens there,
-# so that the finished chart is what the reader last saw. In the top panel, the chord across each
-# era (ERA_CHORDS) is drawn in turn, then its rate fades in, then a short beat (half a pause); the
-# arrow from the 1978 level up to the line's last point, its label, a pause. Then in the bottom
-# panel each chord, its rate, a pause; the gap's arrow, its label; the last box holds (for its
-# reading time, ``LAST_BOX_EXTRA`` included).
-ENDING = dict(chord=1.4, label=0.4, pause=0.8, arrow=0.7, pullback=1.8)
+# so that the finished chart is what the reader last saw. The Scorecard card (it holds for its
+# subtitle's TITLE_READ alone). Then the top panel in the spotlight (the bottom one dimmed, over
+# ``spotlight`` s): the chord across each era (ERA_CHORDS) is drawn in turn, then its rate fades in,
+# then a short beat (half a pause); the arrow from the 1978 level up to the line's last point, its
+# label, a pause. Then the bottom panel in the spotlight: each chord, its rate, a pause; the gap's
+# arrow, its label. Then the thesis, the last box's words on a card (up for its reading time,
+# ``LAST_BOX_EXTRA`` included); and, as it goes, the finished chart, nothing dimmed. (Chords and
+# arrows are drawn at 1.5 times their old pace: 1.4 and 0.7 s.)
+ENDING = dict(chord=2.1, label=0.4, pause=0.8, arrow=1.05, pullback=1.8, spotlight=0.5)
+SPOTLIGHT = 0.7                  # a panel out of the spotlight is veiled this much: it shows at about 30%
 # At the end of Part II, before its break: an arrow is drawn up the economy's line from its 1978
 # level, and a box says what it measures.
 INTERLUDE = dict(arrow=0.7, pause=0.3)
@@ -401,9 +417,9 @@ EVENTS = [
     # for the zones in Guangdong: Shenzhen, Zhuhai and Shantou. Xiamen's zone, in
     # Fujian, was approved by the State Council in October 1980.
     Event("1980-08-26", "Special economic zones",
-          ("**Aug 1980**: Special Economic Zones (SEZs) — special coastal enclaves with lower taxes, lighter "
-           "regulations, and stronger property rights protections — are established to experiment with "
-           "free-market reforms while insulating the rest of China from potential upheaval."),
+          ("**Aug 1980**: Special Economic Zones (SEZs), coastal enclaves with lower taxes and lighter "
+           "regulation that are open to foreign investment, are established to experiment with market "
+           "reforms while insulating the rest of China from potential upheaval."),
           "label", "economy", short="SEZs"),
     # UNSURE: two dates, one line. The IMF's board recognized the People's
     # Republic as China's representative on April 17, 1980 and the World Bank's
@@ -423,16 +439,14 @@ EVENTS = [
            "Great Leap Forward."), "label", "economy"),
     # UNSURE of the day: I have September 22 - October 12, 1980 for Friedman's first visit.
     Event("1980-09-22", "Friedman visits",
-          ("**Sep 1980**: As part of its efforts to successfully liberalize its economy, China invites "
-           "Milton Friedman to give a series of lectures on free markets, deregulation, and the price "
-           "mechanism."), "label", "economy"),
+          ("**Sep 1980**: China invites Milton Friedman to lecture on markets, money and inflation."), "label", "economy"),
     # UNSURE of the day, which I chose: August 16, 2010 is when Japan's second-quarter
     # figures showed its output below China's (the full-year figures followed in
     # February 2011). The share per person is computed (narration_numbers).
     Event("2010-08-16", "Overtakes Japan",
           "**2010**: China's total output passes Japan's, though on a per capita basis it remains far behind.", "label", "economy"),
     Event("2008-11-09", "¥4 trillion stimulus",
-          "**Nov 9, 2008**: China floods the economy with a massive stimulus package worth ¥4 trillion.",
+          "**Nov 9, 2008**: China announces a stimulus package worth ¥4 trillion (yuan), about $586 billion.",
           "label", "economy"),
     Event("1997-07-01", "Hong Kong handover",
           "**Jul 1, 1997**: Britain formally cedes Hong Kong to China.", "label", "economy"),
@@ -486,8 +500,8 @@ EVENTS = [
           "label", "stocks"),
     # These two share one label: five weeks apart, they stand about a pixel apart.
     Event("2018-06-01", "A-shares join MSCI",
-          ("**Jun 2018**: MSCI incorporates a small amount of mainland-listed A-shares into its index, "
-           "eventually reaching 20% by Nov 2019, fundamentally altering what the index measures."),
+          ("**Jun 2018**: MSCI begins including mainland-listed A-shares in its indexes at a small "
+           "inclusion factor, raised to 20% by Nov 2019, changing what the index measures."),
           "label", "stocks", group="2018"),
     Event("2018-07-06", "US tariffs",
           "**Jul 6, 2018**: the first of President Trump's tariffs take effect. China answers in kind.", "label", "stocks", group="2018"),
@@ -569,8 +583,8 @@ class Leader:
 LEADERS = [
     Leader("1949-10-01", "1976-09-09", "Mao", "**Oct 1949 – Sep 1976**: Mao Zedong, Party chairman until his death."),
     Leader("1976-10-07", "1978-12-22", "Hua",
-           ("**Oct 1976 – Dec 1978**: Hua Guofeng, Mao's chosen successor; swiftly sidelined by Deng by Dec "
-            "1978.")),
+           ("**Oct 1976 – Dec 1978**: Hua Guofeng, Mao's chosen successor; sidelined by Deng at the Third "
+            "Plenum (formally Party chairman until 1981).")),
     Leader("1978-12-22", "1989-06-24", "Deng",
            ("**Dec 1978 – Jun 1989**: Though he never officially holds the top post, Deng Xiaoping is the de "
             "facto paramount leader of China; retired 1989–90 but decisive until about 1992, the year of his "
@@ -614,8 +628,8 @@ ERAS = [
     # launched the austerity programme; the end is put at the close of 1991,
     # just before the Southern Tour.
     Era("1988-09-26", "1991-12-31", "Retrenchment",
-        ("**1989–91**: Credit is tightened and Party conservatives attempt to roll back Deng's market "
-         "reforms after the 1988 inflation and the 1989 protests."),
+        ("**Sep 1988 – 1991**: Credit is tightened and Party conservatives attempt to roll back Deng's "
+         "market reforms after the 1988 inflation and the 1989 protests."),
         drop_first=True),
     # UNSURE, INTERPRETIVE: whole calendar years, from the first year of WTO
     # membership to the last year before the global financial crisis.
@@ -663,8 +677,8 @@ BANDS = [
          ("Exchanges open, mostly closed to foreigners", "Exchanges open,<br>mostly closed to foreigners",
           "Exchanges open,<br>mostly closed<br>to foreigners", "Exchanges<br>open, mostly<br>closed to<br>foreigners"),
          ("**From Feb 1992**: a small B-share market opens for foreign investors. **From Jul 1993**: "
-          "B-shares fail to attract much foreign capital, so H-shares list in Hong Kong as an alternative. "
-          "A-shares remain forbidden to foreigners."),
+          "mainland companies also list in Hong Kong (H-shares). A-shares stay closed to foreigners until "
+          "QFII (Qualified Foreign Institutional Investor) in Dec 2002."),
          y=0.76,
          # Ends where the "First B-shares" event stands.
          early_end="1992-02-21",
@@ -677,9 +691,10 @@ BANDS = [
 class Act:
     """One part of the animation (an "act" in the code). Each starts where the one before it ends; the first, with the data.
 
-    Readers see "Part": the title card's overline reads "PART II · 1978–1992",
-    and the scrubber shows the titles alone (``PART_TITLES``, quotation marks
-    and all). Within a part the x-axis is fixed: from ``view_from`` (the start
+    Readers see ``part``: the title card's overline reads "PART I · 1978–1992"
+    (the first is the "Prelude"), and the scrubber shows the titles alone
+    (``PART_TITLES``, quotation marks and all). ``subtitle`` is the line under
+    the title on the card, which holds that much longer (``TITLE_READ``). Within a part the x-axis is fixed: from ``view_from`` (the start
     of the plot, if None) to the part's end, plus a little room. ``seconds``
     is how long the part should play at 1x, the breaks apart: its base speed
     is whatever makes its beats add up to that, up to ``MAX_BASE``
@@ -693,14 +708,19 @@ class Act:
     seconds: float
     panel: str = "economy"
     view_from: str | None = None
+    part: str = ""
+    subtitle: str = ""
 
 
 ACTS = [
-    Act("I", PART_TITLES[0], "Mao", "1978-12-18", 55.0),
-    Act("II", PART_TITLES[1], "Deng", "1992-02-21", 70.0),
+    Act("I", PART_TITLES[0], "Mao", "1978-12-18", 55.0, part="Prelude",
+        subtitle="Famine, purges and upheaval. Far poorer than America, China gains no ground on it."),
+    Act("II", PART_TITLES[1], "Deng", "1992-02-21", 70.0, part="Part I",
+        subtitle="Deng turns China toward markets, and its economy begins to close the gap with America."),
     # Framed on the years in which there is something to invest in: from just
     # before the Shanghai exchange opens (the start of the plain access band).
-    Act("III", PART_TITLES[2], "Investable", None, 73.0, panel="stocks", view_from="1990-07-01"),
+    Act("III", PART_TITLES[2], "Boom", None, 73.0, panel="stocks", view_from="1990-07-01", part="Part II",
+        subtitle="Foreigners can finally buy Chinese shares. The economy keeps surging; the stocks do not follow."),
 ]
 
 
@@ -774,8 +794,8 @@ class Beat:
     says which panel the box goes in: its part's, unless it says otherwise
     (economy boxes in the top panel, market boxes in the bottom one; the other
     panel only if there is no room). ``event`` picks a labelled event out while
-    the box is up, and ``trim`` takes seconds off (or adds them to) its reading
-    time. ``cross`` lets its box run from one panel into the other in its own
+    the box is up, and ``extra_s`` adds seconds to its reading time at 1x
+    (or, negative, takes them off): for a dense box. ``cross`` lets its box run from one panel into the other in its own
     panel's turn.
 
     RATE ARROWS. A box that quotes a rate has ``rate``, the span of the
@@ -802,7 +822,7 @@ class Beat:
     rate: tuple[int, int] | None = None
     reference: tuple[int, int] | None = None
     rate_note: str | None = None
-    trim: float = 0.0
+    extra_s: float = 0.0
     cross: bool = False
 
 
@@ -813,10 +833,10 @@ NARRATION_SPANS = dict(famine=(1960, 1962), factions=(1966, 1968), rebound=(1968
 BEATS = [
     # ---- Part I ----
     Beat("1961-06-30", "1959–61",
-         "The Great Chinese Famine. 15–45 million people die."),
+         "The Great Chinese Famine. Estimates of the dead range from 15 to 45 million."),
     Beat("1962-01-30", "Jan–Feb 1962",
          ("At the 7,000 Cadres Conference, Liu Shaoqi blames the famine primarily on bad policy. Mao makes a "
-          "rare self-criticism and cedes power over the economy to Liu and Deng Xiaoping.")),
+          "rare self-criticism and cedes power over the economy to Liu and Deng Xiaoping."), extra_s=1.0),
     Beat("1965-07-01", "1962–65",
          "Liu and Deng steer a recovery with pragmatic policies and greater market influences.",
          rate=(1962, 1965)),
@@ -825,28 +845,28 @@ BEATS = [
           "says, “Use Mao Zedong Thought as a weapon!”"),
          picture="cr_1966"),
     Beat("1968-07-01", "1966–68",
-         ("Mao's “Bombard the Headquarters” poster targets pragmatists; Liu and Deng arrested; Red Guards "
-          "attack “bourgeois elements.”"), rate=(1966, 1968)),
+         ("Mao's “Bombard the Headquarters” poster targets pragmatists; Liu and Deng are purged and "
+          "detained; Red Guards attack “bourgeois elements.”"), rate=(1966, 1968), extra_s=1.0),
     Beat("1970-07-01", "1968–70",
-         "The PLA restores order. Output per person rebounds {rebound_rise}%.", rate=(1968, 1970)),
+         "The People's Liberation Army restores order. Output per person rebounds {rebound_rise}%.", rate=(1968, 1970)),
     Beat("1977-07-01", "1976–77",
          ("Mao dies; Hua arrests the Gang of Four, the Cultural Revolution's radical leaders; Deng "
           "rehabilitated.")),
     # ---- Part II ----
     Beat("1978-12-22", "Dec 1978",
-         "At the Third Plenum, Deng emerges as paramount leader of China.", trim=-1.0),
+         "At the Third Plenum, Deng emerges as paramount leader of China.", extra_s=-1.0),
     Beat("1979-01-15", "1979–84",
-         "Beijing implements the Household Responsibility System, ending the communes."),
+         "Beijing implements the Household Responsibility System, effectively ending the communes."),
     # Deng at the rodeo in Simonton, Texas, February 2, 1979.
     Beat("1979-02-02", "1979",
-         "Deng tours America; attends a rodeo. Coca-Cola begins selling in China.", picture="deng_carter_1979"),
+         "Deng tours America; attends a rodeo. Coca-Cola returns to China.", picture="deng_carter_1979"),
     Beat("1980-08-26", "1980",
          "China joins the IMF and the World Bank; establishes special economic zones."),
     Beat("1985-12-30", "Dec 1985",
          "TIME names Deng its Man of the Year.", picture="time_1985"),
     Beat("1988-08-15", "1988",
          ("Deng pushes to rapidly free state-set prices; inflation nears 20%. The plan is replaced by "
-          "gradual reform, spanning several years."), trim=-1.0),
+          "gradual reform, spanning several years."), extra_s=-1.0),
     Beat("1989-05-15", "Spring 1989",
          ("Protests over inflation, corruption, and a lack of democracy erupt in Tiananmen Square; the army "
           "quashes them.")),
@@ -855,8 +875,8 @@ BEATS = [
          rate=(1988, 1990), reference=(1978, 1988)),
     # A market box, in Part II: in the bottom panel.
     Beat(_EXCHANGE_OPENS, "{exchange_month}",
-         ("Shanghai's stock exchange opens; Shenzhen's follows in {shenzhen_month}. Foreigners are unable to "
-          "invest."), panel="stocks"),
+         ("Shanghai's stock exchange opens; Shenzhen's follows in {shenzhen_month}. Their shares, A-shares, "
+          "are closed to foreigners."), panel="stocks"),
     Beat("1992-01-18", "Jan–Feb 1992",
          "Deng embarks on his Southern Tour to advocate for continued market reforms."),
     # ---- Part III (market boxes in the bottom panel, economy boxes in the top one) ----
@@ -869,15 +889,17 @@ BEATS = [
          event="First H-shares"),
     # It quotes a rate, so it has an arrow, and comes up at the span's end (the brief's table left it out).
     Beat("1997-07-01", "1993–97",
-         "Foreign direct investment surges by nearly an order of magnitude.", panel="economy", rate=(1993, 1997)),
+         ("Foreign direct investment pours in: over $40 billion a year by 1996, up from about $4 billion in "
+          "1991."), panel="economy", rate=(1993, 1997)),
     Beat("1998-06-30", "1994–2003",
          ("Zhu Rongji, vice premier then premier, enacts sweeping market-oriented reforms, laying off tens "
-          "of millions of state employees, and reinforcing Deng's vision of “reform and opening up.”"), panel="economy"),
+          "of millions of state employees, and reinforcing Deng's vision of “reform and opening up.”"), panel="economy",
+         extra_s=1.0),
     Beat(None, "{wto_month}",
          "China joins the WTO. {trough_lag} its stocks bottom: {trough_falls}.",
          after="trough"),
     Beat("2002-12-01", "{qfii_month}",
-         "QFII allows foreigners to buy A-shares for the first time.", event="QFII"),
+         "QFII lets licensed foreign institutions buy A-shares for the first time, within quotas.", event="QFII"),
     Beat("2006-10-27", "2005–{peak_yy}",
          ("China's big state banks list in Hong Kong; ICBC's {icbc_year} IPO is then the world's largest. "
           "The boom peaks in {peak_month}."),
@@ -928,11 +950,16 @@ class EraChord:
     None: the line's last point). ``hover`` is what the label says on
     hover, a template: ``{span}`` (the years, as "1960–78"), ``{china}``
     and ``{usa}`` (each one's output per person: its growth, % a year).
+    ``label_years``: where the label goes instead of the nearest clear spot
+    to the chord's middle: above the chord between these years, where it may
+    lie over the event lines (faint by the ending), clear of the line and of
+    other labels.
     """
     name: str
     start: int
     end: int | None
     hover: str
+    label_years: tuple[int, int] | None = None
 
 
 # The top panel's chords at the ending, in the order they are drawn. (The Mao hover's last sentence is
@@ -940,7 +967,7 @@ class EraChord:
 ERA_CHORDS = [
     EraChord("Mao", 1960, 1978,
              "**{span}**: China's output per person grew {china}% a year, America's {usa}%. Starting far poorer, "
-             "China did not catch up at all."),
+             "China did not catch up at all.", label_years=(1966, 1972)),
     EraChord("Deng to Hu", 1978, 2012, "**{span}**: {china}% a year against America's {usa}%."),
     EraChord("Xi", 2012, None, "**{span}**: {china}% a year against America's {usa}%."),
 ]
@@ -1254,12 +1281,15 @@ def narration_numbers(gdp: pd.DataFrame, usa: pd.Series, s: pd.Series, e: pd.Ser
     ranking = catch_up_ranking(gdp, GDP_ANCHOR_YEAR, max(ratio), aggregates)
     v["catch_up_ranking"] = ranking
     v["catch_up_rank"] = 1 + [code for code, _ in ranking].index("CHN")
+    w["catch_up_from"] = str(GDP_ANCHOR_YEAR)
     if v["catch_up_rank"] == 1:
         w["catch_up_claim"] = "the biggest catch-up with America in the World Bank's records"
+        w["catch_up_rivals"] = "any other country"
     else:
         warnings.warn(f"China's gain on America since {GDP_ANCHOR_YEAR} ranks {v['catch_up_rank']}, not first: "
-                      "the Dec 1978 box no longer says it is the biggest", stacklevel=2)
+                      "the intro no longer says it is the biggest", stacklevel=2)
         w["catch_up_claim"] = "one of the biggest catch-ups with America in the World Bank's records"
+        w["catch_up_rivals"] = f"all but {v['catch_up_rank'] - 1} other countr{'y' if v['catch_up_rank'] == 2 else 'ies'}"
 
     # Overtaking Japan: China's output per person against Japan's that year, as a simple fraction.
     japan_year = event("Overtakes Japan").year
@@ -1397,11 +1427,11 @@ def box_seconds(beat: Beat, words: dict) -> float:
     """How long a beat's box is up to be read at 1x (not counting its fades): so much, plus so much a word.
 
     A text box takes ``BOX_SECONDS``, a picture card ``PICTURE_SECONDS``; and
-    the beat's own ``trim`` on top.
+    the beat's own ``extra_s`` on top.
     """
     said = f"{beat.lead} {beat.text}".format(**words)
     start, per_word = PICTURE_SECONDS if has_picture(beat) else BOX_SECONDS
-    return start + per_word * len(said.split()) + beat.trim
+    return start + per_word * len(said.split()) + beat.extra_s
 
 
 def interlude_seconds(words: dict) -> float:
@@ -1412,6 +1442,43 @@ def interlude_seconds(words: dict) -> float:
 def final_seconds(words: dict) -> float:
     """How long the box that closes the ending is up to be read, at 1x: its words' time and ``LAST_BOX_EXTRA``."""
     return box_seconds(FINAL_BOX, words) + LAST_BOX_EXTRA
+
+
+def card_hold(subtitle: str) -> float:
+    """How long a part's title card holds at 1x: ``TRANSITION["hold"]``, and its subtitle's ``TITLE_READ``."""
+    return TRANSITION["hold"] + TITLE_READ[0] + TITLE_READ[1] * len(subtitle.split())
+
+
+def intro_card(words: dict, end_year: int) -> dict:
+    """The intro card's words (its title and its text, every number in them computed) and its hold at 1x:
+    a box's reading time for all its words, and ``INTRO_EXTRA``."""
+    title = COPY_TEXT["intro_title"].format(start_year=START_YEAR, end_year=end_year)
+    text = COPY_TEXT["intro_text"].format(**words)
+    hold = BOX_SECONDS[0] + BOX_SECONDS[1] * len(f"{title} {text}".split()) + INTRO_EXTRA
+    return dict(title=title, text=text, hold=round(hold, 3))
+
+
+def score_card(end_year: int) -> dict:
+    """The Scorecard: overline, title and subtitle, and its short hold (its subtitle's ``TITLE_READ`` alone)."""
+    sub_ = COPY_TEXT["score_subtitle"]
+    return dict(kicker=COPY_TEXT["score_kicker"].format(start_year=START_YEAR, end_year=end_year),
+                title=COPY_TEXT["score_title"], subtitle=sub_,
+                hold=round(TITLE_READ[0] + TITLE_READ[1] * len(sub_.split()), 3))
+
+
+def cards_seconds(words: dict, end_year: int) -> float:
+    """The cards' time at 1x, fades included: the intro, the three parts' title cards (each with its ghosts),
+    and the Scorecard. (The breaks' axis moves are not cards.)"""
+    tr = TRANSITION
+    intro = tr["card_in"] + intro_card(words, end_year)["hold"] + tr["card_out"]
+    parts = sum(tr["card_in"] + card_hold(act.subtitle) + tr["ghost"] + tr["card_out"] for act in ACTS)
+    score = tr["card_in"] + score_card(end_year)["hold"] + tr["card_out"]
+    return intro + parts + score
+
+
+def _multiple(v: int) -> str:
+    """2 to an integer power, as a reader would write it: ×16, ×1, ×½."""
+    return f"×{2 ** v}" if v >= 0 else "×" + {-1: "½", -2: "¼", -3: "⅛"}.get(v, f"1/{2 ** -v}")
 
 
 def beat_date(beat: Beat, trough: pd.Timestamp) -> pd.Timestamp:
@@ -1935,7 +2002,7 @@ def _times(x: float) -> str:
 _NARROW_BELOW_PX = 560
 _LAYOUTS = dict(
     wide=dict(
-        margin=dict(l=54, r=88, b=26), px_per_bit=58, font=12.5, drop_from=900, modebar=True,
+        margin=dict(l=88, r=88, b=26), px_per_bit=58, font=12.5, drop_from=900, modebar=True, multiples=True,
         gdp_width=2.5, stock_width=1.8, economy_width=1.7, head=15, title=15.5, title_row=26, anchor=10.5,
         tick=dict(up=3, down=7, width=2),
         strip=dict(
@@ -1944,9 +2011,9 @@ _LAYOUTS = dict(
             era_font=10.5, era_bar=6, era_label=14, leader=16, leader_font=10.5, bare_gap=14),
         arrow_fonts=[11.5, 10.5, 9.5], band_font=11, fill_font=10.5, hint_font=10, rate_font=10.5,
         card=dict(font=12.5, width=300, pictures=[260, 230, 200, 170], below=False), end=dict(arrow=9, label=19),
-        act_card=dict(kicker=13, title=27, width=0.56), pill=10.5),
+        act_card=dict(kicker=13, title=27, sub=15.5, width=0.56), pill=10.5),
     narrow=dict(
-        margin=dict(l=46, r=10, b=24), px_per_bit=46, font=11, drop_from=None, modebar=False,
+        margin=dict(l=46, r=10, b=24), px_per_bit=46, font=11, drop_from=None, modebar=False, multiples=False,
         gdp_width=2.2, stock_width=1.4, economy_width=1.4, head=13.5, title=14, title_row=24, anchor=9,
         tick=dict(up=3, down=6, width=2),
         strip=dict(
@@ -1954,7 +2021,7 @@ _LAYOUTS = dict(
             era_font=9.5, era_bar=6, era_label=13, leader=14, leader_font=9.5, bare_gap=12),
         arrow_fonts=[10, 9], band_font=9.5, fill_font=9.5, hint_font=9, rate_font=9.5,
         card=dict(font=11.5, width=250, pictures=[150, 125, 100], below=True), end=dict(arrow=3, label=None),
-        act_card=dict(kicker=10, title=19, width=0.8), pill=10),
+        act_card=dict(kicker=10, title=19, sub=12.5, width=0.8), pill=10),
 )
 # The four arrowed annotations, in date order: how each may be broken over
 # lines (fewest lines first; the script takes the first that fits clear of the
@@ -2369,6 +2436,8 @@ def build_china_figure(
             key=f"era{n}", name=era["era"].name, span=era["span"], color=_GDP_COLOR, rate=round(era["rate"], 6),
             start=_iso(era["t0"]), end=_iso(era["t1"]), y0=y0, y1=y1,
             said=said, text=said, wraps=wrapped(said),
+            label_from=f"{era['era'].label_years[0]}-01-01" if era["era"].label_years else None,
+            label_to=f"{era['era'].label_years[1]}-12-31" if era["era"].label_years else None,
             hover=era["era"].hover.format(span=era["span"], china=f"{era['china']:.1f}", usa=f"{era['usa']:.1f}"),
             shape=shape(type="line", xref="x", yref="y", x0=_iso(era["t0"]), y0=y0, x1=_iso(era["t1"]),
                         y1=y1, line=dict(color=_GDP_COLOR, width=1.6, dash="dash"), layer="between"),
@@ -2546,8 +2615,9 @@ def build_china_figure(
     for n, part in enumerate(plan):
         act, table = part["act"], part["table"]
         acts.append(dict(
-            numeral=act.numeral, title=act.title, card_title=act.title, short=act.short,
-            kicker=COPY_TEXT["kicker"].format(numeral=act.numeral, start_year=starts[n].year, end_year=ends[n].year),
+            numeral=act.numeral, title=act.title, card_title=act.title, short=act.short, part=act.part,
+            kicker=COPY_TEXT["kicker"].format(part=act.part, start_year=starts[n].year, end_year=ends[n].year),
+            subtitle=act.subtitle, hold=round(card_hold(act.subtitle), 3),
             start=_iso(starts[n]), end=_iso(ends[n]), range=[_iso(views[n][0]), _iso(views[n][1])],
             # The schedule: playback time against date, linear between the dates given.
             base=round(table["base"], 4), grid=_schedule_steps(table)))
@@ -2572,11 +2642,16 @@ def build_china_figure(
                  seconds=round(final_seconds(words), 3))
 
     # ---- Axes: one y-axis per panel, no titles, no tick marks ----
-    def y_axis(domain, y_range):
+    tick_texts = {}
+
+    def y_axis(domain, y_range, name):
         ticks = list(range(int(np.ceil(y_range[0])), int(np.floor(y_range[1])) + 1))
         unit = " bit" if abs(ticks[-1]) == 1 else " bits"
+        plain = [_signed(v, unit if v == ticks[-1] else "") for v in ticks]
+        # (On the wide layout each label gives the multiple too, "+4 bits (×16)"; the script picks per layout.)
+        tick_texts[name] = dict(vals=ticks, plain=plain, multiples=[f"{p} ({_multiple(v)})" for p, v in zip(plain, ticks)])
         return dict(domain=domain, range=y_range, fixedrange=True, anchor="x", automargin=False,
-                    tickvals=ticks, ticktext=[_signed(v, unit if v == ticks[-1] else "") for v in ticks],
+                    tickvals=ticks, ticktext=tick_texts[name]["multiples" if wide["multiples"] else "plain"],
                     ticks="", tickfont=dict(color=LABEL), gridcolor=GRID, zeroline=False)
 
     tested = None
@@ -2597,8 +2672,8 @@ def build_china_figure(
                    tickfont=dict(color=LABEL), automargin=False,
                    tickformatstops=[dict(dtickrange=[None, "M11"], value="%b %Y"),
                                     dict(dtickrange=["M12", None], value="%Y")]),
-        yaxis=y_axis(geo["top"], y_top),
-        yaxis2=y_axis(geo["bottom"], y_bottom),
+        yaxis=y_axis(geo["top"], y_top, "top"),
+        yaxis2=y_axis(geo["bottom"], y_bottom, "bottom"),
         shapes=shapes, annotations=annotations,
         meta=dict(
             trace=trace, ann=role, zero=zero, playhead=playhead, events=events, eras=eras, leaders=leaders,
@@ -2620,8 +2695,10 @@ def build_china_figure(
             play=dict(start=_iso(data_start), end=_iso(cutoff), speeds=list(SPEEDS), speed=DEFAULT_SPEED, acts=acts,
                       beats=shown, notes=noted, note=NOTE_BEAT, rate=RATE_ARROW, sync=SYNC_DAYS,
                       final=final, interlude=interlude, transition=TRANSITION, ending=ENDING, reveal=REVEAL_SECONDS,
+                      intro=intro_card(words, cutoff.year), score=score_card(cutoff.year), spotlight=SPOTLIGHT,
+                      snap_days=START_SNAP_DAYS,
                       ghost=GHOST_OPACITY, card_fade=CARD_FADE_SECONDS, scrim=SCRIM_OPACITY),
-            view=dict(x=x_range, y=y_top, y2=y_bottom),
+            view=dict(x=x_range, y=y_top, y2=y_bottom), ticks=tick_texts,
             layouts=_LAYOUTS, narrow_below=_NARROW_BELOW_PX,
             budget=dict(title=TITLE_ROW_MAX_PX, top=TOP_STRIP_MAX_PX, bottom=BOTTOM_STRIP_MAX_PX),
             alpha=_ALPHA, text_alpha=_TEXT_ALPHA, event_line_opacity=_EVENT_LINE_OPACITY,
@@ -2644,12 +2721,14 @@ __FIG__
 <div class="china-head china-head-top">__HEAD_TOP__</div>
 <div class="china-head china-head-bottom">__HEAD_BOTTOM__</div>
 <div class="china-hots" aria-hidden="true"><div class="china-pulse"></div><div class="china-pulse-dot"></div></div>
+<div class="china-dim china-dim-top" aria-hidden="true"></div>
+<div class="china-dim china-dim-bottom" aria-hidden="true"></div>
 <div class="china-scrim" aria-hidden="true"></div>
 <div class="china-beat" title="Click to dismiss"><div class="china-beat-in"><img class="china-beat-img" alt="">
   <div class="china-beat-body"><span class="china-beat-lead"></span> <span class="china-beat-text"></span>
     <div class="china-beat-credit"></div></div></div></div>
 <div class="china-act-card"><div class="china-act-kicker"></div><div class="china-act-rule"></div>
-  <div class="china-act-name"></div></div>
+  <div class="china-act-name"></div><div class="china-act-sub"></div></div>
 <div class="china-overlay" aria-hidden="true">
   <div class="china-pill"></div>
   <div class="china-guide"></div>
@@ -2699,6 +2778,12 @@ _STYLE = """<style>
   font-variant-numeric: lining-nums; }
 .china-act-rule { height: 0; margin: 12px auto 14px; width: 100%; border-top: 1px solid currentColor; opacity: .45; }
 .china-act-name { line-height: 1.16; font-weight: 700; text-wrap: balance; }
+/* The line under a card's title, in roman; the intro's and the thesis's words are all in it. */
+.china-act-sub { margin-top: 12px; line-height: 1.4; font-weight: 400; text-wrap: balance; }
+.china-act-name:empty + .china-act-sub, .china-act-sub:first-child { margin-top: 0; }
+/* At the ending, the panel out of the spotlight is veiled in the page's colour (strips and labels too). */
+.china-dim { position: absolute; left: 0; top: 0; width: 100%; z-index: 2; display: none; pointer-events: none;
+  background: var(--bs-body-bg, #fff); }
 /* A beat's box: a text box, or a picture card (the picture beside the words,
    or above them). Page colours, all but opaque, so it reads over whatever is
    behind it in either theme. A click or a tap dismisses it. */
@@ -2841,12 +2926,13 @@ _SCRIPT = r"""<script>
   var scrubWrap = $(".china-scrub-wrap"), actsBox = $(".china-acts"), startOut = $(".china-start"), endOut = $(".china-end");
   var keyBox = $(".china-key"), guide = $(".china-guide"), tip = $(".china-tip"), title = $(".china-title");
   var pill = $(".china-pill"), scrim = $(".china-scrim"), actCard = $(".china-act-card"), beatCard = $(".china-beat");
+  var dimTop = $(".china-dim-top"), dimBottom = $(".china-dim-bottom");
   var heads = [$(".china-head-top"), $(".china-head-bottom")];
   var dotEl = {gdp: $(".china-dot-gdp"), stock: $(".china-dot-stock"), economy: $(".china-dot-economy")};
   var DAY = 86400000, YEAR = 31557600000, HOUR = 3600000;          // ms
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var hotBox = $(".china-hots"), pulseRing = $(".china-pulse"), pulseDot = $(".china-pulse-dot");
-  var PL, M, TR, AN, G, S, PEERS, EV, ERAS, LEADERS, BANDS, ARROWS, FILLS, CHORDS, ERACHORDS, CLIMB, GAP, ANCHORS, ACTS, VIEWS, BEATS, FINAL, INTER, NOTES, TL, END;
+  var PL, M, TR, AN, G, S, PEERS, EV, ERAS, LEADERS, BANDS, ARROWS, FILLS, CHORDS, ERACHORDS, CLIMB, GAP, INTRO_CARD, SCORE_CARD, THESIS_CARD, ANCHORS, ACTS, VIEWS, BEATS, FINAL, INTER, NOTES, TL, END;
   var T0, T1, TA, TB, TG, X0, X1, FONT;
   var L = null, GEO = null, P = null, FIT = null, STATE = null, lastW = 0, sent = {};
   var clock = 0, want = 0, playhead = 0, playing = false, played = false, raf = 0, busy = false, pending = null, speed = 1;
@@ -3006,12 +3092,15 @@ _SCRIPT = r"""<script>
   //     after the axis has moved).
   //   eras, eraRates, climb, climbLabel, chords, rates, arrow, gap, last: the ending, piece by piece (0 to 1).
   //   inter, interAlpha: the arrow at the end of the interlude's act: how far drawn, and how strong.
+  //   cardObj: the card up (the intro, a part's, the Scorecard, the thesis), at cardAlpha.
+  //   dimTop, dimBottom: at the ending, how far each panel is out of the spotlight (0 to 1).
   function stateAt(c) {
     c = clamp(c, 0, END);
     var tr = M.play.transition, en = M.play.ending, fade = M.play.card_fade, seg = TL[0];
     for (var i = 1; i < TL.length; i++) if (c >= TL[i].c0) seg = TL[i];
     var s = c - seg.c0, k = seg.act, last = ACTS.length - 1, whole = VIEWS.length - 1;
-    var st = {clock: c, kind: seg.kind, act: k, done: c >= END, card: -1, cardAlpha: 0, newAct: k, newAlpha: 1,
+    var st = {clock: c, kind: seg.kind, act: k, done: c >= END, card: -1, cardObj: null, cardAlpha: 0, newAct: k, newAlpha: 1,
+              dimTop: 0, dimBottom: 0,
               va: k, vb: k, vu: 0, chords: [0, 0], rates: [0, 0], eras: ERACHORDS.map(function () { return 0; }),
               eraRates: ERACHORDS.map(function () { return 0; }), climb: 0, climbLabel: 0, arrow: 0, gap: 0, last: 0,
               beat: null, beatAlpha: 0,
@@ -3025,21 +3114,29 @@ _SCRIPT = r"""<script>
       st.T = timeOf(k, s);
     } else if (seg.kind === "inter") {     // at rest at the end of act k: the arrow is drawn up, then its box comes
       st.T = ACTS[k].t1; st.inter = clamp(s / M.play.interlude.arrow_seconds, 0, 1); st.interAlpha = 1;
-    } else if (seg.kind === "open") {      // the first act's title card, over the first frame
-      st.T = T0; st.card = 0;
+    } else if (seg.kind === "intro") {     // the intro card, over the first frame, before the first act's
+      st.T = T0; st.cardObj = INTRO_CARD; st.newAlpha = 0;
       st.cardAlpha = clamp(Math.min(s / tr.card_in, (seg.dur - s) / tr.card_out), 0, 1);
-      st.newAlpha = clamp((s - tr.card_in - tr.hold) / tr.ghost, 0, 1);
+    } else if (seg.kind === "open") {      // the first act's title card, over the first frame
+      st.T = T0; st.card = 0; st.cardObj = ACTS[0].card;
+      st.cardAlpha = clamp(Math.min(s / tr.card_in, (seg.dur - s) / tr.card_out), 0, 1);
+      st.newAlpha = clamp((s - tr.card_in - seg.hold) / tr.ghost, 0, 1);
     } else if (seg.kind === "break") {     // at rest at the end of act k: card in, hold, the axis moves, ghosts, card out
-      var held = tr.card_in + tr.hold;
-      st.T = ACTS[k].t1; st.card = k + 1;
+      var held = tr.card_in + seg.hold;
+      st.T = ACTS[k].t1; st.card = k + 1; st.cardObj = ACTS[k + 1].card;
       st.cardAlpha = clamp(Math.min(s / tr.card_in, (seg.dur - s) / tr.card_out), 0, 1);
       st.vb = k + 1; st.vu = smooth((s - held) / tr.move);
       st.newAct = k + 1; st.newAlpha = clamp((s - held - tr.move) / tr.ghost, 0, 1);
       // The interlude's arrow fades as the title card comes up.
       if (k === M.play.interlude.act) { st.inter = 1; st.interAlpha = clamp(1 - s / tr.card_in, 0, 1); }
-    } else if (seg.kind === "end") {       // in the whole chart's view: the top panel's chords and arrow, then the bottom's; the last box
-      var E = seg.marks;
+    } else if (seg.kind === "score") {     // the Scorecard, in the whole chart's view
+      st.T = T1; st.newAct = last; st.va = st.vb = whole; st.cardObj = SCORE_CARD;
+      st.cardAlpha = clamp(Math.min(s / tr.card_in, (seg.dur - s) / tr.card_out), 0, 1);
+    } else if (seg.kind === "end") {       // the top panel in the spotlight, then the bottom; the thesis; the finished chart
+      var E = seg.marks, sp = en.spotlight;
       st.T = T1; st.newAct = last; st.va = st.vb = whole;
+      st.dimBottom = s < E.swap ? clamp(s / sp, 0, 1) : 1 - clamp((s - E.swap) / sp, 0, 1);
+      st.dimTop = s < E.swap ? 0 : s < E.boxOut ? clamp((s - E.swap) / sp, 0, 1) : 1 - clamp((s - E.boxOut) / tr.card_out, 0, 1);
       st.eras = E.era.map(function (t) { return clamp((s - t) / en.chord, 0, 1); });
       st.eraRates = E.eraRate.map(function (t) { return clamp((s - t) / en.label, 0, 1); });
       st.climb = clamp((s - E.climb) / en.arrow, 0, 1); st.climbLabel = clamp((s - E.climbLabel) / en.label, 0, 1);
@@ -3047,7 +3144,8 @@ _SCRIPT = r"""<script>
       st.rates = E.rate.map(function (t) { return clamp((s - t) / en.label, 0, 1); });
       st.arrow = clamp((s - E.arrow) / en.arrow, 0, 1);
       st.gap = clamp((s - E.gap) / en.label, 0, 1);
-      st.last = clamp(Math.min((s - E.box) / fade, (E.boxOut + fade - s) / fade), 0, 1);
+      st.last = clamp(Math.min((s - E.box) / tr.card_in, (E.boxOut + tr.card_out - s) / tr.card_out), 0, 1);
+      if (st.last > 0) { st.cardObj = THESIS_CARD; st.cardAlpha = st.last; }
     } else {                               // the pull-back, as the data ends: from the last act's view to the whole chart
       st.T = T1; st.newAct = last; st.vb = whole; st.vu = smooth(s / seg.dur);
     }
@@ -3055,7 +3153,7 @@ _SCRIPT = r"""<script>
     st.r0 = A.r0 + (B.r0 - A.r0) * st.vu; st.r1 = A.r1 + (B.r1 - A.r1) * st.vu;
     // A beat's box fades in as the clock reaches its first moment (the playhead at the box's date, or
     // within a month of it), is up until its second, and then fades out.
-    if (!st.done && seg.kind !== "end" && seg.kind !== "pull") BEATS.forEach(function (b) {
+    if (!st.done && seg.kind !== "end" && seg.kind !== "pull" && seg.kind !== "score") BEATS.forEach(function (b) {
       var a = Math.min(clamp((c - b.c0) / fade, 0, 1), clamp((b.c1 - c) / fade + 1, 0, 1));
       if (a > st.beatAlpha) { st.beatAlpha = a; st.beat = b; }
     });
@@ -3499,9 +3597,9 @@ _SCRIPT = r"""<script>
       }
       return true;
     }
-    function clear(q) {
+    function clear(q, overLines) {
       if (q.a < 3 || q.b > plotW - 3 || q.top < L.tick.down + 4 || q.bottom > room - 3) return false;
-      if (lines.some(function (x) { return x > q.a - 4 && x < q.b + 4; })) return false;
+      if (!overLines && lines.some(function (x) { return x > q.a - 4 && x < q.b + 4; })) return false;
       if (taken.some(function (o) { return q.a < o.b + 4 && o.a < q.b + 4 && q.top < o.bottom + 4 && o.top < q.bottom + 4; })) return false;
       return offTheLines(q);
     }
@@ -3515,7 +3613,25 @@ _SCRIPT = r"""<script>
       ec.place = null;
       if (!FIT.ends) return;
       var x0 = X(ec.t0), x1 = X(ec.t1), mid = (x0 + x1) / 2, best = null;
-      ec.wraps.forEach(function (w, k) {
+      // An era with a window of its own (Mao's): above the chord, between those years, nearest their middle,
+      // over the event lines if need be (they are faint by the ending).
+      if (ec.labelFrom !== null) {
+        var w0 = X(ec.labelFrom), w1 = X(ec.labelTo), wm = (w0 + w1) / 2;
+        ec.wraps.forEach(function (w, k) {
+          var sz = bold(w), W = sz.w, h = sz.h;
+          var from = Math.min(w0 + W / 2, wm), to = Math.max(w1 - W / 2, wm);
+          for (var xc = from; xc <= to + 0.01; xc += 3) {
+            var yc = Y(chordAt(ec, VIEWS[whole].r0 + xc / sc));
+            for (var off = 5; off <= 120; off += 5) {
+              var top = yc - off - h, cost = Math.abs(xc - wm) + off + 40 * k + 3 * Math.max(0, W - (w1 - w0));   // (wider than its window: dearer)
+              if (best && cost >= best.cost) break;
+              var q = {a: xc - W / 2, b: xc + W / 2, top: top, bottom: top + h};
+              if (clear(q, true)) { best = {cost: cost, q: q, text: w, x: xc}; break; }
+            }
+          }
+        });
+      }
+      if (!best) ec.wraps.forEach(function (w, k) {
         var sz = bold(w), W = sz.w, h = sz.h;
         for (var xc = x0 + W / 2; xc <= x1 - W / 2; xc += 3) {
           var yc = Y(chordAt(ec, VIEWS[whole].r0 + xc / sc));
@@ -3722,6 +3838,11 @@ _SCRIPT = r"""<script>
           for (a = s0 - 2 - W; a >= 4; a -= 8)
             tries.push({a: a, top: top, k: k, spans: spans, side: -1, cost: cost + (s0 - a - W) + (before && before.side !== -1 ? 30 : 0)});
         }
+        // The place of the box before it in its act, first of all, if that is still off the playhead's sweep
+        // (the box's own size may differ: it keeps that box's top-left corner).
+        if (before && before.k === k && !spans && before.top >= lo && before.top <= hi
+            && (before.a >= s1 + 2 ? before.a + W <= right : before.a + W <= s0 - 2 && before.a >= 4))
+          tries.push({a: before.a, top: before.top, k: k, spans: false, side: before.a >= s1 + 2 ? 1 : -1, cost: -1, kept: true});
       });
       tries.sort(function (p, q) { return p.cost - q.cost; });
       for (var n = 0; n < tries.length; n++) {
@@ -3774,7 +3895,7 @@ _SCRIPT = r"""<script>
     // to its label. Where the first would run through the panel's name (the
     // last act's view puts three events there) it starts below the name
     // instead. A beat can pick an event out, once reached, while its box is up.
-    var next = {}, faint = done || st.kind === "end" ? M.final_line_share : st.kind === "pull" ? 1 - (1 - M.final_line_share) * st.vu : 1;
+    var next = {}, faint = done || st.kind === "end" || st.kind === "score" ? M.final_line_share : st.kind === "pull" ? 1 - (1 - M.final_line_share) * st.vu : 1;
     if (!done) EV.forEach(function (e) {
       if (e.tick || !e.on || st.clock >= e.clock) return;
       if (!next[e.panel] || e.t < next[e.panel].t) next[e.panel] = e;
@@ -3874,7 +3995,7 @@ _SCRIPT = r"""<script>
     // from the anchor to its series' last point, then its rate at the chord's
     // end; then the arrow that measures the gap between the two ends, grown
     // from the economy's end to the stocks', and what it measures.
-    var head = !done && st.kind !== "end" && st.kind !== "pull";
+    var head = !done && st.kind !== "end" && st.kind !== "pull" && st.kind !== "score";
     M.playhead.forEach(function (i) { H(i, {visible: head, x0: iso(T), x1: iso(T)}); });
     CHORDS.forEach(function (ch, n) {
       var f = st.chords[n], r = FIT.ends ? st.rates[n] : 0;
@@ -3947,7 +4068,7 @@ _SCRIPT = r"""<script>
     var st = STATE = stateAt(c), T = st.T, done = st.done, data = {x: [], y: []}, idx = [];
     clock = c; playhead = T;
     function put(i, x, y) { idx.push(i); data.x.push(x); data.y.push(y); }
-    var g = reveal(G, T), p = revealPair(T), f = fills(p), mk = markersAt(T), live = !done && st.kind !== "pull" && st.kind !== "end";
+    var g = reveal(G, T), p = revealPair(T), f = fills(p), mk = markersAt(T), live = !done && st.kind !== "pull" && st.kind !== "end" && st.kind !== "score";
     PEERS.forEach(function (D) { var r = reveal(D, T); put(D.trace, r.x, r.y); });
     put(TR.gdp, g.x, g.y);
     put(TR.gdp_head, live ? [last(g.x)] : [], live ? [last(g.y)] : []);
@@ -4036,19 +4157,33 @@ _SCRIPT = r"""<script>
         : part ? st.rates[+part]
         : clamp((st.clock - clockOf(+row.getAttribute("data-t"))) / M.play.reveal, 0, 1);
     });
-    // An act's title card, and the scrim that dims the figure behind it.
-    if (st.card >= 0 && st.cardAlpha > 0) {
-      if (actCard._act !== st.card) {
-        actCard._act = st.card;
-        actCard.querySelector(".china-act-kicker").textContent = ACTS[st.card].kicker;
-        actCard.querySelector(".china-act-name").textContent = ACTS[st.card].cardTitle;
+    // A card (the intro, a part's title card, the Scorecard, the thesis), and the scrim that dims the figure behind it.
+    var cd = st.cardObj;
+    if (cd && st.cardAlpha > 0) {
+      if (actCard._card !== cd) {
+        actCard._card = cd;
+        var kick = actCard.querySelector(".china-act-kicker"), name = actCard.querySelector(".china-act-name"), sub = actCard.querySelector(".china-act-sub");
+        kick.textContent = cd.kicker; name.textContent = cd.title; sub.textContent = cd.sub || "";
+        kick.style.display = actCard.querySelector(".china-act-rule").style.display = cd.kicker ? "" : "none";
+        name.style.display = cd.title ? "" : "none"; sub.style.display = cd.sub ? "" : "none";
+        name.style.fontSize = (cd.small ? 0.78 : 1) * L.act_card.title + "px";
+        sub.style.fontSize = (cd.big ? 1.12 : 1) * L.act_card.sub + "px";
+        actCard.style.width = FIT.cardW[cd.wide ? 1 : 0] + "px";
+        actCard.style.pointerEvents = cd.dismiss ? "auto" : "none";
+        actCard.style.cursor = cd.dismiss ? "pointer" : "";
+        actCard.title = cd.dismiss ? "Click to dismiss" : "";
       }
       actCard.style.display = scrim.style.display = "block";
       actCard.style.opacity = st.cardAlpha;
       scrim.style.opacity = st.cardAlpha * M.play.scrim;
     } else actCard.style.display = scrim.style.display = "none";
-    // A beat's box, or the last box of all, where fit() found room for it. One the reader has dismissed stays away.
-    var b = st.last > 0 ? FINAL : st.beat, alpha = st.last > 0 ? st.last : st.beatAlpha;
+    // At the ending, the panel out of the spotlight, veiled.
+    [[dimTop, st.dimTop], [dimBottom, st.dimBottom]].forEach(function (v) {
+      v[0].style.display = v[1] > 0 ? "block" : "none";
+      v[0].style.opacity = v[1] * M.play.spotlight;
+    });
+    // A beat's box, where fit() found room for it. One the reader has dismissed stays away.
+    var b = st.beat, alpha = st.beatAlpha;
     if (b && b.box && alpha > 0 && !dismissed[b.id]) {
       dress(b, b.box.how);
       beatCard.style.display = "block";
@@ -4074,7 +4209,7 @@ _SCRIPT = r"""<script>
   // view). An axis label that the pill would crowd, or that only says the same year, is hidden
   // while it is there. Neither the pill nor the playhead outlives the play.
   function syncPill() {
-    var xa = gd._fullLayout.xaxis, off = STATE.done || STATE.kind === "end" || STATE.kind === "pull";
+    var xa = gd._fullLayout.xaxis, off = STATE.done || STATE.kind === "end" || STATE.kind === "pull" || STATE.kind === "score";
     var x = off ? -9 : xa.l2p(STATE.T), on = x >= -1 && x <= xa._length + 1;
     pill.style.display = on ? "block" : "none";
     var d = new Date(STATE.T), year = String(d.getUTCFullYear());
@@ -4114,6 +4249,14 @@ _SCRIPT = r"""<script>
   function play(from) {
     if (reducedMotion()) { render(END); return; }   // reduced motion: straight to the finished chart
     var prev = null;
+    // Play pressed at (or within START_SNAP_DAYS of) a part's start: that part's title card first; at the
+    // very beginning, the intro and then the first part's card. (Dragging alone shows no card.)
+    if (from === undefined && clock < END) {
+      var st0 = stateAt(clock), snap = M.play.snap_days * DAY;
+      if (st0.kind === "play") ACTS.forEach(function (A, k) {
+        if (from === undefined && Math.abs(st0.T - A.t0) <= snap) from = k ? ACTS[k - 1].b0 : 0;
+      });
+    }
     if (from !== undefined || clock >= END) { dismissed = {}; hurrying = null; hurry = 0; }
     want = from !== undefined ? from : clock >= END ? 0 : clock;
     played = true;
@@ -4267,6 +4410,9 @@ _SCRIPT = r"""<script>
     GEO.plotW = plotW; GEO.panelH = [GEO.topH, GEO.botH];
     patch.width = w; patch.height = GEO.height; patch.autosize = false; patch["font.size"] = L.font;
     patch.margin = {l: L.margin.l, r: L.margin.r, t: GEO.t, b: L.margin.b};
+    // The y-axes' labels: bits and the multiple, where the margin has room for both; bits alone on a phone.
+    patch["yaxis.ticktext"] = M.ticks.top[L.multiples ? "multiples" : "plain"];
+    patch["yaxis2.ticktext"] = M.ticks.bottom[L.multiples ? "multiples" : "plain"];
     patch["yaxis.domain"] = GEO.top; patch["yaxis2.domain"] = GEO.bottom;
     function above(px) { return 1 + px / GEO.topH; }
     EV.forEach(function (e) {
@@ -4408,7 +4554,7 @@ _SCRIPT = r"""<script>
     // place, the boxes of one act in turn so that each can stay near the one before.
     beatCard.style.visibility = "hidden"; beatCard.style.display = "block";
     var before = null;
-    BEATS.concat([FINAL]).forEach(function (b, n, all) {
+    BEATS.forEach(function (b, n, all) {
       if (n && all[n - 1].act !== b.act) before = null;
       b.box = placeBox(b, plotW, b.last ? null : before);
       before = b.box || before;
@@ -4416,7 +4562,7 @@ _SCRIPT = r"""<script>
     beatCard._beat = null;
     beatCard.style.display = "none"; beatCard.style.visibility = "";
     // (Boxes under the plot stand over the key: the key keeps room enough for the tallest of them.)
-    var deepest = Math.max.apply(null, BEATS.concat([FINAL]).map(function (b) { return b.box && b.box.below ? b.box.h : 0; }));
+    var deepest = Math.max.apply(null, BEATS.map(function (b) { return b.box && b.box.below ? b.box.h : 0; }));
     keyBox.style.minHeight = deepest ? (deepest + 10) + "px" : "";
 
     // The title card, over the middle of the plot, with the scrim over the whole figure; the year
@@ -4425,9 +4571,16 @@ _SCRIPT = r"""<script>
     // for, so that the three read alike.
     actCard.style.left = (L.margin.l + plotW / 2) + "px";
     actCard.style.top = (GEO.t + GEO.plotH / 2) + "px";
-    actCard.style.width = Math.round(Math.min(L.act_card.width * plotW, w - 24)) + "px";
+    // (The intro and the thesis take a wider card.)
+    FIT.cardW = [Math.round(Math.min(L.act_card.width * plotW, w - 24)), Math.round(Math.min(Math.max(1.3 * L.act_card.width, 0.72) * plotW, w - 24))];
+    actCard.style.width = FIT.cardW[0] + "px";
     actCard.querySelector(".china-act-kicker").style.fontSize = L.act_card.kicker + "px";
     actCard.querySelector(".china-act-name").style.fontSize = L.act_card.title + "px";
+    actCard.querySelector(".china-act-sub").style.fontSize = L.act_card.sub + "px";
+    actCard._card = null;
+    // The veils: the top panel with its strips (below the title row), and the bottom one with the strip above it.
+    dimTop.style.top = L.title_row + "px"; dimTop.style.height = (GEO.t + GEO.topH - L.title_row) + "px";
+    dimBottom.style.top = (GEO.t + GEO.topH) + "px"; dimBottom.style.height = (GEO.plotH - GEO.topH) + "px";
     pill.style.fontSize = L.pill + "px";
     var track = scrubWrap.clientWidth, names = actsBox.querySelectorAll(".china-act-label"), form = 0;
     function forms(k) { return [ACTS[k].title, ACTS[k].short, ACTS[k].numeral]; }
@@ -4653,7 +4806,7 @@ _SCRIPT = r"""<script>
   // A labelled event's line turns solid, dark and 2 px wide, and its label bold; a tick grows
   // taller and darker. Drawn in HTML over the plot (no Plotly redraw), so it costs a few style
   // writes and moves nothing else; it goes with the hover box (render() clears both).
-  var hovered = [], hotEls = [], hotText = [], hotOn = false;
+  var hovered = [], hotEls = [], hotText = [], hotOn = false, HOT_STROKE = 0.55;
   function hotLine(n, x, y0, y1, w, color) {
     var el = hotEls[n];
     if (!el) { el = hotEls[n] = document.createElement("div"); el.className = "china-hot"; hotBox.appendChild(el); }
@@ -4665,7 +4818,7 @@ _SCRIPT = r"""<script>
     if (!hotOn) return;
     hotOn = false;
     hotEls.forEach(function (el) { el.style.display = "none"; });
-    hotText.forEach(function (el) { el.style.fontWeight = ""; });
+    hotText.forEach(function (el) { el.style.stroke = el.style.strokeWidth = ""; });
     hotText = [];
   }
   function hot(xa, ya, y2, ox, oy) {
@@ -4683,7 +4836,9 @@ _SCRIPT = r"""<script>
       hotLine(n++, x, top + below, top + ax._length, 2, P.ink);
       var lead = e.lead === null ? e : EV[e.lead], el = lead.labelled ? label(lead.annotation) : null;
       var tx = el && el.querySelector("text");
-      if (tx) { tx.style.fontWeight = "700"; hotText.push(tx); }
+      // (Emboldened by an outline in its own colour rather than the bold face: it does not widen, so a label
+      // that stands clear of the lines stays clear of them under the cursor.)
+      if (tx) { tx.style.stroke = getComputedStyle(tx).fill; tx.style.strokeWidth = HOT_STROKE + "px"; hotText.push(tx); }
     });
   }
   function showTip(cx, cy) {
@@ -4823,7 +4978,7 @@ _SCRIPT = r"""<script>
     FILLS.forEach(function (f) { who[AN[f.role]] = {name: f.role, kind: "fill", over: true, infill: f.kind === "behind"}; });
     CHORDS.forEach(function (ch) { who[ch.annotation] = {name: "rate: " + ch.key, kind: "rate", over: true}; });
     // (An era's rate in the plot keeps clear of the event lines, as a label of its own does.)
-    ERACHORDS.forEach(function (ec) { who[ec.annotation] = {name: "rate: " + ec.name, kind: "era rate", over: false}; });
+    ERACHORDS.forEach(function (ec) { who[ec.annotation] = {name: "rate: " + ec.name, kind: "era rate", over: ec.labelFrom !== null}; });
     who[CLIMB.label] = {name: "the climb's label", kind: "rate", over: true};
     who[GAP.label] = {name: "the gap's label", kind: "rate", over: true};
     BEATS.forEach(function (b) { ratesOf(b).forEach(function (R) { who[R.label] = {name: "rate: " + R.text, kind: "rate", over: true}; }); });
@@ -4968,12 +5123,12 @@ _SCRIPT = r"""<script>
       return go(c).then(function () {
         var st = STATE, fl = gd._fullLayout, xa = fl.xaxis, r = gd.getBoundingClientRect(), tr = M.play.transition;
         var seg = TL.filter(function (s) { return c >= s.c0; }).pop(), s = c - seg.c0, k = seg.act;
-        var cl = collisions(tag), x0 = xa.r2l(xa.range[0]), x1 = xa.r2l(xa.range[1]), held = tr.card_in + tr.hold;
+        var cl = collisions(tag), x0 = xa.r2l(xa.range[0]), x1 = xa.r2l(xa.range[1]), held = tr.card_in + (seg.hold || 0);
         if (JSON.stringify([fl.yaxis.range, fl.yaxis2.range]) !== yRanges) fail(tag + ": a y-range has changed");
         // The x-range: the act's own, except while a break (or the pull-back) is moving it.
         var moving = (seg.kind === "break" && s > held && s < held + tr.move) || (seg.kind === "pull" && s > 0 && s < seg.dur);
         // (The ending happens in the whole chart's view, after the pull-back.)
-        var A = VIEWS[seg.kind === "end" ? whole : seg.kind === "break" && s >= held + tr.move ? k + 1 : k], B = VIEWS[seg.kind === "pull" ? whole : k + 1];
+        var A = VIEWS[seg.kind === "end" || seg.kind === "score" ? whole : seg.kind === "break" && s >= held + tr.move ? k + 1 : k], B = VIEWS[seg.kind === "pull" ? whole : k + 1];
         if (moving) {
           var between = function (v, a, b) { return a === b ? Math.abs(v - a) < 1000 : v > Math.min(a, b) + DAY && v < Math.max(a, b) - DAY; };
           if (!between(x0, VIEWS[k].r0, B.r0) || !between(x1, VIEWS[k].r1, B.r1)) fail(tag + ": the axis is not between two views while it moves");
@@ -4981,7 +5136,7 @@ _SCRIPT = r"""<script>
           fail(tag + ": the x-range is not the act's: " + iso(x0).slice(0, 10) + " to " + iso(x1).slice(0, 10) + ", not " + iso(A.r0).slice(0, 10) + " to " + iso(A.r1).slice(0, 10));
         if (Math.abs(scrub.value / scrub.max - (st.T - T0) / (T1 - T0)) > 1 / scrub.max) fail(tag + ": the scrubber is not at the playhead's date");
         // The playhead, with the year under it, until the ending; no axis label crowding the year.
-        var head = seg.kind === "open" || seg.kind === "play" || seg.kind === "inter" || seg.kind === "break";
+        var head = seg.kind === "intro" || seg.kind === "open" || seg.kind === "play" || seg.kind === "inter" || seg.kind === "break";
         M.playhead.forEach(function (i) {
           var sh = fl.shapes[i];
           if (head !== (sh.visible !== false)) fail(tag + ": the playhead is " + (head ? "missing" : "still drawn"));
@@ -5024,15 +5179,19 @@ _SCRIPT = r"""<script>
           if (hoverAt(e).indexOf(e.description) >= 0) fail(tag + ": a ghost answers the cursor: " + e.label);
         });
         // The title card and its scrim.
-        var cardUp = actCard.style.display !== "none";
-        if (cardUp !== (st.card >= 0 && st.cardAlpha > 0)) fail(tag + ": the act's title card is " + (cardUp ? "up" : "missing"));
-        if (cardUp !== (scrim.style.display !== "none")) fail(tag + ": the scrim and the title card are not up together");
-        if (cardUp && (actCard.querySelector(".china-act-kicker").textContent !== M.play.acts[st.card].kicker
-            || actCard.querySelector(".china-act-name").textContent !== M.play.acts[st.card].card_title)) fail(tag + ": the title card has the wrong words");
+        var cardUp = actCard.style.display !== "none", cd = st.cardObj;
+        if (cardUp !== (!!cd && st.cardAlpha > 0)) fail(tag + ": the card is " + (cardUp ? "up" : "missing"));
+        if (cardUp !== (scrim.style.display !== "none")) fail(tag + ": the scrim and the card are not up together");
+        if (cardUp && (actCard.querySelector(".china-act-kicker").textContent !== cd.kicker
+            || actCard.querySelector(".china-act-name").textContent !== cd.title || actCard.querySelector(".china-act-sub").textContent !== (cd.sub || "")))
+          fail(tag + ": the card has the wrong words");
+        if (st.card >= 0 && cd !== ACTS[st.card].card) fail(tag + ": a part's title card is not its own");
+        // The spotlight: only at the ending, before the finished chart.
+        if ((dimTop.style.display !== "none" || dimBottom.style.display !== "none") && seg.kind !== "end") fail(tag + ": a panel is veiled outside the ending");
         if (seg.kind !== "end" && (gd.layout.shapes[CHORDS[0].shape].visible !== false || CLIMB_UP()
             || ERACHORDS.some(function (ec) { return gd.layout.shapes[ec.shape].visible !== false; }))) fail(tag + ": a chord is drawn before the ending");
         // Every event line at its strength: full during play; a share of it once the view has pulled back (and on the way).
-        var share_ = seg.kind === "end" ? M.final_line_share : seg.kind === "pull" ? 1 - (1 - M.final_line_share) * st.vu : 1;
+        var share_ = seg.kind === "end" || seg.kind === "score" ? M.final_line_share : seg.kind === "pull" ? 1 - (1 - M.final_line_share) * st.vu : 1;
         EV.forEach(function (e, n) {
           var sh = fl.shapes[e.shape];
           // (Those fully drawn, and not picked out by a box.)
@@ -5208,7 +5367,7 @@ _SCRIPT = r"""<script>
           if (!own_ || own_.h < tall + 4 || own_.w <= sh.line.width) fail("a hovered tick does not grow taller: " + e.label);
         } else {
           if (lit.some(function (h) { return Math.abs(h.w - 2) > 0.2; })) fail("a hovered event's line is not 2 px wide: " + e.label);
-          if (!tx || getComputedStyle(tx).fontWeight < 600) fail("a hovered event's label is not bold: " + e.label);
+          if (!tx || !(parseFloat(getComputedStyle(tx).strokeWidth) > 0.3) || getComputedStyle(tx).stroke === "none") fail("a hovered event's label is not emboldened: " + e.label);
         }
         var after = collisions("hovered").boxes.filter(function (b) { return b.kind !== "card"; }).map(function (b) { return [b.name, Math.round(b.l), Math.round(b.t)].join(); }).join("|");
         if (!e.tick && before.split("|").length !== after.split("|").length) fail("hovering changes what is drawn: " + e.label);
@@ -5280,8 +5439,21 @@ _SCRIPT = r"""<script>
           var said_ = describe(cx - r5.left - xa5._offset, cy - r5.top, cx, cy, xa5, fl5.yaxis, fl5.yaxis2);
           if (said_.indexOf(ec.hover) < 0) fail("an era's rate does not say what it was in growth on hover: " + ec.name);
           var mid = xa5.l2p((ec.t0 + ec.t1) / 2) + r5.left + xa5._offset;
+          // (Mao's: in the plot by its chord, within its years, above the zero line.)
+          if (ec.labelFrom !== null && FIT.ends && (ec.place.gutter || cx < r5.left + xa5._offset + xa5.l2p(ec.labelFrom) - 8
+              || cx > r5.left + xa5._offset + xa5.l2p(ec.labelTo) + 8 || lb.bottom > r5.top + fl5.yaxis._offset + fl5.yaxis.l2p(0)))
+            fail("an era's label is not in its window, above the zero line: " + ec.name);
           out.end.eras.push(ec.name + ": " + (ec.place.gutter ? "in the gutter" : "in the plot, " + Math.round(cx - mid) + " px from the chord's middle")
                             + " (" + plain(lab.text).length + " characters, " + lab.text.split("<br>").length + " line(s))");
+        });
+        if (dimTop.style.display !== "none" || dimBottom.style.display !== "none" || actCard.style.display !== "none") fail("the finished chart is veiled or carded");
+        // The y-axes' labels: with the multiple where the layout has room for it, inside the figure.
+        [["yaxis", ".yaxislayer-above .ytick text", M.ticks.top], ["yaxis2", ".yaxislayer-above .y2tick text", M.ticks.bottom]].forEach(function (ax) {
+          var els = Array.prototype.slice.call(gd.querySelectorAll(ax[1])), want = ax[2][L.multiples ? "multiples" : "plain"];
+          var said = els.map(function (el) { return el.textContent; });
+          if (said.join("|") !== want.join("|")) fail(ax[0] + ": its labels are " + said.join(", "));
+          els.forEach(function (el) { if (el.getBoundingClientRect().left < r5.left - 0.5) fail(ax[0] + ": a label runs out of the figure: " + el.textContent); });
+          out.end[ax[0]] = said.join(", ");
         });
         var arrow = fl5.annotations[CLIMB.arrow], cl = fl5.annotations[CLIMB.label], gEnd = last(G.y);
         var says = (gEnd >= 0 ? "+" : "−") + Math.abs(gEnd).toFixed(2) + " bits since " + new Date(toMs(M.anchors[0].date)).getUTCFullYear()
@@ -5339,7 +5511,7 @@ _SCRIPT = r"""<script>
       // The scrubber's segments: one label per act, in order, each over its own stretch of the track.
       var track = scrubWrap.getBoundingClientRect(), labels = actsBox.querySelectorAll(".china-act-label");
       if (labels.length !== ACTS.length || actsBox.querySelectorAll(".china-act-gap").length !== ACTS.length - 1) fail("the scrubber is not marked off in acts");
-      ACTS.forEach(function (A, k) { if (!/^Part [IV]+ · \d{4}–\d{4}$/.test(A.kicker)) fail("a title card's overline is not “Part … · yyyy–yyyy”: " + A.kicker); });
+      ACTS.forEach(function (A, k) { if (!/^(Prelude|Part [IV]+) · \d{4}–\d{4}$/.test(A.kicker)) fail("a title card's overline is not “Prelude/Part … · yyyy–yyyy”: " + A.kicker); });
       Array.prototype.forEach.call(labels, function (b, k) {
         var q = b.getBoundingClientRect(), a = track.left + (ACTS[k].t0 - T0) / (T1 - T0) * track.width, e = track.left + (ACTS[k].t1 - T0) / (T1 - T0) * track.width;
         var form = [ACTS[0].title, ACTS[0].short, ACTS[0].numeral].indexOf(labels[0].textContent);
@@ -5367,12 +5539,40 @@ _SCRIPT = r"""<script>
       function chord(n) { var sh = gd._fullLayout.shapes[CHORDS[n].shape]; return sh.visible === false ? 0 : (toMs(sh.x1) - TA) / (T1 - TA); }
       function shown(i) { var a = gd._fullLayout.annotations[i]; return a.visible === false ? 0 : a.opacity === undefined ? 1 : a.opacity; }
       function eraChord(n) { var ec = ERACHORDS[n], sh = gd._fullLayout.shapes[ec.shape]; return sh.visible === false ? 0 : (toMs(sh.x1) - ec.t0) / (ec.t1 - ec.t0); }
+      // Which panel is in the spotlight: the other one veiled (at the spotlight's strength), this one clear.
+      function spotlit(panel, tag) {
+        var on = panel === "top" ? dimBottom : dimTop, off = panel === "top" ? dimTop : dimBottom;
+        if (on.style.display === "none" || Math.abs(+on.style.opacity - M.play.spotlight) > 0.01 || off.style.display !== "none")
+          fail("ending: " + tag + ": the " + panel + " panel is not the one in the spotlight");
+      }
       function climbLength() { var a = gd._fullLayout.annotations[CLIMB.arrow]; return a.visible === false ? 0 : a.y / CLIMB.value; }
       function arrowLength() { var a = gd._fullLayout.annotations[GAP.arrow]; return a.visible === false ? 0 : (a.ay - GAP.top) / (GAP.bottom - GAP.top); }
       TL.forEach(function (seg) {
         var A = ACTS[seg.act], name = "act " + A.numeral;
-        if (seg.kind === "open") {
-          then("opening: card", seg.c0 + tr.card_in + tr.hold / 2, function () {
+        if (seg.kind === "intro") {
+          // The intro, over the first frame: wider than a title card, its words computed, a click sends it away.
+          then("intro: card", seg.c0 + tr.card_in + M.play.intro.hold / 2, function () {
+            var pts = [gd.data[TR.gdp].x.length, gd.data[TR.gdp_head].x.length, gd.data[TR.stock].x.length];
+            if (pts.join() !== "1,1,0") fail("the intro is not over the first frame: " + pts.join());
+            if (STATE.cardObj !== INTRO_CARD || !(+actCard.style.opacity > 0.99)) fail("the intro card is not fully up while it holds");
+            if (actCard.querySelector(".china-act-name").textContent !== M.play.intro.title || actCard.querySelector(".china-act-sub").textContent !== M.play.intro.text)
+              fail("the intro card does not say what it should");
+            if (Math.abs(+scrim.style.opacity - M.play.scrim) > 0.01) fail("the figure is not dimmed behind the intro card");
+            if (getComputedStyle(actCard).pointerEvents !== "auto") fail("the intro card cannot be clicked away");
+            var q = actCard.getBoundingClientRect(), r = gd.getBoundingClientRect();
+            if (q.left < r.left || q.right > r.right || q.top < r.top) fail("the intro card is outside the figure");
+            out.introCard = {width: Math.round(q.width), height: Math.round(q.height)};
+          });
+        } else if (seg.kind === "score") {
+          // The Scorecard: in the whole chart's view, before anything of the ending is drawn.
+          then("Scorecard", seg.c0 + tr.card_in + seg.hold / 2, function () {
+            if (STATE.cardObj !== SCORE_CARD || !(+actCard.style.opacity > 0.99)) fail("the Scorecard is not fully up while it holds");
+            if (actCard.querySelector(".china-act-kicker").textContent !== M.play.score.kicker || actCard.querySelector(".china-act-name").textContent !== M.play.score.title
+                || actCard.querySelector(".china-act-sub").textContent !== M.play.score.subtitle) fail("the Scorecard does not say what it should");
+            if (ERACHORDS.some(function (_, n) { return eraChord(n); }) || chord(0)) fail("the ending is drawn under the Scorecard");
+          });
+        } else if (seg.kind === "open") {
+          then("opening: card", seg.c0 + tr.card_in + seg.hold / 2, function () {
             var pts = [gd.data[TR.gdp].x.length, gd.data[TR.gdp_head].x.length, gd.data[TR.stock].x.length];
             if (pts.join() !== "1,1,0") fail("the first frame is not a single dot: " + pts.join());
             if (!(+actCard.style.opacity > 0.99)) fail("the opening title card is not fully up while it holds");
@@ -5384,8 +5584,12 @@ _SCRIPT = r"""<script>
             if (Math.abs((q.left + q.right) / 2 - (r.left + fl.xaxis._offset + fl.xaxis._length / 2)) > 1.5) fail("the title card is not centred over the plot");
             if (q.left < r.left || q.right > r.right) fail("the title card is wider than the figure");
             if (actCard.querySelector("img")) fail("a title card has an image");
+            if (actCard.querySelector(".china-act-sub").textContent !== M.play.acts[0].subtitle) fail("the Prelude's card has no subtitle");
+            var subStyle = getComputedStyle(actCard.querySelector(".china-act-sub")), nameStyle = getComputedStyle(actCard.querySelector(".china-act-name"));
+            if (!(parseFloat(subStyle.fontSize) < parseFloat(nameStyle.fontSize)) || +subStyle.fontWeight >= 600) fail("a subtitle is not in roman, smaller than the title");
+            out.titleCard.subtitle = subStyle.fontSize;
           });
-          then("opening: ghost", seg.c0 + held + tr.ghost);
+          then("opening: ghost", seg.c0 + tr.card_in + seg.hold + tr.ghost);
         } else if (seg.kind === "play") {
           [0.004, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.996].forEach(function (f) { then(name + " " + (100 * f).toFixed(1) + "%", seg.c0 + f * seg.dur); });
           // The annotations that are beats: playback slows to a text box's speed, the annotation fades
@@ -5430,13 +5634,15 @@ _SCRIPT = r"""<script>
         } else if (seg.kind === "break") {
           var into = "break after " + name;
           then(into + ": card in", seg.c0 + tr.card_in / 2);
-          then(into + ": hold", seg.c0 + tr.card_in + tr.hold / 2, function () {
+          var heldB = tr.card_in + seg.hold;
+          then(into + ": hold", seg.c0 + tr.card_in + seg.hold / 2, function () {
+            if (actCard.querySelector(".china-act-sub").textContent !== M.play.acts[seg.act + 1].subtitle) fail(into + ": the card has no subtitle");
             if (!(+actCard.style.opacity > 0.99)) fail(into + ": the title card is not fully up while it holds");
             if (Math.abs(+scrim.style.opacity - M.play.scrim) > 0.01) fail(into + ": the figure is not dimmed behind the title card");
             if (EV.some(function (e) { return e.act > seg.act && gd._fullLayout.shapes[e.shape].visible !== false; })) fail(into + ": the next act's events are up before the axis has moved");
           });
-          then(into + ": moving", seg.c0 + held + tr.move / 2);
-          then(into + ": ghost", seg.c0 + held + tr.move + tr.ghost, function () {
+          then(into + ": moving", seg.c0 + heldB + tr.move / 2);
+          then(into + ": ghost", seg.c0 + heldB + tr.move + tr.ghost, function () {
             if (!EV.some(function (e) { return e.ghost && e.act === seg.act + 1; })) fail(into + ": no ghost appears once the axis has moved");
           });
           then(into + ": card out", seg.c0 + seg.dur - tr.card_out / 2);
@@ -5452,6 +5658,7 @@ _SCRIPT = r"""<script>
               var drawn = ERACHORDS.map(function (_, m) { return eraChord(m); });
               if (!(drawn[n] > 0.3 && drawn[n] < 0.7) || drawn.some(function (d, m) { return m < n ? d !== 1 : m > n && d !== 0; }) || shown(ec.annotation)
                   || climbLength() || chord(0)) fail("the eras' chords are not drawn in turn: " + ec.name + " " + drawn.map(function (d) { return d.toFixed(2); }).join(", "));
+              spotlit("top", "era chord " + (n + 1));
             });
             then("ending: era rate " + (n + 1), seg.c0 + E.eraRate[n] + en.label + en.pause / 4, function () {
               if (eraChord(n) !== 1 || (ec.place && shown(ec.annotation) < 0.99) || (n + 1 < ERACHORDS.length && eraChord(n + 1)))
@@ -5468,6 +5675,7 @@ _SCRIPT = r"""<script>
             if (ERACHORDS.some(function (ec, n) { return eraChord(n) !== 1 || (ec.place && shown(ec.annotation) < 0.99); }) || climbLength() !== 1)
               fail("the top panel's chords and arrow do not stay while the bottom panel's are drawn");
             if (!(chord(0) > 0.3 && chord(0) < 0.7) || chord(1) !== 0 || shown(CHORDS[0].annotation)) fail("the economy's chord is not drawn first, alone: " + chord(0).toFixed(2) + " / " + chord(1).toFixed(2));
+            spotlit("bottom", "first chord");
           });
           then("ending: first rate", seg.c0 + E.rate[0] + en.label + en.pause / 2, function () {
             if (chord(0) !== 1 || chord(1) !== 0 || (FIT.ends && shown(CHORDS[0].annotation) < 0.99) || shown(CHORDS[1].annotation)) fail("the economy's rate does not follow its chord, before the stocks' chord");
@@ -5483,18 +5691,24 @@ _SCRIPT = r"""<script>
           });
           then("ending: gap label", seg.c0 + E.gap + en.label + 0.1, function () {
             if (arrowLength() !== 1 || (FIT.ends && shown(GAP.label) < 0.99)) fail("the gap's label does not follow its arrow");
-            if (beatCard.style.display !== "none") fail("the last box is up before the gap is labelled");
+            if (actCard.style.display !== "none" || beatCard.style.display !== "none") fail("the thesis is up before the gap is labelled");
+            spotlit("bottom", "gap label");
           });
-          then("ending: last box", seg.c0 + E.box + M.play.card_fade + M.play.final.seconds / 2, function () {
-            var q = beatCard.getBoundingClientRect(), r = gd.getBoundingClientRect();
-            if (beatCard.style.display === "none" || !(+beatCard.style.opacity > 0.99)) return fail("the last box is not up while it holds");
-            if (beatCard.querySelector(".china-beat-lead").textContent !== M.play.final.lead || beatCard.querySelector(".china-beat-text").textContent !== M.play.final.text)
-              fail("the last box does not say what it should");
-            if (!FINAL.box.below && (q.left < r.left || q.right > r.right || q.top < r.top || q.bottom > r.bottom)) fail("the last box is outside the figure");
-            out.frames["ending: last box"].box = [Math.round(q.left - r.left), Math.round(q.top - r.top), Math.round(q.width), Math.round(q.height)];
+          // The thesis: the last box's words on a card, centred over the plot, with the scrim.
+          then("ending: thesis", seg.c0 + E.box + tr.card_in + M.play.final.seconds / 2, function () {
+            var q = actCard.getBoundingClientRect(), r = gd.getBoundingClientRect(), fl = gd._fullLayout;
+            if (STATE.cardObj !== THESIS_CARD || actCard.style.display === "none" || !(+actCard.style.opacity > 0.99)) return fail("the thesis card is not up while it holds");
+            if (actCard.querySelector(".china-act-kicker").textContent !== M.play.final.lead || actCard.querySelector(".china-act-sub").textContent !== M.play.final.text)
+              fail("the thesis card does not say what the last box says");
+            if (Math.abs(+scrim.style.opacity - M.play.scrim) > 0.01) fail("the figure is not dimmed behind the thesis card");
+            if (Math.abs((q.left + q.right) / 2 - (r.left + fl.xaxis._offset + fl.xaxis._length / 2)) > 1.5) fail("the thesis card is not centred over the plot");
+            if (q.left < r.left || q.right > r.right || q.top < r.top || q.bottom > r.bottom) fail("the thesis card is outside the figure");
+            if (beatCard.style.display !== "none") fail("a box is up with the thesis card");
+            out.frames["ending: thesis"].box = [Math.round(q.left - r.left), Math.round(q.top - r.top), Math.round(q.width), Math.round(q.height)];
           });
-          then("ending: box gone", seg.c0 + seg.dur - 0.05, function () {
-            if (beatCard.style.display !== "none" && +beatCard.style.opacity > 0.3) fail("the last box has not faded by the end");
+          then("ending: thesis gone", seg.c0 + seg.dur - 0.05, function () {
+            if (actCard.style.display !== "none" && +actCard.style.opacity > 0.3) fail("the thesis card has not faded by the end");
+            if (+dimTop.style.opacity > 0.25 && dimTop.style.display !== "none") fail("the top panel is still veiled at the end");
           });
         } else if (seg.kind === "pull") {
           // The pull-back comes first, as the data ends: nothing of the ending is drawn yet, and no box is up.
@@ -5614,6 +5828,7 @@ _SCRIPT = r"""<script>
           }
         });
       });
+      var tr = M.play.transition;
       // A click sends a box away, and it stays away.
       return chain.then(function () { return go((BEATS[0].c0 + BEATS[0].c1) / 2); }).then(function () {
         if (beatCard.style.display === "none") return fail("no box to dismiss");
@@ -5629,13 +5844,19 @@ _SCRIPT = r"""<script>
         return frames(2);
       }).then(function () {
         if (clock < INTER.c1 + M.play.card_fade - 1e-6) fail("a click on the interlude's box does not move on");
-        // And the last box: a click moves on to its fade.
+        // And the thesis card: a click moves on to its fade. The intro: a click moves on to the first part's card.
         var end = TL.filter(function (s) { return s.kind === "end"; })[0];
-        return go(end.c0 + end.marks.box + M.play.card_fade + 1).then(function () {
-          beatCard.click();
+        return go(end.c0 + end.marks.box + tr.card_in + 1).then(function () {
+          actCard.click();
           return frames(2);
         }).then(function () {
-          if (clock < end.c0 + end.marks.boxOut - 1e-6) fail("a click on the last box does not move on");
+          if (clock < end.c0 + end.marks.boxOut - 1e-6) fail("a click on the thesis card does not move on");
+          return go(TL[0].c0 + tr.card_in + 1);
+        }).then(function () {
+          actCard.click();
+          return frames(2);
+        }).then(function () {
+          if (clock < TL[1].c0 - 1e-6) fail("a click on the intro does not move on");
         });
       });
     }).then(function () {
@@ -5683,10 +5904,32 @@ _SCRIPT = r"""<script>
         chain = chain.then(function () { busy = false; pending = null; b.click(); return frames(2); }).then(function () {
           var was = playing, st = stateAt(k ? ACTS[k - 1].b0 : 0);
           pause();
-          out.jumps.push(ACTS[k].numeral + " → " + st.kind + ", card " + ACTS[st.card].numeral + ", at " + iso(st.T).slice(0, 10));
+          out.jumps.push(ACTS[k].numeral + " → " + st.kind + ", card " + (st.cardObj ? st.cardObj.id : "none") + ", at " + iso(st.T).slice(0, 10));
           if (!was) fail("an act's label does not start playback: " + b.textContent);
-          if (st.card !== k || Math.abs(st.T - ACTS[k].t0) > DAY) fail("an act's label does not lead to its title card: " + b.textContent);
+          // (The first part's label, from the very beginning: the intro, then its card.)
+          if ((k ? st.card !== k : st.cardObj !== INTRO_CARD) || Math.abs(st.T - ACTS[k].t0) > DAY) fail("an act's label does not lead to its title card: " + b.textContent);
           if (Math.abs(clock - (k ? ACTS[k - 1].b0 : 0)) > 3) fail("an act's label did not move the clock to its card: " + b.textContent);
+        });
+      });
+      // Dragged to a part's start (or the far left) and played: that part's card first (at the far left, the
+      // intro). Dragged there alone: no card. Dragged to the middle of a part and played: no card, no jump.
+      out.starts = [];
+      [[0, 0], [1, ACTS[1].t0], [2, ACTS[2].t0], [-1, (ACTS[1].t0 + ACTS[1].t1) / 2]].forEach(function (spec) {
+        chain = chain.then(function () {
+          scrub.value = Math.round((spec[1] ? spec[1] - T0 : 0) / (T1 - T0) * scrub.max);
+          busy = false; pending = null;
+          scrub.dispatchEvent(new Event("input", {bubbles: true}));
+          return frames(2);
+        }).then(function () {
+          if (actCard.style.display !== "none") fail("dragging the scrubber brings up a card");
+          var before = clock;
+          playBtn.click();
+          var st = STATE;
+          pause();
+          out.starts.push((spec[0] < 0 ? "mid-part" : "part " + spec[0]) + " → " + st.kind + (st.cardObj ? " (" + st.cardObj.id + ")" : ""));
+          if (spec[0] === 0 && (Math.abs(clock) > 0.05 || st.cardObj !== INTRO_CARD)) fail("play from the far left does not start with the intro");
+          if (spec[0] > 0 && (Math.abs(clock - ACTS[spec[0] - 1].b0) > 0.05 || st.card !== spec[0])) fail("play from a part's start does not show its title card");
+          if (spec[0] < 0 && (Math.abs(clock - before) > 0.05 || st.cardObj)) fail("play from mid-part jumps or shows a card");
         });
       });
       return chain.then(function () {
@@ -5785,7 +6028,7 @@ _SCRIPT = r"""<script>
       anchorsDrawn("the finished chart, after the play");
       // What the play adds up to, in seconds at 1x.
       var by = function (kind) { return TL.filter(function (s) { return s.kind === kind; }).map(function (s) { return +s.dur.toFixed(2); }); };
-      out.play = {opening: by("open")[0], acts: ACTS.map(function (A) { return A.numeral + ": " + A.total.toFixed(2); }),
+      out.play = {intro: by("intro")[0], opening: by("open")[0], scorecard: by("score")[0], acts: ACTS.map(function (A) { return A.numeral + ": " + A.total.toFixed(2); }),
                   interlude: by("inter")[0], breaks: by("break"), ending: by("end")[0], pullBack: by("pull")[0], total: +END.toFixed(2),
                   totalAtDefault: +(END / M.play.speed).toFixed(2),
                   totalAtFastest: +(END / last(M.play.speeds)).toFixed(2)};
@@ -5825,38 +6068,49 @@ _SCRIPT = r"""<script>
       a.grid[0].forEach(function (d) { x.push(last(x) + d); });
       a.grid[1].forEach(function (d) { tau.push(last(tau) + d); });
       return {numeral: a.numeral, title: a.title, cardTitle: a.card_title, short: a.short, kicker: a.kicker, base: a.base,
+              part: a.part, subtitle: a.subtitle, hold: a.hold,
+              card: {id: "act", kicker: a.kicker, title: a.card_title, sub: a.subtitle},
               t0: t0, t1: toMs(a.end), t: x.map(function (v) { return t0 + v * YEAR; }), tau: tau, total: last(tau),
               c0: 0, b0: 0, i0: 0};
     });
     VIEWS = M.play.acts.map(function (a) { return {r0: toMs(a.range[0]), r1: toMs(a.range[1])}; }).concat([{r0: X0, r1: X1}]);
-    var tr = M.play.transition, en = M.play.ending, fade = M.play.card_fade, open = tr.card_in + tr.hold + tr.ghost + tr.card_out, c = open;
-    TL = [{kind: "open", act: 0, c0: 0, dur: open}];
+    var tr = M.play.transition, en = M.play.ending, fade = M.play.card_fade;
+    // Played from the beginning: the intro card, then the first act's title card.
+    var intro = tr.card_in + M.play.intro.hold + tr.card_out, open = tr.card_in + ACTS[0].hold + tr.ghost + tr.card_out;
+    TL = [{kind: "intro", act: 0, c0: 0, dur: intro}, {kind: "open", act: 0, c0: intro, dur: open, hold: ACTS[0].hold}];
+    var c = intro + open;
     var IL = M.play.interlude, interDur = IL.arrow_seconds + IL.pause + 2 * fade + IL.seconds;
     ACTS.forEach(function (A, k) {
       A.c0 = c; TL.push({kind: "play", act: k, c0: c, dur: A.total}); c += A.total;
       // At the end of one act, before its break, the playhead rests: an arrow up the economy's line, then its box.
       if (k === IL.act) { A.i0 = c; TL.push({kind: "inter", act: k, c0: c, dur: interDur}); c += interDur; }
       if (k === ACTS.length - 1) return;
-      A.b0 = c; TL.push({kind: "break", act: k, c0: c, dur: open + tr.move}); c += open + tr.move;
+      var hold = ACTS[k + 1].hold, brk = tr.card_in + hold + tr.move + tr.ghost + tr.card_out;
+      A.b0 = c; TL.push({kind: "break", act: k, c0: c, dur: brk, hold: hold}); c += brk;
     });
-    // As the data ends the view pulls back to the whole chart; the ending follows there, as moments
-    // from its start: in the top panel each era's chord and its rate, a short beat after each; the
-    // arrow up from the 1978 level and its label, a pause; then each of the bottom panel's chords and
-    // its rate, a pause after each; the gap's arrow and its label; the last box coming up, and going.
-    var eraStep = en.chord + en.label + en.pause / 2, step = en.chord + en.label + en.pause;
-    var marks = {era: M.era_chords.map(function (_, n) { return n * eraStep; }),
-                 eraRate: M.era_chords.map(function (_, n) { return n * eraStep + en.chord; })};
-    marks.climb = M.era_chords.length * eraStep;
+    // As the data ends the view pulls back to the whole chart, and the Scorecard comes up. The ending
+    // follows there, as moments from its start: the top panel in the spotlight (the bottom one veiled),
+    // each era's chord and its rate, a short beat after each; the arrow up from the 1978 level and its
+    // label, a pause; the spotlight moves (swap) to the bottom panel: each chord and its rate, a pause
+    // after each; the gap's arrow and its label; the thesis card coming up (box), and going (boxOut)
+    // as the finished chart returns, nothing veiled.
+    var sp = en.spotlight, eraStep = en.chord + en.label + en.pause / 2, step = en.chord + en.label + en.pause;
+    var marks = {era: M.era_chords.map(function (_, n) { return sp + n * eraStep; }),
+                 eraRate: M.era_chords.map(function (_, n) { return sp + n * eraStep + en.chord; })};
+    marks.climb = sp + M.era_chords.length * eraStep;
     marks.climbLabel = marks.climb + en.arrow;
-    var b0 = marks.climbLabel + en.label + en.pause;
+    marks.swap = marks.climbLabel + en.label + en.pause;
+    var b0 = marks.swap + sp;
     marks.chord = [b0, b0 + step]; marks.rate = [b0 + en.chord, b0 + step + en.chord];
     marks.arrow = b0 + 2 * step;
     marks.gap = marks.arrow + en.arrow;
     marks.box = marks.gap + en.label + en.pause / 2;
-    marks.boxOut = marks.box + fade + M.play.final.seconds;
+    marks.boxOut = marks.box + tr.card_in + M.play.final.seconds;
+    var score = tr.card_in + M.play.score.hold + tr.card_out;
     TL.push({kind: "pull", act: ACTS.length - 1, c0: c, dur: en.pullback}); c += en.pullback;
-    TL.push({kind: "end", act: ACTS.length - 1, c0: c, dur: marks.boxOut + fade + 0.15, marks: marks});
-    END = c + marks.boxOut + fade + 0.15;
+    TL.push({kind: "score", act: ACTS.length - 1, c0: c, dur: score, hold: M.play.score.hold}); c += score;
+    TL.push({kind: "end", act: ACTS.length - 1, c0: c, dur: marks.boxOut + tr.card_out + 0.15, marks: marks});
+    END = c + marks.boxOut + tr.card_out + 0.15;
     EV = M.events.map(function (e) {
       var t = toMs(e.date);
       return {t: t, tier: e.tier, tick: e.tier === "tick", panel: e.panel, label: e.label,
@@ -5893,9 +6147,14 @@ _SCRIPT = r"""<script>
     });
     ERACHORDS = M.era_chords.map(function (ec) {
       return {key: ec.key, name: ec.name, span: ec.span, color: ec.color, rate: ec.rate, t0: toMs(ec.start), t1: toMs(ec.end),
+              labelFrom: ec.label_from ? toMs(ec.label_from) : null, labelTo: ec.label_to ? toMs(ec.label_to) : null,
               y0: ec.y0, y1: ec.y1, wraps: ec.wraps, text: ec.text, hover: ec.hover, shape: ec.shape, annotation: ec.annotation,
               place: null};
     });
+    // The cards that are not a part's: the intro (a click sends it away), the Scorecard, the thesis (the last box's words).
+    INTRO_CARD = {id: "intro", kicker: "", title: M.play.intro.title, sub: M.play.intro.text, small: true, wide: true, dismiss: true};
+    SCORE_CARD = {id: "score", kicker: M.play.score.kicker, title: M.play.score.title, sub: M.play.score.subtitle};
+    THESIS_CARD = {id: "thesis", kicker: M.play.final.lead, title: "", sub: M.play.final.text, big: true, wide: true, dismiss: true};
     CLIMB = {value: M.climb.value, t: toMs(M.climb.date), text: M.climb.text, wraps: M.climb.wraps, arrow: M.climb.arrow,
              label: M.climb.label, place: null};
     GAP = {value: M.gap.value, text: M.gap.text, wraps: M.gap.wraps, top: M.gap.top, bottom: M.gap.bottom, arrow: M.gap.arrow, label: M.gap.label};
@@ -5982,6 +6241,14 @@ _SCRIPT = r"""<script>
     // The scrubber's position is a date. It shows that date as its own act plays it: never a break.
     scrub.addEventListener("input", function () { pause(); dismissed = {}; render(clockAt(T0 + scrub.value / scrub.max * (T1 - T0))); });
     beatCard.addEventListener("click", dismiss);
+    // A click on the intro sends it away (on to the first part's card); on the thesis, on to the finished chart.
+    actCard.addEventListener("click", function () {
+      var cd = STATE.cardObj;
+      if (cd === THESIS_CARD) return dismiss();
+      if (cd !== INTRO_CARD) return;
+      var next = TL[1].c0;
+      if (playing) want = Math.max(want, next); else render(Math.max(clock, next));
+    });
     gd.on("plotly_relayout", onRelayout);
 
     gd.addEventListener("pointermove", function (e) {
@@ -6016,7 +6283,7 @@ _SCRIPT = r"""<script>
     if (location.search.indexOf("china-") >= 0) window.__CHINA__ = {
       show: function (c) { pause(); busy = false; pending = null; dismissed = {}; render(c); return STATE; },
       state: function () { return STATE; }, clockAt: clockAt, timeline: TL, acts: ACTS, views: VIEWS, beats: BEATS,
-      last: FINAL, inter: INTER, notes: NOTES, end: END, eras: ERACHORDS, climb: CLIMB, hovered: function () { return hovered.slice(); },
+      last: FINAL, inter: INTER, notes: NOTES, end: END, eras: ERACHORDS, climb: CLIMB, cards: {intro: INTRO_CARD, score: SCORE_CARD, thesis: THESIS_CARD}, hovered: function () { return hovered.slice(); },
       // How many characters of text a picture card can hold and keep its picture at this width (its lead as it is):
       // the card's own words, repeated as needed, cut at a word.
       pictureRoom: function (i) {
@@ -6125,13 +6392,17 @@ COPY_KINDS = ("title card", "scrubber label", "text box", "picture card", "pictu
 COPY_BUDGETS = {"card-2020-11-03": 14}
 # The placeholders each composed string may use, by its key in COPY_TEXT.
 _COPY_TEXT_FIELDS = dict(
-    panel_economy=(), panel_stocks=(), kicker=("numeral", "start_year", "end_year"),
+    panel_economy=(), panel_stocks=(), kicker=("part", "start_year", "end_year"),
+    intro_title=("start_year", "end_year"), intro_text=("catch_up_from", "catch_up_rivals"),
+    score_kicker=("start_year", "end_year"), score_title=(), score_subtitle=(),
     hover_economy_1978=("anchor_year", "change"), hover_stocks=("since", "change"), hover_economy=("since", "change"),
     anchor=("anchor",), zero_key=("since",), chord_rate=("rate", "multiple"),
     era_rate=("name", "span", "rate", "multiple"), era_rate_flat=("name", "span", "rate"),
     climb=("bits", "anchor_year", "multiple"), chord_economy=(), chord_stocks=(), gap=("gap_bits", "gap_multiple"))
 _COPY_TEXT_KINDS = dict(
     panel_economy="panel label", panel_stocks="panel label", kicker="title card",
+    intro_title="title card", intro_text="title card", score_kicker="title card", score_title="title card",
+    score_subtitle="title card",
     hover_economy_1978="series hover template", hover_stocks="series hover template",
     hover_economy="series hover template", anchor="series hover template", zero_key="zero-line label",
     chord_rate="rate label", era_rate="rate label", era_rate_flat="rate label", climb="arrow label",
@@ -6139,17 +6410,16 @@ _COPY_TEXT_KINDS = dict(
 
 
 def running_time(plan: list[dict], words: dict) -> float:
-    """The whole play at 1x, in seconds: the opening card, the parts, the stop at the end of Part II, the
-    breaks, the pull-back and the ending (the eras' chords, the climb, the bottom panel's chords, the gap,
-    the last box)."""
-    opening = sum(TRANSITION[k] for k in ("card_in", "hold", "ghost", "card_out"))
-    breaks = (len(ACTS) - 1) * (opening + TRANSITION["move"])
-    E = ENDING
-    ending = (len(ERA_CHORDS) * (E["chord"] + E["label"] + E["pause"] / 2) + E["arrow"] + E["label"] + E["pause"]
-              + 2 * (E["chord"] + E["label"] + E["pause"]) + E["arrow"] + E["label"] + E["pause"] / 2
-              + 2 * CARD_FADE_SECONDS + final_seconds(words) + 0.15)
-    return (opening + sum(float(part["table"]["tau"][-1]) for part in plan) + interlude_seconds(words) + breaks
-            + ending + E["pullback"])
+    """The whole play at 1x, in seconds, from the beginning: the cards (the intro, the parts' title cards, the
+    Scorecard), the parts, the stop at the end of Part I, the axis moving at each break, the pull-back and the
+    ending (the spotlight on each panel in turn, its chords and arrows; the thesis card)."""
+    E, tr = ENDING, TRANSITION
+    end_year = pd.Timestamp(plan[-1]["end"]).year
+    ending = (E["spotlight"] + len(ERA_CHORDS) * (E["chord"] + E["label"] + E["pause"] / 2) + E["arrow"] + E["label"]
+              + E["pause"] + E["spotlight"] + 2 * (E["chord"] + E["label"] + E["pause"]) + E["arrow"] + E["label"]
+              + E["pause"] / 2 + tr["card_in"] + final_seconds(words) + tr["card_out"] + 0.15)
+    return (cards_seconds(words, end_year) + (len(ACTS) - 1) * tr["move"] + sum(float(part["table"]["tau"][-1]) for part in plan)
+            + interlude_seconds(words) + E["pullback"] + ending)
 
 
 def _placeholders(text: str) -> list[str]:
@@ -6196,8 +6466,12 @@ def copy_rows() -> list[dict]:
 
     # The figure's title, the panels' names, and the strings composed with numbers (COPY_TEXT).
     add("figure-title", "figure title", TITLE, ("TITLE",))
+    cutoff_year = pd.Timestamp(meta["play"]["end"]).year
     instances = dict(
-        kicker=[dict(numeral=a["numeral"], start_year=a["start"][:4], end_year=a["end"][:4]) for a in meta["play"]["acts"]],
+        kicker=[dict(part=a["part"], start_year=a["start"][:4], end_year=a["end"][:4]) for a in meta["play"]["acts"]],
+        intro_title=[dict(start_year=START_YEAR, end_year=cutoff_year)],
+        intro_text=[dict(catch_up_from=words["catch_up_from"], catch_up_rivals=words["catch_up_rivals"])],
+        score_kicker=[dict(start_year=START_YEAR, end_year=cutoff_year)],
         hover_economy_1978=[dict(anchor_year=GDP_ANCHOR_YEAR, change="+2.31 bits (×4.96), for example")],
         hover_stocks=[dict(since=words["since"], change="−0.57 bits (×0.67), for example")],
         hover_economy=[dict(since=words["since"], change="+2.23 bits (×4.69), for example")],
@@ -6225,6 +6499,8 @@ def copy_rows() -> list[dict]:
     for i, (act, part) in enumerate(zip(ACTS, meta["play"]["acts"])):
         add(f"part-{act.numeral}-title", "title card", PART_TITLES[i], ("PART_TITLES", i), date=part["start"])
         add(f"part-{act.numeral}-short", "scrubber label", act.short, ("ACTS", i, "short"), date=part["start"])
+        add(f"part-{act.numeral}-name", "title card", act.part, ("ACTS", i, "part"), date=part["start"])
+        add(f"part-{act.numeral}-subtitle", "title card", act.subtitle, ("ACTS", i, "subtitle"), date=part["start"])
 
     # The boxes, the stop at the end of Part II and the last box: each with its bold lead.
     total = running_time(plan, words)
@@ -6668,8 +6944,14 @@ def _run_checks() -> None:
         assert axis.ticks == "" and not axis.title.text and axis.side in (None, "left")
         text = list(axis.ticktext)
         assert sum("bit" in t for t in text) == 1 and "bit" in text[-1], "the unit belongs on the top tick alone"
-        assert text[-1].endswith(" bit" if text[-1].startswith("+1 ") else " bits")
-        assert all(t == "0" or t[0] in "+−" for t in text) and not any("-" in t for t in text)
+        assert all(t.startswith("0") or t[0] in "+−" for t in text) and not any("-" in t for t in text)
+    # Each label gives the multiple too, where there is room (the wide layout); bits alone on a phone.
+    assert (list(fig.layout.yaxis.ticktext), list(fig.layout.yaxis2.ticktext)) == (meta["ticks"]["top"]["multiples"],
+                                                                               meta["ticks"]["bottom"]["multiples"])
+    assert meta["ticks"]["top"]["multiples"] == ["0 (×1)", "+1 (×2)", "+2 (×4)", "+3 (×8)", "+4 bits (×16)"]
+    assert meta["ticks"]["bottom"]["multiples"] == ["−1 (×½)", "0 (×1)", "+1 (×2)", "+2 bits (×4)"]
+    assert meta["ticks"]["top"]["plain"] == ["0", "+1", "+2", "+3", "+4 bits"] and meta["ticks"]["bottom"]["plain"][-1] == "+2 bits"
+    assert _LAYOUTS["wide"]["multiples"] and not _LAYOUTS["narrow"]["multiples"], "multiples on the wide layout only"
     assert fig.layout.xaxis.ticks == "" and not fig.layout.showlegend
     assert sum(k.startswith("yaxis") for k in fig.layout.to_plotly_json()) == 2, "exactly one y-axis per panel"
     assert f'<div class="china-title">{TITLE}</div>' in page
@@ -6870,7 +7152,7 @@ def _run_checks() -> None:
     assert len({fig.layout.shapes[who["shape"]].fillcolor for who in meta["leaders"]}) == 2
     assert [era["label"] for era in meta["eras"]] == ["Famine", "Cultural Revolution", "Retrenchment",
                                                       "WTO export boom", "Zero-COVID"]
-    assert era_meta["Retrenchment"]["description"].startswith("**1989–91**: ")
+    assert era_meta["Retrenchment"]["description"].startswith("**Sep 1988 – 1991**: ")
     assert [era.label for era in ERAS if era.drop_first] == ["Retrenchment", "WTO export boom"]
     assert "Mao era" not in labels, "the leaders' row replaces the Mao era bar"
     for before, after in zip(ERAS, ERAS[1:]):
@@ -6938,9 +7220,33 @@ def _run_checks() -> None:
     assert len(PART_TITLES) == 3 and PART_TITLES[1][0] == "“" and PART_TITLES[1][-1] == "”"
     assert [a["card_title"] for a in acts] == PART_TITLES
     assert [a["end"] for a in acts[:-1]] == ["1978-12-18", "1992-02-21"], "the part breaks have moved"
-    assert [a["kicker"] for a in acts] == [COPY_TEXT["kicker"].format(numeral=n_, start_year=a_, end_year=z_)
-                                           for n_, a_, z_ in (("I", 1960, 1978), ("II", 1978, 1992), ("III", 1992, cutoff.year))]
-    assert all(a["kicker"].startswith("Part ") for a in acts)
+    assert [a["kicker"] for a in acts] == [COPY_TEXT["kicker"].format(part=p_, start_year=a_, end_year=z_)
+                                           for p_, a_, z_ in (("Prelude", 1960, 1978), ("Part I", 1978, 1992),
+                                                              ("Part II", 1992, cutoff.year))]
+    assert [a["kicker"] for a in acts] == ["Prelude · 1960–1978", "Part I · 1978–1992", "Part II · 1992–2025"]
+    assert [a["title"] for a in acts] == PART_TITLES == ["Mao's Mayhem", "“Seeking Truth from Facts”", "Betting on the Boom"]
+    assert [a["short"] for a in acts][-1] == "Boom"
+    # Each part's card: its subtitle under the title, and a hold that much longer (so much, and so much a word).
+    for a in acts:
+        close(a["hold"], TRANSITION["hold"] + TITLE_READ[0] + TITLE_READ[1] * len(a["subtitle"].split()), 1e-3, "a card's hold")
+    assert [a["subtitle"] for a in acts] == [
+        "Famine, purges and upheaval. Far poorer than America, China gains no ground on it.",
+        "Deng turns China toward markets, and its economy begins to close the gap with America.",
+        "Foreigners can finally buy Chinese shares. The economy keeps surging; the stocks do not follow."]
+    # The intro: its claim computed (China's gain on America since 1978 ranks first), its hold a box's reading
+    # time and a second more.
+    intro_ = play["intro"]
+    assert numbers["catch_up_rank"] == 1 and words["catch_up_rivals"] == "any other country", "China no longer ranks first: the intro must say so"
+    assert (intro_["title"], intro_["text"]) == ("China ÷ United States, 1960–2025",
+        "Since 1978, China has closed more ground on America than any other country in the World Bank's records. "
+        "Its stocks have not followed.")
+    close(intro_["hold"], BOX_SECONDS[0] + BOX_SECONDS[1] * len(f"{intro_['title']} {intro_['text']}".split()) + INTRO_EXTRA,
+          1e-3, "the intro's hold")
+    score_ = play["score"]
+    assert (score_["kicker"], score_["title"], score_["subtitle"]) == ("1960–2025", "The Scorecard", "First the economy, then the stocks.")
+    close(score_["hold"], TITLE_READ[0] + TITLE_READ[1] * len(score_["subtitle"].split()), 1e-3, "the Scorecard's short hold")
+    assert play["spotlight"] == SPOTLIGHT and 0.65 <= SPOTLIGHT <= 0.75, "a panel out of the spotlight shows at about 30%"
+    assert play["snap_days"] == START_SNAP_DAYS and 3 <= START_SNAP_DAYS <= 10
     assert "text-transform: uppercase" in _STYLE[_STYLE.index(".china-act-kicker"):], "the overline is not in capitals"
     # The acts tile the data: the first starts with it, each starts where the one before ends, the last ends with it.
     for earlier, later in zip(acts, acts[1:]):
@@ -7043,19 +7349,29 @@ def _run_checks() -> None:
         bases.append(table["base"])
     opening = sum(TRANSITION[k] for k in ("card_in", "hold", "ghost", "card_out"))
     transition = opening + TRANSITION["move"]
+    # (The cards as they now stand: the intro; each part's title card, held for its subtitle; the Scorecard.)
+    intro_s = TRANSITION["card_in"] + play["intro"]["hold"] + TRANSITION["card_out"]
+    part_cards = [TRANSITION["card_in"] + a["hold"] + TRANSITION["ghost"] + TRANSITION["card_out"] for a in acts]
+    score_s = TRANSITION["card_in"] + play["score"]["hold"] + TRANSITION["card_out"]
     last_read = final_seconds(words)
     close(last_read, BOX_SECONDS[0] + BOX_SECONDS[1] * len(f"{play['final']['lead']} {play['final']['text']}".split())
           + LAST_BOX_EXTRA, 1e-9, "the last box's reading time")
     # (After the pull-back: each era's chord, its rate and half a pause; the climb's arrow, its label, a
     # pause; then the bottom panel's two chords, each with its rate and a pause; the gap; the last box.)
-    eras_ending = len(ERA_CHORDS) * (ENDING["chord"] + ENDING["label"] + ENDING["pause"] / 2) + ENDING["arrow"] + ENDING["label"]
-    ending = (eras_ending + ENDING["pause"] + 2 * (ENDING["chord"] + ENDING["label"] + ENDING["pause"]) + ENDING["arrow"]
-              + ENDING["label"] + ENDING["pause"] / 2 + CARD_FADE_SECONDS + last_read + CARD_FADE_SECONDS + 0.15)
+    # (The top panel in the spotlight, its eras' chords and the climb, a pause; the spotlight moves; the bottom
+    # panel's two chords and the gap; the thesis card in, up for the last box's reading time, out.)
+    eras_ending = (ENDING["spotlight"] + len(ERA_CHORDS) * (ENDING["chord"] + ENDING["label"] + ENDING["pause"] / 2)
+                   + ENDING["arrow"] + ENDING["label"])
+    ending = (eras_ending + ENDING["pause"] + ENDING["spotlight"] + 2 * (ENDING["chord"] + ENDING["label"] + ENDING["pause"])
+              + ENDING["arrow"] + ENDING["label"] + ENDING["pause"] / 2 + TRANSITION["card_in"] + last_read
+              + TRANSITION["card_out"] + 0.15)
     interlude = interlude_seconds(words)
     assert 4 <= transition <= 5.5 and 1.5 <= ENDING["pullback"] <= 2.0 and ENDING["pullback"] > TRANSITION["move"]
-    assert ENDING["chord"] == 2 * 0.7 and ENDING["pause"] == 0.8 and "box_hold" not in ENDING, "the ending's timings"
+    assert abs(ENDING["chord"] - 1.5 * 1.4) < 1e-9 and abs(ENDING["arrow"] - 1.5 * 0.7) < 1e-9 and ENDING["pause"] == 0.8, "the ending's drawing, at 1.5 times its old pace"
+    assert "box_hold" not in ENDING and ENDING["spotlight"] == 0.5
     assert 0.25 <= GHOST_OPACITY <= 0.35 and REVEAL_SECONDS == 0.5 and 0.4 <= SCRIM_OPACITY <= 0.8
-    total = opening + sum(durations) + interlude + transition * (len(acts) - 1) + ending + ENDING["pullback"]
+    total = (intro_s + sum(part_cards) + TRANSITION["move"] * (len(acts) - 1) + sum(durations) + interlude + score_s
+             + ending + ENDING["pullback"])
     assert play["transition"] == TRANSITION and play["ending"] == ENDING
     close(play["final"]["seconds"], last_read, 1e-3, "the page's last box is not up for its reading time")
 
@@ -7063,8 +7379,8 @@ def _run_checks() -> None:
     #       with every number in them computed (and each computed number as expected).
     assert len(beats) == len(BEATS) == sum(len(part["beats"]) for part in plan) == 28
     assert [sum(b["act"] == n for b in beats) for n in range(3)] == [7, 10, 11], "the beats are not in the parts they belong to"
-    trims = {b.lead: b.trim for b in BEATS if b.trim}
-    assert trims == {"Dec 1978": -1.0, "1988": -1.0}, trims
+    extra = {b.lead: b.extra_s for b in BEATS if b.extra_s}
+    assert extra == {"Dec 1978": -1.0, "1988": -1.0, "Jan–Feb 1962": 1.0, "1966–68": 1.0, "1994–2003": 1.0}, extra
     for b in beats:
         act = acts[b["act"]]
         assert act["start"] < b["date"] <= act["end"], f"the beat of {b['date']} lies outside its part"
@@ -7073,7 +7389,7 @@ def _run_checks() -> None:
         assert b["panel"] in ("economy", "stocks") and "{" not in b["lead"] + b["text"], "an unfilled placeholder"
         count = len(f"{b['lead']} {b['text']}".split())
         start_, per_word = PICTURE_SECONDS if b["kind"] == "picture" else BOX_SECONDS
-        close(b["seconds"], start_ + per_word * count + trims.get(b["lead"], 0.0), 1e-3, "a box's reading time")
+        close(b["seconds"], start_ + per_word * count + extra.get(b["lead"], 0.0), 1e-3, "a box's reading time")
         off = (pd.Timestamp(b["since"]) - pd.Timestamp(b["date"])) / pd.Timedelta(days=1)
         assert abs(off) <= SYNC_DAYS, f"the box of {b['date']} comes up {off:+.1f} days from its date"
     # Economy boxes in the top panel, market boxes in the bottom one.
@@ -7566,7 +7882,7 @@ def _run_checks() -> None:
                  *(w for spec in _ARROWS.values() for w in spec["wraps"]), *(w for spec in _FILL_LABELS.values() for w in spec["wraps"]),
                  *(w for band in BANDS for w in band.wraps), *(p.short for p in PICTURES.values()),
                  *(x for era in ERAS for x in (era.label, era.description)), *(x for who in LEADERS for x in (who.label, who.description)),
-                 *(x for era in ERA_CHORDS for x in (era.name, era.hover))]:
+                 *(x for era in ERA_CHORDS for x in (era.name, era.hover)), *(x for act in ACTS for x in (act.part, act.subtitle, act.short))]:
         assert item in listed, f"not in the copy: {item[:50]!r}"
     dates_ = [r["date"] for r in rows if r["date"]]
     assert dates_ == sorted(dates_) and all(r["date"] for r in rows[:len(dates_)]), "rows are not by date, undated last"
@@ -7610,6 +7926,13 @@ def _run_checks() -> None:
     new_tree = ast.parse(rewritten)
     for path, text_ in changed.items():
         assert [ac.literal_value(rewritten, n) for n in ac.resolve(new_tree, path, this)] == [text_], path
+    assert rewritten.count('(("') == source.count('(("'), "the importer doubled a literal's parentheses"
+    assert {"copy-intro-title", "copy-intro-text", "copy-score-kicker", "copy-score-title", "copy-score-subtitle",
+            "part-I-name", "part-III-subtitle", "part-III-short"} <= set(by_id), "a new string is not in the workbook"
+    assert by_id["part-III-short"]["text"] == "Boom" and by_id["copy-kicker"]["text"] == "{part} · {start_year}–{end_year}"
+    # The Mao label's window (the others have none): its years, and the chord's.
+    assert [(c_["name"], c_["label_from"], c_["label_to"]) for c_ in meta["era_chords"]] == [
+        ("Mao", "1966-01-01", "1972-12-31"), ("Deng to Hu", None, None), ("Xi", None, None)]
     title_node = ac.resolve(new_tree, ("TITLE",), this)[0]
     assert title_node.end_lineno > title_node.lineno, "a long new text is not broken over lines"
     bad = {"no-such-id": "x", "card-1961-06-30": "**1959–61** Output falls {famine_fal}%.",
@@ -7682,10 +8005,12 @@ def _run_checks() -> None:
     print(f"  context: {len(LEADERS)} leaders; {len(ERAS)} eras; {len(BANDS)} access bands.")
     both = lambda secs: " / ".join(f"{secs / v:.1f}" for v in SPEEDS)
     print(f"  playback, in seconds at {' / '.join(f'{v}x' for v in SPEEDS)} (the default is {DEFAULT_SPEED}x): "
-          f"opening card {both(opening)}; "
-          + "; ".join(f"part {a['numeral']} {both(d)} (target {spec.seconds:.0f})" for a, d, spec in zip(acts, durations, ACTS))
-          + f"; the stop at the end of Part II {both(interlude)}; each of the {len(acts) - 1} part breaks {both(transition)}; "
-          f"the ending {both(ending)}; the pull-back {both(ENDING['pullback'])}; in all {both(total)}.")
+          f"intro card {both(intro_s)}; "
+          + "; ".join(f"{a['part']} card {both(c_)}, play {both(d)} (target {spec.seconds:.0f})"
+                      for a, c_, d, spec in zip(acts, part_cards, durations, ACTS))
+          + f"; the stop at the end of {acts[_INTERLUDE_ACT]['part']} {both(interlude)}; the axis moving at each of the "
+          f"{len(acts) - 1} breaks {both(TRANSITION['move'])}; the pull-back {both(ENDING['pullback'])}; the Scorecard "
+          f"{both(score_s)}; the ending {both(ending)}; in all {both(total)}.")
     reading = [sum(sec + 2 * CARD_FADE_SECONDS for _, sec, _ in part["boxes"]) for part in plan]
     print("  of which boxes are up (reading time and fades): " + ", ".join(
           f"part {a['numeral']} {r:.1f} s" for a, r in zip(acts, reading)) + f"; base speeds, in years a second: "

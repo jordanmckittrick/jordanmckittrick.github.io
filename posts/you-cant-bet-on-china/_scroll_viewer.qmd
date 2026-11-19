@@ -1,6 +1,8 @@
 <!--
   Scroll viewer widget for "A Thousand Li of Rivers and Mountains".
-  Included from index.qmd via {{< include _scroll_viewer.qmd >}}.
+  Included from index.qmd via {{< include _scroll_viewer.qmd >}}, inside a
+  ::: {#fig-thousand-li} block. The caption lives in index.qmd (the block's
+  last paragraph) so Quarto numbers it like every other figure.
 
   Self-contained: <style>, the <figure>, and the <script> below have no
   external dependencies. Class names are all prefixed with `scroll-viewer__`
@@ -16,7 +18,9 @@
 ```{=html}
 <style>
   .scroll-viewer {
-    margin: 2rem 0;
+    /* Spacing above comes from the Quarto figure this sits in; 1em below
+       matches the gap Quarto leaves between other images and their captions. */
+    margin: 0 0 1em;
     padding: 0;
   }
 
@@ -156,22 +160,6 @@
     pointer-events: none;
     will-change: width;
   }
-
-  .scroll-viewer figcaption {
-    margin-top: 0.75rem;
-    font-size: 0.9rem;
-    line-height: 1.45;
-    color: rgba(0, 0, 0, 0.66);
-  }
-  @media (prefers-color-scheme: dark) {
-    .scroll-viewer figcaption { color: rgba(255, 255, 255, 0.66); }
-  }
-  .scroll-viewer figcaption a {
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 2px;
-  }
 </style>
 
 <figure class="scroll-viewer"
@@ -200,9 +188,6 @@
       </div>
     </div>
   </div>
-  <figcaption>
-    Wang Ximeng, <em>A Thousand Li of Rivers and Mountains</em>, 1113. The Palace Museum, Beijing. At nearly forty feet long, this priceless work of art is a hand scroll painted on silk using azurite (blue) and malachite (green) that was designed to be unfurled slowly, revealing the vast Chinese landscape and scenes from the daily lives of ordinary people living during the Northern Song Dynasty, a period of immense wealth and sophistication. <a href="a-thousand-li-of-rivers-and-mountains(complete).jpg" target="_blank" rel="noopener">View full resolution&nbsp;↗</a>
-  </figcaption>
 </figure>
 
 <script>
