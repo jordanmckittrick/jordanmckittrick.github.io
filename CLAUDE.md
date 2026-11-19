@@ -47,7 +47,7 @@ This is a [Quarto](https://quarto.org) website published to GitHub Pages. Conten
 ## Bibliography
 
 - One shared `references.bib` at the repo root, wired into every post through `posts/_metadata.yml`. Posts have **no** `bibliography:` line of their own (the checker flags one).
-- Keys follow `authorYEARfirstword` (e.g. `breiman1961optimal`), and every entry has a `% VERIFIED:` comment above it saying what it was checked against. Five older entries cited by `posts/shannons-demon/` (`shannon_and_investment`, `samuelson_1971`, `landauer_1961`, `bennett_1982`, `markowitz_1952`) predate this rule and have neither.
+- Keys follow `authorYEARfirstword` (e.g. `breiman1961optimal`), and every entry has a `% VERIFIED:` comment above it saying what it was checked against.
 
 ## Checks
 

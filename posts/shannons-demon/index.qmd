@@ -17,27 +17,27 @@ draft: false
 
 
 
-### Introduction
+## Introduction
 If intuition is any guide, it shouldn't be possible for a long-only portfolio to be profitable when each of its component assets is a lemon, unless, of course, one is clairvoyant and can predict those fleeting moments when random chance will favor each asset. Yet, as I'll demonstrate in this post, not only is it possible to do this without any clairvoyance whatsoever, but also an investor can (almost surely) guarantee an exponential amount of money in the long run from an appropriately constructed portfolio of such lemons, at least under certain conditions that this post makes exact. It turns out that information theory provides a lovely explanation for why this is possible. The culmination of this post is a simple, closed-form formula for the excess expected growth rate of a portfolio over the risk-free rate, for a two-state, two-asset complete market. This formula is expressed as the difference between two Kullback-Leibler divergences. 
 
 ![Vincent van Gogh, _Still Life with Lemons on a Plate_, 1887. Van Gogh Museum.](still-life-with-lemons-on-a-plate-1887.jpg){#fig-van-gogh width="100%" fig-align="center" fig-alt="A post-impressionist painting by Vincent van Gogh depicting several bright yellow lemons piled on a simple ceramic plate against a textured, light-colored background."} 
 
 
 
-### Maxwell's demon and Shannon's demon
-Named after the legendary physicist James Clerk Maxwell, Maxwell's demon is a thought experiment in physics in which a hypothetical demon controls a microscopic, frictionless door separating two chambers of gas. The demon selectively sorts fast and slow molecules in the gas to pass through the door so that the fast molecules go to one chamber and the slow molecules go to the other, thereby creating a temperature difference without expending any of the system's energy. This procedure would lead to an increase in the free energy of the system, which could then be used to do useful work, seemingly violating the second law of thermodynamics. Put differently, the demon extracts useful work from heat, which is the random energy of the molecules, all at no apparent thermodynamic cost to the system. This is magic for a physicist, and like magic, it is impossible. The modern resolution of this paradox is that there is in fact a cost to the system, as the demon with its finite memory must eventually erase its records, and erasing information dissipates at least $k_B T \ln 2$ of heat per erased bit, creating entropy in the process [@landauer_1961; @bennett_1982].
+## Maxwell's demon and Shannon's demon
+Named after the legendary physicist James Clerk Maxwell, Maxwell's demon is a thought experiment in physics in which a hypothetical demon controls a microscopic, frictionless door separating two chambers of gas. The demon selectively sorts fast and slow molecules in the gas to pass through the door so that the fast molecules go to one chamber and the slow molecules go to the other, thereby creating a temperature difference without expending any of the system's energy. This procedure would lead to an increase in the free energy of the system, which could then be used to do useful work, seemingly violating the second law of thermodynamics. Put differently, the demon extracts useful work from heat, which is the random energy of the molecules, all at no apparent thermodynamic cost to the system. This is magic for a physicist, and like magic, it is impossible. The modern resolution of this paradox is that there is in fact a cost to the system, as the demon with its finite memory must eventually erase its records, and erasing information dissipates at least $k_B T \ln 2$ of heat per erased bit, creating entropy in the process [@landauer1961irreversibility; @bennett1982thermodynamics].
 
-In a nod to Maxwell's demon, Shannon's demon, which is named after the founder of information theory, Claude Shannon, is a somewhat analogous thought experiment in investing in which the random up-and-down noise of asset prices (loosely analogous to heat in physics) can seemingly "magically" create wealth by rebalancing one's portfolio in just the right way so as to maximize the long-run growth rate [@shannon_and_investment]. It is as if Shannon's demon is able to sort profitable outcomes from unprofitable ones. Unlike Maxwell's demon, however, Shannon's demon exists in the sense that it is a real, mathematically rigorous strategy that does not violate any laws of physics or finance. The connection to thermodynamics is purely one of loose analogy; the actual concepts are information-theoretic.
+In a nod to Maxwell's demon, Shannon's demon, which is named after the founder of information theory, Claude Shannon, is a somewhat analogous thought experiment in investing in which the random up-and-down noise of asset prices (loosely analogous to heat in physics) can seemingly "magically" create wealth by rebalancing one's portfolio in just the right way so as to maximize the long-run growth rate [@cover1998shannon]. It is as if Shannon's demon is able to sort profitable outcomes from unprofitable ones. Unlike Maxwell's demon, however, Shannon's demon exists in the sense that it is a real, mathematically rigorous strategy that does not violate any laws of physics or finance. The connection to thermodynamics is purely one of loose analogy; the actual concepts are information-theoretic.
 
 ![Alexandre Cabanel, _Fallen Angel_, 1847. Musée Fabre.](fallen-angel.jpg){#fig-fallen-angel width="100%" fig-align="center" fig-alt="A painting in the French Academic style of angels in the background sky and, in the foreground, a fit nude man with angel wings sitting on the ground with his arm across his lower face, a tear drop rolling down the side of his nose, and an unmistakable expression of resentment, hurt, and anger."} 
 
 
-### The setup
+## The setup
 In order to most clearly illustrate the concepts at play, I have necessarily chosen a very simple (and therefore unrealistic) example, in which there are only two assets to invest in: a risk-free asset with a negative interest rate and a risky asset modeled by a coin flip. Nonetheless, the results and machinery I develop here generalize to more realistic settings, though of course there are additional nuances and complications that arise in those cases, such as estimating return probabilities, accounting for transaction costs, and so on. In this post, however, I will ignore such complications in order to focus on the core ideas.
 
 We will think of the risk-free asset as reminiscent of a Swiss bank account: the account is so safe and so desirable that it pays a _negative_ interest rate; hence, its associated gross return satisfies $r < 1.$ On the other hand, the risky asset, which I'll model as a coin flip, will be highly volatile in its outcome, where heads comes with a very handsome (gross) return of $\gamma_h$ with probability $0 < p_h < 1$ and tails with a very steep loss $\gamma_t < r < \gamma_h$ (with probability $1 - p_h$). In addition, I'll set $\gamma_t = \alpha / \gamma_h$, for some $\alpha > 0$, i.e. $\alpha = \gamma_h \gamma_t$ is the gross return of one heads-and-tails round trip. Finally, I let $f$ denote the fraction of our money that we allocate to the risky asset (hence, $1 - f$ is the fraction that we allocate to the risk-free asset). After every period, we rebalance our portfolio to maintain these fractions. If we disallow shorting the risky asset, then we limit ourselves to $f \geq 0$, and if we disallow leverage (shorting the risk-free asset), we require $f \leq 1$. Our goal is to choose $f$ intelligently so that we make as much money as possible in the long run (or lose the least possible).[^3] I'll let $S_0$ denote the initial wealth.
 
-[^3]: To the economist, investing "intelligently" means maximizing an expected utility function. In this post, intelligent investing is taken to mean maximizing long-run wealth. For a spirited -- and monosyllabic! -- defense of the economist's point of view, see @samuelson1979why. For a more technical argument, see @samuelson_1971.
+[^3]: To the economist, investing "intelligently" means maximizing an expected utility function. In this post, intelligent investing is taken to mean maximizing long-run wealth. For a spirited -- and monosyllabic! -- defense of the economist's point of view, see @samuelson1979why. For a more technical argument, see @samuelson1971fallacy.
 
 In what follows, let $w^T = (1 - f, f)$ denote the allocation vector and $X^T = (r, \gamma)$ the random gross returns vector, where $\gamma$ takes the value $\gamma_h$ with probability $p_h$ and $\gamma_t$ with probability $1 - p_h$. Note that $w^T = (1,0)$ corresponds to a portfolio consisting solely of the risk-free asset, and $w^T = (0,1)$ corresponds to a portfolio consisting solely of the risky asset. The portfolio gross return for a particular period is then given by $$Y(w) = w^T X = (1 - f)r + f\gamma,$$ so the wealth after $n$ periods is $$S_n(w) = S_0\prod_{i=1}^n Y_i(w),$$ where $Y_i(w)$ is the portfolio gross return in period $i$. This multiplicative branching of wealth, starting from the initial wealth $S_0$, is sketched in @fig-wealth-tree.
 
@@ -58,7 +58,7 @@ coin_flip_model = CoinFlipWithRisklessAssetModel(r=0.97, gamma_heads=2.0, p=0.5,
 
 
 
-### The risky asset is a lemon
+## The risky asset is a lemon
 Obviously the risk-free asset is a lemon, as it bleeds 3% each period. (By "lemon" I simply mean an asset that will almost surely grind its way to a 100% loss over time.) While it is less obvious, the risky asset is also a lemon, which can be seen using Monte Carlo simulations. 
 
 ```{python}
@@ -129,7 +129,7 @@ Note that this result implies that, regardless of the starting allocation, any b
 
 
 
-### The expected wealth is a mirage
+## The expected wealth is a mirage
 The _expected value_ path for the risky asset, however, tells a very different story from the typical path. After 500 periods, the expected value path (not shown in @fig-risky-wealth) for the risky asset sits around $4 \cdot 10^{39}$, which is many orders of magnitude better than both the sampled median and the sampled mean, both of which are shown in the figure. This is because of the small number of rare paths with enough heads to make a killing. In fact, using the independence of the coin flips, we see that the expected wealth after $n$ periods diverges to infinity exponentially fast:
 $$
 \begin{align}
@@ -196,7 +196,7 @@ create_no_loss_probability_plot(no_loss_probability_df, alt=fig_alt("fig-no-loss
 
 
 
-### How to salvage a portfolio of lemons
+## How to salvage a portfolio of lemons
 Earlier I invoked the strong law of large numbers to show that the risky asset is a lemon: because its expected growth rate, $W(w),$ is negative whenever $\alpha < 1$ (for our fair coin), it will almost surely tend towards a 100% loss in the long run, and as I just showed, the probability of not losing money decays exponentially fast. Instead of letting our portfolio consist solely of the risky asset, however, we can instead choose $w$ to maximize $W(w) = \mathbb{E} \left[ \ln Y(w) \right].$ This maximizer is unique because $W$ is a strictly concave function of $w$. If we think of $W(w)$ as a function of $f$ (since $w^T = (1 - f, f)$), we can find the optimal fraction to allocate to the risky asset by taking the derivative with respect to $f$ and setting it equal to zero. Doing so, we find that the optimal fraction is given by 
 $$
 \begin{align}
@@ -205,7 +205,7 @@ f^* = r \frac{\Delta}{ab},
 $$
 where I've defined $\Delta = \mathbb{E}[\gamma] - r$, $a = \gamma_h - r$ and $b = r - \gamma_t$.
 
-Though Claude Shannon never published any of his ideas on investing, it is widely claimed that he explained an investing idea, which has since become known as "Shannon's demon", during a lecture at MIT [@shannon_and_investment]. During that lecture, Shannon reportedly considered a two-asset portfolio consisting of cash and a coin flip with $\gamma_h = 2$, $\gamma_t = 0.5$, $p_h = 0.5$, and $r = 1$. In that case, we have $\Delta = 0.25$, $a = 1$ and $b = 0.5$, which implies that the optimal fraction to allocate to the risky asset is $f^* = 0.5$. In other words, Shannon's demon would invest half of its money in cash and half in the coin flip, rebalancing after every flip to maintain this allocation. 
+Though Claude Shannon never published any of his ideas on investing, it is widely claimed that he explained an investing idea, which has since become known as "Shannon's demon", during a lecture at MIT [@cover1998shannon]. During that lecture, Shannon reportedly considered a two-asset portfolio consisting of cash and a coin flip with $\gamma_h = 2$, $\gamma_t = 0.5$, $p_h = 0.5$, and $r = 1$. In that case, we have $\Delta = 0.25$, $a = 1$ and $b = 0.5$, which implies that the optimal fraction to allocate to the risky asset is $f^* = 0.5$. In other words, Shannon's demon would invest half of its money in cash and half in the coin flip, rebalancing after every flip to maintain this allocation. 
 
 We see immediately that $f^*$ is positive (i.e. we invest at least some of our money in the risky asset) if and only if $\Delta > 0$. If $\Delta = 0$, then $f^* = 0$ and we invest all of our money in the risk-free asset. If $\Delta < 0$, then $f^* < 0$ and we would need to short the risky asset in order to maximize our expected growth rate. In our case, we are restricting ourselves to long-only portfolios (i.e. $0 \leq f \leq 1$), so we would simply invest all of our money in the risk-free asset. Finally, if $\Delta > ab/r$, then we would need to buy the risky asset on margin (i.e. short the risk-free asset), but again, in this post we're restricting ourselves to long-only portfolios. Since the growth rate diverges to negative infinity at $f = -r/a < 0$ and $f = r/b \geq 1$, we see that the optimal $f^*$ is always in the open interval $(-r/a, r/b)$.
 
@@ -394,7 +394,7 @@ create_growth_rate_convergence_plot(
 
 While it is true that the expected _return_ is a linear function of $f$, the expected _growth rate_ $W(w)$ -- which is the quantity that actually drives long-run performance [@breiman1961optimal] -- is a strictly concave function of $w$. This feature is readily seen in the bottom panel of @fig-arithmetic-vs-geometric. The values of $f$ that fall between the two black "X" marks in @fig-arithmetic-vs-geometric are those that yield a positive expected growth rate, and hence almost surely $S_n \rightarrow \infty$. Such gambles have been defined elsewhere as "favorable" [@breiman1961optimal]. 
 
-The concavity of $W$ shows the value of diversification in a new light. In traditional mean-variance portfolio theory, diversification is typically justified as a means of reducing risk [@markowitz_1952].[^2] However, in the context of maximizing long-run wealth (our goal), diversification emerges from an attempt to maximize the growth rate.
+The concavity of $W$ shows the value of diversification in a new light. In traditional mean-variance portfolio theory, diversification is typically justified as a means of reducing risk [@markowitz1952portfolio].[^2] However, in the context of maximizing long-run wealth (our goal), diversification emerges from an attempt to maximize the growth rate.
 
 [^2]: Of course, there are other justifications as well. I do not claim that the only justification offered for diversification is risk reduction, but it is certainly the most common one. 
 
@@ -413,7 +413,7 @@ create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP, alt=fig_al
 
 
 
-### The connection to information theory {#the-connection-to-information-theory}
+## The connection to information theory {#the-connection-to-information-theory}
 Since $W(f^*)$ is the best achievable growth rate, let's take a closer look at it. We have
 $$
 \begin{align}
@@ -472,7 +472,7 @@ where $\Omega$ is the set of allowed values of $f$, e.g. $\Omega = [0, 1]$ for a
 
 
 
-### Conclusion
+## Conclusion
 Unlike Maxwell's demon, Shannon's demon is, in the sense made clear in this post, real, as it is a mathematically sound strategy for increasing the growth rate of a portfolio, which is what drives long-run performance. More scientifically, the key takeaways from this post are:
 
 1. Long-run performance is determined by the expected growth rate, $W(f) = \mathbb{E}[\ln Y(f)]$, _not_ the expected return, $\mathbb{E}[Y(f)]$.
@@ -487,7 +487,7 @@ To make these points, I have had to assume a lot, e.g. I've assumed a simple, tw
 
 
 
-### References {.unnumbered}
+## References {.unnumbered}
 
 ::: {#refs}
 :::

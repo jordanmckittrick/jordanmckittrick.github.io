@@ -2,7 +2,7 @@
 title: "Link syntax errors"
 ---
 
-# Intro {#sec-intro}
+## Intro {#sec-intro}
 
 A link with an at sign: [Intro](@sec-intro).
 

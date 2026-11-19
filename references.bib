@@ -5,7 +5,8 @@
 % the works that post cites, so a work cited in several posts has one entry
 % and is formatted the same way everywhere.
 %
-% Entries with a "% VERIFIED:" comment were checked on 2026-11-14 against the
+% Entries with a "% VERIFIED:" comment were checked on 2026-11-14 (the last
+% section's five on 2026-11-19) against the
 % publisher, DOI landing page, Project Euclid, arXiv, a library catalogue, or
 % the source itself; the comment says what each was checked against. Entries
 % carrying "% UNVERIFIED:" could not be checked against the authoritative
@@ -415,56 +416,77 @@
 % From "1: Shannon's Demon, Made Exact"
 % ---------------------------------------------------------------------------
 
-% Carried over unchanged from posts/shannons-demon/references.bib (2026-11-14).
-% These five entries have not been checked against a publisher or DOI page.
-% That post's other four entries were duplicates of works above (kelly1956,
-% breiman1961, cover_and_thomas_textbook, samuelson_1979); the checked
-% entries above replace them.
+% Carried over from posts/shannons-demon/references.bib (2026-11-14), then
+% checked and given house-style keys on 2026-11-19. Old keys, in order:
+% shannon_and_investment, samuelson_1971, landauer_1961, bennett_1982,
+% markowitz_1952. That post's other four entries were duplicates of works
+% above (kelly1956, breiman1961, cover_and_thomas_textbook, samuelson_1979);
+% the checked entries above replace them.
 
-@article{shannon_and_investment,
+% VERIFIED: the article itself, a scan linked from Cover's publication list
+% (https://isl.stanford.edu/~cover/cover-papers.html, item 111): byline
+% "Thomas M. Cover, Stanford University", pp. 10-11, page footer "Special
+% Golden Jubilee Issue, Summer 1998". No volume or issue number is printed on
+% the pages, and the article has no DOI. Pages added.
+@article{cover1998shannon,
   author  = {Cover, Thomas M.},
   title   = {Shannon and Investment},
   journal = {IEEE Information Theory Society Newsletter},
   year    = {1998},
+  pages   = {10--11},
   note    = {Special Golden Jubilee Issue (Summer 1998)}
 }
 
-@article{samuelson_1971,
+% VERIFIED: Crossref record for the DOI (Proc. Natl. Acad. Sci. 68(10),
+% Oct. 1971, pp. 2493-2496). TITLE CORRECTED: the published title puts
+% "Fallacy" in quotation marks; the old entry dropped them. DOI added.
+@article{samuelson1971fallacy,
   author  = {Samuelson, Paul A.},
-  title   = {The Fallacy of Maximizing the Geometric Mean in Long Sequences of Investing or Gambling},
+  title   = {The ``Fallacy'' of Maximizing the Geometric Mean in Long Sequences of Investing or Gambling},
   journal = {Proceedings of the National Academy of Sciences},
   year    = {1971},
   volume  = {68},
   number  = {10},
-  pages   = {2493--2496}
+  pages   = {2493--2496},
+  doi     = {10.1073/pnas.68.10.2493}
 }
 
-@article{landauer_1961,
+% VERIFIED: Crossref record for the DOI (IBM J. Res. Dev. 5(3), July 1961,
+% pp. 183-191; Crossref gives the author as "R. Landauer"). DOI added.
+@article{landauer1961irreversibility,
   author  = {Landauer, Rolf},
   title   = {Irreversibility and Heat Generation in the Computing Process},
   journal = {IBM Journal of Research and Development},
   year    = {1961},
   volume  = {5},
   number  = {3},
-  pages   = {183--191}
+  pages   = {183--191},
+  doi     = {10.1147/rd.53.0183}
 }
 
-@article{bennett_1982,
+% VERIFIED: Crossref record for the DOI (Int. J. Theor. Phys. 21(12),
+% Dec. 1982, pp. 905-940). The "a" after the dash is lowercase, as in the
+% DOI record; the old entry had "A". DOI added.
+@article{bennett1982thermodynamics,
   author  = {Bennett, Charles H.},
-  title   = {The Thermodynamics of Computation---A Review},
+  title   = {The Thermodynamics of Computation---a Review},
   journal = {International Journal of Theoretical Physics},
   year    = {1982},
   volume  = {21},
   number  = {12},
-  pages   = {905--940}
+  pages   = {905--940},
+  doi     = {10.1007/BF02084158}
 }
 
-@article{markowitz_1952,
+% VERIFIED: Crossref record for the DOI (J. Finance 7(1), March 1952,
+% pp. 77-91). DOI added.
+@article{markowitz1952portfolio,
   author  = {Markowitz, Harry},
   title   = {Portfolio Selection},
   journal = {The Journal of Finance},
   year    = {1952},
   volume  = {7},
   number  = {1},
-  pages   = {77--91}
+  pages   = {77--91},
+  doi     = {10.1111/j.1540-6261.1952.tb01525.x}
 }

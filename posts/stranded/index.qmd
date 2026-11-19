@@ -17,7 +17,7 @@ draft: false
 
 
 
-# Introduction
+## Introduction
 
 Consider two seemingly unrelated scenarios:
 
@@ -34,7 +34,7 @@ Both answers turn out to involve information projections. In particular, I'll sh
 
 
 
-# Stranded at sea
+## Stranded at sea
 
 Following the end of the Napoleonic Wars and the restoration of the Bourbon monarchy, on June 17, 1816, the French frigate *La Méduse* set sail for Saint-Louis to re-establish French colonial rule over Senegal. Captaining the ship was Hugues Duroy de Chaumareys, an aristocratic royalist émigré. By 1816 de Chaumareys had not captained a ship for two decades, and, eager to please the impatient colonial governor of Senegal, who was on board with him, he chose to ignore warnings from his officers and depart from the standard course, instead opting to take a more direct route that would bring the ship dangerously close to the shallow seas off the coast of present-day Mauritania. 
 
@@ -54,7 +54,7 @@ For reasons that remain unclear, shortly after launch the towline connecting the
 
 
 
-# The setup
+## The setup
 
 ### The basics
 Let $G \in \mathbb{R}^{K \times M}$ denote a matrix of gross returns for $M$ assets over $K$ possible future states of the world, where $K > M$. I'll refer to $G$ as "the market." By a gross return, I mean that if you invest one dollar in the $j^{th}$ asset, then after one period that dollar has become $G_{ij}$ dollars, assuming the $i^{th}$ state is realized. I'll let $G_j$ denote the random gross return (payoff per dollar invested) of the $j^{th}$ asset, which pays $G_{ij}$ if the $i^{th}$ state is realized. I'll assume that the first asset, "cash," is risk-free with gross return $r$, i.e. the first column of $G$ is $r\mathbb{1}$, where $\mathbb{1}$ is the vector of ones, of whatever length the context requires. I also assume that $\operatorname{rank} G = M$, equivalently the linear map $G: \mathbb{R}^M \rightarrow \mathbb{R}^K$ is injective.
@@ -111,7 +111,7 @@ in nats (1 nat = $1 / \ln 2$ bits). For all $w \not \in \mathcal{A}_{++}$, we ta
 
 
 
-# What your disagreement with the market is worth {#sec-what_your_disagreement_with_the_market_is_worth}
+## What your disagreement with the market is worth {#sec-what_your_disagreement_with_the_market_is_worth}
 This section answers the first question: if your forecasted probability measure is $p$, how much is your edge? It turns out that although $D(p \| q)$ plays an important role, it is not the edge, only an upper bound on it. 
 
 
@@ -368,7 +368,7 @@ HTML(html)
 
 
 
-# What a missing asset is worth {#sec-what_a_missing_asset_is_worth}
+## What a missing asset is worth {#sec-what_a_missing_asset_is_worth}
 
 I'll now answer the second question by measuring the extra growth rate achieved by trading an additional asset. I'll also contrast the results I derive with a more familiar approach involving Sharpe ratios. In general, trading an additional asset shrinks $\mathcal{Q}$, so the machinery we developed in the previous section turns out to be very pertinent for figuring out how much growth we forgo by not trading it.
 
@@ -720,7 +720,7 @@ Markdown("\n".join(md))
 
 
 
-# Conclusion
+## Conclusion
 
 ::: {.epigraph}
 There are no rules any more. I’m just numb to what would have been jaw-dropping events for me a year ago. At some point, maybe I’ll get hit by a whole wave of PTSD.
@@ -770,7 +770,7 @@ My first post was about the importance of the concavity of the logarithm appeari
 
 
 
-# Provenance and further reading {.unnumbered}
+## Provenance and further reading {.unnumbered}
 Most of the ingredients used here are known, at least those found in [What your disagreement with the market is worth](#sec-what_your_disagreement_with_the_market_is_worth), but are scattered across various literatures. The references I mention below (and the references therein) often discuss multiple overlapping topics, so if I recommend a source for one purpose below, keep in mind that it might have other material pertinent to this post. If you think I have missed any particularly important citations, please let me know.
 
 For further reading on the relationship between information theory and investing, a good first source is @cover2006elements. Chapter 6 considers the case of complete markets (indeed $G$ is diagonal there), where in Section 6.1 you can find a version of my @eq-definition_of_growth_rate_with_misspecified_true_distribution. Chapter 16 considers long-only log-optimal portfolios in further depth. Section 16.2 derives an analogue of @eq-foc and @eq-optimal_portfolio_defines_an_SDF for long-only portfolios. By contrast, @breiman1961optimal is a classic and early source for log-optimal investing that emphasizes probabilistic properties rather than connections to information theory.
@@ -800,7 +800,7 @@ Finally, the following material is potentially new, though I would not be surpri
 
 
 
-# References {.unnumbered}
+## References {.unnumbered}
 
 ::: {#refs}
 :::

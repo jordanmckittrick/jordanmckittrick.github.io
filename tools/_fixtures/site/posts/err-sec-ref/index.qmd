@@ -2,6 +2,6 @@
 title: "A bare section reference"
 ---
 
-# Intro {#sec-intro}
+## Intro {#sec-intro}
 
 As shown in @sec-intro, headings aren't numbered.

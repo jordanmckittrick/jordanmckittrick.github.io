@@ -2,7 +2,7 @@
 title: "Unresolved cross-references"
 ---
 
-# Intro {#sec-intro}
+## Intro {#sec-intro}
 
 An equation that isn't here: @eq-missing.
 

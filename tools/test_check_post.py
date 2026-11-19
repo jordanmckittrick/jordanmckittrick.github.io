@@ -63,6 +63,9 @@ def test_clean_posts_have_no_problems(name):
                     (9, "ERROR", "indent")}),  # "  ::: {#refs}"
     ("err-front-matter", {(3, "ERROR", "front-matter")}),
     ("warn-nested-parens", {(5, "WARN", "nested-parens")}),
+    ("warn-heading", {(6, "WARN", "heading"),     # ### right after the title skips ##
+                      (10, "WARN", "heading"),    # a # heading in the body
+                      (14, "WARN", "heading")}),  # ## straight to ####
 ])
 def test_each_rule_fires_exactly_where_expected(name, expected):
     assert found(name) == expected
@@ -78,6 +81,16 @@ def test_one_problem_per_line_here():
 def test_messages_name_the_fix():
     msgs = {p.message for p in check_post.run([post("err-sec-ref")], SITE, all_mode=False)}
     assert any("[Intro](#sec-intro)" in m for m in msgs)
+
+
+def test_heading_messages_name_the_fix():
+    probs = check_post.run([post("warn-heading")], SITE, all_mode=False)   # sorted by line
+    assert [p.message for p in probs] == [
+        "heading: `###` skips a level after the title (level 1); use `##`",           # line 6
+        "heading: a `#` heading is the title's level; use `##` for a section "        # line 10
+        "(change only the #s, so its id keeps working)",
+        "heading: `####` skips a level after the `##` on line 12; use `###`",         # line 14
+    ]
 
 
 def test_all_mode_reports_drafts_and_unused_entries():

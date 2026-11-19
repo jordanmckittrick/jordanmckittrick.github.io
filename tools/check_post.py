@@ -37,6 +37,11 @@ WARN rules:
 * ``draft``          each post's ``draft:`` value (``--all`` only).
 * ``nested-parens``  a parenthetical citation ``[@...]`` inside your own
                      parentheses, which renders as "((Author 2026))".
+* ``heading``        a ``#`` heading in the body (the ``title:`` is the page's
+                     level-1 heading, so sections are ``##`` and subsections
+                     ``###``), or a heading that skips a level, e.g. ``##``
+                     straight to ``####``. The title counts as level 1, so a
+                     post whose first heading is ``###`` skips ``##``.
 
 What is skipped: front matter (except ``bibliography:``, ``image:``, ``draft:``
 and ``nocite:``), code cells and other fenced blocks, inline code spans, and
@@ -461,6 +466,23 @@ def check_doc(doc: Doc, root: Path, bib: dict[str, int]) -> tuple[list[tuple[int
                 kind = "heading" if ln.lstrip().startswith("#") else "fenced div"
                 err(b.start + off + 1, f"indent: indented {kind} renders as literal text; "
                                        f"remove the leading spaces")
+
+    # 13. Heading levels. The title is level 1, so the body's sections are ##,
+    # and each heading goes at most one level deeper than the one before it.
+    prev, prev_line = 1, None
+    for b in doc.blocks:
+        if not b.heading:
+            continue
+        level = len(HEADING_RE.match(b.text).group(1))
+        if level == 1:
+            warn(b.start + 1, "heading: a `#` heading is the title's level; use `##` for a "
+                              "section (change only the #s, so its id keeps working)")
+        elif level > prev + 1:
+            after = (f"the `{'#' * prev}` on line {prev_line}" if prev_line
+                     else "the title (level 1)")
+            warn(b.start + 1, f"heading: `{'#' * level}` skips a level after {after}; "
+                              f"use `{'#' * (prev + 1)}`")
+        prev, prev_line = level, b.start + 1
 
     # 7b. Figure cells need their own alt text.
     for c in doc.cells:

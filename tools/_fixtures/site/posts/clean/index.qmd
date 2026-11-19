@@ -5,7 +5,7 @@ image: pic.svg
 draft: false
 ---
 
-# Setup {#sec-setup}
+## Setup {#sec-setup}
 
 Prices are in dollars (\$5 or \$10), and `$HOME` and `` a ` $ tick `` are code spans. The growth rate $W$ satisfies
 $$
@@ -16,7 +16,7 @@ See [Setup](#sec-setup), [the next heading](#another-heading), the [sibling post
 
 As @smith2020first argued, and others agree [@smith2020first; @jones2021second, p. 3], this holds (see @fig-pic and @tbl-results, or [the docs](https://example.com)). A citation at the end of a sentence: @jones2021second. A year only: [-@smith2020first].
 
-## Another heading
+### Another heading
 
 ![A caption with $[0, 1]$ math and a [link](https://example.com).](pic.svg){#fig-pic fig-alt="A small grey square." width="50%"}
 
@@ -41,7 +41,7 @@ y = 2
 
 As @fig-cell shows.
 
-# References {.unnumbered}
+## References {.unnumbered}
 
 ::: {#refs}
 :::

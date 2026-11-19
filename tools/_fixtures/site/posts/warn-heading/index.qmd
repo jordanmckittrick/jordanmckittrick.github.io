@@ -1,0 +1,25 @@
+---
+title: "Heading levels"
+# A YAML comment in the front matter is not a heading.
+---
+
+### Starts a level too deep
+
+Some text.
+
+# A level-1 heading
+
+## Back in line
+
+#### Skips from two to four
+
+```{python}
+# A comment at the left margin of a code cell is not a heading.
+x = 1
+```
+
+<!--
+# A heading inside an HTML comment is not rendered.
+-->
+
+### Coming back up a level is fine
