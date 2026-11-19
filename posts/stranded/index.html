@@ -463,8 +463,8 @@ window.Quarto = {
 </header>
 
 
-<section id="introduction" class="level1">
-<h1>Introduction</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
 <p>Consider two seemingly unrelated scenarios:</p>
 <ol type="1">
 <li>You disagree vehemently with the market’s implied probabilities for the future. Assuming you’re right and the market’s wrong, do you have an edge? If so, how much?</li>
@@ -474,8 +474,8 @@ window.Quarto = {
 <p>In spite of their apparent differences, these questions are closely related, as their answers fall out of the same information-theoretic framework, which I will derive in this post. The unifying thread is the idea of market <em>incompleteness</em>, which is the problem of not being able to bet on every possible future event. Because incompleteness implies the non-uniqueness of risk-neutral measures, this post can be thought of as an investigation into the implications of this non-uniqueness for the portfolio manager.</p>
 <p>Both answers turn out to involve information projections. In particular, I’ll show that the rate at which you can beat cash in the long run is <span class="math inline">\(\min_{q \in \mathcal{Q}}D(p \| q)\)</span>, where <span class="math inline">\(\mathcal{Q}\)</span> is the set of all risk-neutral measures. The naive answer <span class="math inline">\(D(p \| q)\)</span> overestimates your edge by an amount I call the <em>misfit</em>, a phantom edge that can’t be captured by any portfolio. I derive these results and shed further light on them in <a href="#sec-what_your_disagreement_with_the_market_is_worth">What your disagreement with the market is worth</a>. Then in <a href="#sec-what_a_missing_asset_is_worth">What a missing asset is worth</a> I show that the value of a new asset is precisely the misfit that adding it eliminates. I call this particular kind of misfit the <em>stranded</em> growth, which is evaluated at the optimal portfolio from the original market and the risk-neutral measure closest to <span class="math inline">\(p\)</span> from the enlarged market. The stranded growth is positive if and only if the risk-neutral measure in the original market that is closest to <span class="math inline">\(p\)</span> misprices the new asset. I also derive an approximation for the stranded growth in terms of the new asset’s appraisal ratio, and I demonstrate that while the stranded growth is related to the maximum Sharpe ratio, a new asset can increase the maximum Sharpe ratio while leaving the maximum growth rate unchanged, and <em>vice versa</em>.</p>
 </section>
-<section id="stranded-at-sea" class="level1">
-<h1>Stranded at sea</h1>
+<section id="stranded-at-sea" class="level2">
+<h2 class="anchored" data-anchor-id="stranded-at-sea">Stranded at sea</h2>
 <p>Following the end of the Napoleonic Wars and the restoration of the Bourbon monarchy, on June 17, 1816, the French frigate <em>La Méduse</em> set sail for Saint-Louis to re-establish French colonial rule over Senegal. Captaining the ship was Hugues Duroy de Chaumareys, an aristocratic royalist émigré. By 1816 de Chaumareys had not captained a ship for two decades, and, eager to please the impatient colonial governor of Senegal, who was on board with him, he chose to ignore warnings from his officers and depart from the standard course, instead opting to take a more direct route that would bring the ship dangerously close to the shallow seas off the coast of present-day Mauritania.</p>
 <p>On July 2, <em>La Méduse</em> ran aground roughly 30 miles off the coast. For three days her crew tried to dislodge the ship, but de Chaumareys refused to unburden her by jettisoning her cargo, which included 14 heavy cannons. To make matters worse, they had run aground during a spring high tide, so no later tide would rise high enough to float her off. It became clear that the ship could not be refloated, so on July 5 the captain called for her evacuation. There were not enough lifeboats for the over 400 people on board, however, so they salvaged timber from the ship to construct a makeshift raft for the 147 people who could not fit into a lifeboat. The 20-by-7-meter raft was thrown together haphazardly. It included a rudimentary sail but no rudder, and it was partially submerged under the weight of 147 people. The plan was for the lifeboats to tow the raft to shore.</p>
 <p>For reasons that remain unclear, shortly after launch the towline connecting the raft with the lifeboats was severed. It was later alleged that this was a deliberate decision taken to ease the burden of those in the lifeboats. In any case, the 146 men and one woman on board the raft were suddenly adrift in open ocean on a partially submerged raft, with woefully inadequate provisions, no oars, no rudder, and a sail that hardly worked. Many of the horrors that ensued over the next 13 days were so lurid that I will not share them here. When the raft was finally rescued on July 17 by the <em>Argus</em>, another French ship accompanying <em>La Méduse</em>, only 15 of the original 147 people were still alive. Five of the 15 survivors would die from exhaustion shortly after reaching shore <span class="citation" data-cites="miles2007wreck">(<a href="#ref-miles2007wreck" role="doc-biblioref">Miles 2007</a>)</span>.</p>
@@ -490,8 +490,8 @@ Figure&nbsp;1: Théodore Géricault, <em>The Raft of the Medusa</em>, 1819. Mus�
 </figure>
 </div>
 </section>
-<section id="the-setup" class="level1">
-<h1>The setup</h1>
+<section id="the-setup" class="level2">
+<h2 class="anchored" data-anchor-id="the-setup">The setup</h2>
 <section id="the-basics" class="level3">
 <h3 class="anchored" data-anchor-id="the-basics">The basics</h3>
 <p>Let <span class="math inline">\(G \in \mathbb{R}^{K \times M}\)</span> denote a matrix of gross returns for <span class="math inline">\(M\)</span> assets over <span class="math inline">\(K\)</span> possible future states of the world, where <span class="math inline">\(K &gt; M\)</span>. I’ll refer to <span class="math inline">\(G\)</span> as “the market.” By a gross return, I mean that if you invest one dollar in the <span class="math inline">\(j^{th}\)</span> asset, then after one period that dollar has become <span class="math inline">\(G_{ij}\)</span> dollars, assuming the <span class="math inline">\(i^{th}\)</span> state is realized. I’ll let <span class="math inline">\(G_j\)</span> denote the random gross return (payoff per dollar invested) of the <span class="math inline">\(j^{th}\)</span> asset, which pays <span class="math inline">\(G_{ij}\)</span> if the <span class="math inline">\(i^{th}\)</span> state is realized. I’ll assume that the first asset, “cash,” is risk-free with gross return <span class="math inline">\(r\)</span>, i.e.&nbsp;the first column of <span class="math inline">\(G\)</span> is <span class="math inline">\(r\mathbb{1}\)</span>, where <span class="math inline">\(\mathbb{1}\)</span> is the vector of ones, of whatever length the context requires. I also assume that <span class="math inline">\(\operatorname{rank} G = M\)</span>, equivalently the linear map <span class="math inline">\(G: \mathbb{R}^M \rightarrow \mathbb{R}^K\)</span> is injective.</p>
@@ -529,8 +529,8 @@ Figure&nbsp;2: Albrecht Dürer, <em>Salvator Mundi</em>, ca. 1505. The Metropoli
 </div>
 </section>
 </section>
-<section id="sec-what_your_disagreement_with_the_market_is_worth" class="level1">
-<h1>What your disagreement with the market is worth</h1>
+<section id="sec-what_your_disagreement_with_the_market_is_worth" class="level2">
+<h2 class="anchored" data-anchor-id="sec-what_your_disagreement_with_the_market_is_worth">What your disagreement with the market is worth</h2>
 <p>This section answers the first question: if your forecasted probability measure is <span class="math inline">\(p\)</span>, how much is your edge? It turns out that although <span class="math inline">\(D(p \| q)\)</span> plays an important role, it is not the edge, only an upper bound on it.</p>
 <section id="the-first-order-condition" class="level3">
 <h3 class="anchored" data-anchor-id="the-first-order-condition">The first-order condition</h3>
@@ -685,7 +685,7 @@ m(q, w^*) = \arg \min_{m' \in \mathcal{M}_{q,\,\cdot}} D(p \| m').
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>check_readout(fig, p, html)</span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>HTML(html)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-<div id="fig-simplex-unconstrained" class="cell-output cell-output-display quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="15">
+<div id="fig-simplex-unconstrained" class="cell-output cell-output-display quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="1">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-simplex-unconstrained-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="simplex-readout-slot"></div>
@@ -1191,8 +1191,8 @@ Figure&nbsp;4: The simplex for the running example: <span class="math inline">\(
 </div>
 </section>
 </section>
-<section id="sec-what_a_missing_asset_is_worth" class="level1">
-<h1>What a missing asset is worth</h1>
+<section id="sec-what_a_missing_asset_is_worth" class="level2">
+<h2 class="anchored" data-anchor-id="sec-what_a_missing_asset_is_worth">What a missing asset is worth</h2>
 <p>I’ll now answer the second question by measuring the extra growth rate achieved by trading an additional asset. I’ll also contrast the results I derive with a more familiar approach involving Sharpe ratios. In general, trading an additional asset shrinks <span class="math inline">\(\mathcal{Q}\)</span>, so the machinery we developed in the previous section turns out to be very pertinent for figuring out how much growth we forgo by not trading it.</p>
 <section id="the-seesaw" class="level3">
 <h3 class="anchored" data-anchor-id="the-seesaw">The seesaw</h3>
@@ -1500,7 +1500,7 @@ S(G')^2 = S(G)^2 + A^2,
 Table&nbsp;1: <span class="math inline">\(G\)</span>: cash (<span class="math inline">\(r = 0.97\)</span>) and risky asset (<span class="math inline">\(a = (2, 1, 0.4)\)</span>), with <span class="math inline">\(p = (0.5, 0.2, 0.3)\)</span>. <span class="math inline">\(G'\)</span>: the same but with one of two candidate assets <span class="math inline">\(\gamma\)</span> added. Both candidates have zero expected excess return. Within each column, <span class="math inline">\(w^*\)</span>, <span class="math inline">\(w_S\)</span>, and <span class="math inline">\(q^*\)</span> denote the log-optimal portfolio, Sharpe-optimal portfolio (the maximum-Sharpe portfolio, leveraged to maximize the growth rate), and the risk-neutral measure closest to <span class="math inline">\(p\)</span> in KL divergence, for that column’s corresponding market. Growth quantities are in nats/period. The break-even access fee, <span class="math inline">\(1 - e^{-\sigma}\)</span>, is the largest fraction of wealth one could pay each period for the right to trade <span class="math inline">\(\gamma\)</span> and be no worse off.
 </figcaption>
 <div aria-describedby="tbl-sharpe-vs-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display cell-output-markdown" data-execution_count="16">
+<div class="cell-output cell-output-display cell-output-markdown" data-execution_count="2">
 <table class="cell caption-top table table-sm table-striped small">
 <colgroup>
 <col style="width: 25%">
@@ -1658,8 +1658,8 @@ Table&nbsp;1: <span class="math inline">\(G\)</span>: cash (<span class="math in
 </div>
 </section>
 </section>
-<section id="conclusion" class="level1">
-<h1>Conclusion</h1>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <div class="epigraph">
 <p>There are no rules any more. I’m just numb to what would have been jaw-dropping events for me a year ago. At some point, maybe I’ll get hit by a whole wave of PTSD.</p>
 <p>— Terence Tao, quoted in <span class="citation" data-cites="bumiller2026war">Bumiller (<a href="#ref-bumiller2026war" role="doc-biblioref">2026</a>)</span></p>
@@ -1689,8 +1689,8 @@ Figure&nbsp;6: Paul Cézanne, <em>Gardanne</em>, 1885–1886. The Metropolitan M
 </figure>
 </div>
 </section>
-<section id="provenance-and-further-reading" class="level1 unnumbered">
-<h1 class="unnumbered">Provenance and further reading</h1>
+<section id="provenance-and-further-reading" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="provenance-and-further-reading">Provenance and further reading</h2>
 <p>Most of the ingredients used here are known, at least those found in <a href="#sec-what_your_disagreement_with_the_market_is_worth">What your disagreement with the market is worth</a>, but are scattered across various literatures. The references I mention below (and the references therein) often discuss multiple overlapping topics, so if I recommend a source for one purpose below, keep in mind that it might have other material pertinent to this post. If you think I have missed any particularly important citations, please let me know.</p>
 <p>For further reading on the relationship between information theory and investing, a good first source is <span class="citation" data-cites="cover2006elements">Cover and Thomas (<a href="#ref-cover2006elements" role="doc-biblioref">2006</a>)</span>. Chapter 6 considers the case of complete markets (indeed <span class="math inline">\(G\)</span> is diagonal there), where in Section 6.1 you can find a version of my <a href="#eq-definition_of_growth_rate_with_misspecified_true_distribution" class="quarto-xref">Equation&nbsp;7</a>. Chapter 16 considers long-only log-optimal portfolios in further depth. Section 16.2 derives an analogue of <a href="#eq-foc" class="quarto-xref">Equation&nbsp;3</a> and <a href="#eq-optimal_portfolio_defines_an_SDF" class="quarto-xref">Equation&nbsp;4</a> for long-only portfolios. By contrast, <span class="citation" data-cites="breiman1961optimal">Breiman (<a href="#ref-breiman1961optimal" role="doc-biblioref">1961</a>)</span> is a classic and early source for log-optimal investing that emphasizes probabilistic properties rather than connections to information theory.</p>
 <p>The relationship between log-optimal investing and optimal portfolios as numeraires is investigated, among other places, in <span class="citation" data-cites="long1990numeraire">Long (<a href="#ref-long1990numeraire" role="doc-biblioref">1990</a>)</span>. A deeper look into changes of numeraires and their applications in finance can be found in <span class="citation" data-cites="geman1995changes">Geman et al. (<a href="#ref-geman1995changes" role="doc-biblioref">1995</a>)</span>. The special relationship between log-optimal investing and numeraires is also considered in <span class="citation" data-cites="korn2009numeraire">Korn and Schäl (<a href="#ref-korn2009numeraire" role="doc-biblioref">2009</a>)</span> and <span class="citation" data-cites="karatzas2007numeraire">Karatzas and Kardaras (<a href="#ref-karatzas2007numeraire" role="doc-biblioref">2007</a>)</span>.</p>
@@ -1707,8 +1707,8 @@ Figure&nbsp;6: Paul Cézanne, <em>Gardanne</em>, 1885–1886. The Metropolitan M
 <li>The interpretation of the decomposition formula as “naive edge = edge + misfit.” The decomposition formula itself is not really new, as it follows from equations (11) and (14) of <span class="citation" data-cites="vecer2026numeraire">Vecer (<a href="#ref-vecer2026numeraire" role="doc-biblioref">2026</a>)</span>.</li>
 </ol>
 </section>
-<section id="references" class="level1 unnumbered">
-<h1 class="unnumbered">References</h1>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
 <div id="refs" class="references csl-bib-body hanging-indent" role="list">
 <div id="ref-alhadeff2002raft" class="csl-entry" role="listitem">
 Alhadeff, Albert. 2002. <em>The Raft of the <span>Medusa</span>: <span>G</span><span>é</span>ricault, Art, and Race</em>. Prestel.
@@ -2282,7 +2282,7 @@ Vecer, Jan. 2026. <em>Numeraire Invariance of Entropy-Projected Martingale Measu
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu"># Introduction</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
 <span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>Consider two seemingly unrelated scenarios:</span>
 <span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
@@ -2299,7 +2299,7 @@ Vecer, Jan. 2026. <em>Numeraire Invariance of Entropy-Projected Martingale Measu
 <span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="fu"># Stranded at sea</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="fu">## Stranded at sea</span></span>
 <span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>Following the end of the Napoleonic Wars and the restoration of the Bourbon monarchy, on June 17, 1816, the French frigate *La Méduse* set sail for Saint-Louis to re-establish French colonial rule over Senegal. Captaining the ship was Hugues Duroy de Chaumareys, an aristocratic royalist émigré. By 1816 de Chaumareys had not captained a ship for two decades, and, eager to please the impatient colonial governor of Senegal, who was on board with him, he chose to ignore warnings from his officers and depart from the standard course, instead opting to take a more direct route that would bring the ship dangerously close to the shallow seas off the coast of present-day Mauritania. </span>
 <span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
@@ -2319,7 +2319,7 @@ Vecer, Jan. 2026. <em>Numeraire Invariance of Entropy-Projected Martingale Measu
 <span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="fu"># The setup</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="fu">## The setup</span></span>
 <span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="fu">### The basics</span></span>
 <span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>Let $G \in \mathbb{R}^{K \times M}$ denote a matrix of gross returns for $M$ assets over $K$ possible future states of the world, where $K &gt; M$. I'll refer to $G$ as "the market." By a gross return, I mean that if you invest one dollar in the $j^{th}$ asset, then after one period that dollar has become $G_{ij}$ dollars, assuming the $i^{th}$ state is realized. I'll let $G_j$ denote the random gross return (payoff per dollar invested) of the $j^{th}$ asset, which pays $G_{ij}$ if the $i^{th}$ state is realized. I'll assume that the first asset, "cash," is risk-free with gross return $r$, i.e. the first column of $G$ is $r\mathbb{1}$, where $\mathbb{1}$ is the vector of ones, of whatever length the context requires. I also assume that $\operatorname{rank} G = M$, equivalently the linear map $G: \mathbb{R}^M \rightarrow \mathbb{R}^K$ is injective.</span>
@@ -2376,7 +2376,7 @@ Vecer, Jan. 2026. <em>Numeraire Invariance of Entropy-Projected Martingale Measu
 <span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="fu"># What your disagreement with the market is worth {#sec-what_your_disagreement_with_the_market_is_worth}</span></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="fu">## What your disagreement with the market is worth {#sec-what_your_disagreement_with_the_market_is_worth}</span></span>
 <span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>This section answers the first question: if your forecasted probability measure is $p$, how much is your edge? It turns out that although $D(p <span class="sc">\|</span> q)$ plays an important role, it is not the edge, only an upper bound on it. </span>
 <span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a></span>
@@ -2633,7 +2633,7 @@ Vecer, Jan. 2026. <em>Numeraire Invariance of Entropy-Projected Martingale Measu
 <span id="cb3-370"><a href="#cb3-370" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-371"><a href="#cb3-371" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-372"><a href="#cb3-372" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-373"><a href="#cb3-373" aria-hidden="true" tabindex="-1"></a><span class="fu"># What a missing asset is worth {#sec-what_a_missing_asset_is_worth}</span></span>
+<span id="cb3-373"><a href="#cb3-373" aria-hidden="true" tabindex="-1"></a><span class="fu">## What a missing asset is worth {#sec-what_a_missing_asset_is_worth}</span></span>
 <span id="cb3-374"><a href="#cb3-374" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-375"><a href="#cb3-375" aria-hidden="true" tabindex="-1"></a>I'll now answer the second question by measuring the extra growth rate achieved by trading an additional asset. I'll also contrast the results I derive with a more familiar approach involving Sharpe ratios. In general, trading an additional asset shrinks $\mathcal{Q}$, so the machinery we developed in the previous section turns out to be very pertinent for figuring out how much growth we forgo by not trading it.</span>
 <span id="cb3-376"><a href="#cb3-376" aria-hidden="true" tabindex="-1"></a></span>
@@ -2985,7 +2985,7 @@ Vecer, Jan. 2026. <em>Numeraire Invariance of Entropy-Projected Martingale Measu
 <span id="cb3-724"><a href="#cb3-724" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-725"><a href="#cb3-725" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-726"><a href="#cb3-726" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-727"><a href="#cb3-727" aria-hidden="true" tabindex="-1"></a><span class="co"># Conclusion</span></span>
+<span id="cb3-727"><a href="#cb3-727" aria-hidden="true" tabindex="-1"></a><span class="co">## Conclusion</span></span>
 <span id="cb3-728"><a href="#cb3-728" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-729"><a href="#cb3-729" aria-hidden="true" tabindex="-1"></a><span class="sc">:::</span> {.epigraph}</span>
 <span id="cb3-730"><a href="#cb3-730" aria-hidden="true" tabindex="-1"></a>There are no rules <span class="bu">any</span> more<span class="sc">.</span> I<span class="sc">’</span>m just numb to what would have been jaw<span class="op">-</span>dropping events <span class="cf">for</span> me a year ago<span class="sc">.</span> At some point<span class="sc">,</span> maybe I<span class="sc">’</span>ll get hit by a whole wave of PTSD<span class="sc">.</span></span>
@@ -3035,7 +3035,7 @@ Vecer, Jan. 2026. <em>Numeraire Invariance of Entropy-Projected Martingale Measu
 <span id="cb3-774"><a href="#cb3-774" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-775"><a href="#cb3-775" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-776"><a href="#cb3-776" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-777"><a href="#cb3-777" aria-hidden="true" tabindex="-1"></a><span class="co"># Provenance and further reading {.unnumbered}</span></span>
+<span id="cb3-777"><a href="#cb3-777" aria-hidden="true" tabindex="-1"></a><span class="co">## Provenance and further reading {.unnumbered}</span></span>
 <span id="cb3-778"><a href="#cb3-778" aria-hidden="true" tabindex="-1"></a>Most of the ingredients used here are known, at least those found <span class="kw">in</span> [What your disagreement <span class="cf">with</span> the market <span class="kw">is</span> worth](<span class="co">#sec-what_your_disagreement_with_the_market_is_worth), but are scattered across various literatures. The references I mention below (and the references therein) often discuss multiple overlapping topics, so if I recommend a source for one purpose below, keep in mind that it might have other material pertinent to this post. If you think I have missed any particularly important citations, please let me know.</span></span>
 <span id="cb3-779"><a href="#cb3-779" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-780"><a href="#cb3-780" aria-hidden="true" tabindex="-1"></a>For further reading on the relationship between information theory <span class="kw">and</span> investing, a good first source <span class="kw">is</span> <span class="op">@</span>cover2006elements. Chapter <span class="dv">6</span> considers the case of complete markets (indeed $G$ <span class="kw">is</span> diagonal there), where <span class="kw">in</span> Section <span class="fl">6.1</span> you can find a version of my <span class="op">@</span>eq<span class="op">-</span>definition_of_growth_rate_with_misspecified_true_distribution. Chapter <span class="dv">16</span> considers <span class="bu">long</span><span class="op">-</span>only log<span class="op">-</span>optimal portfolios <span class="kw">in</span> further depth. Section <span class="fl">16.2</span> derives an analogue of <span class="op">@</span>eq<span class="op">-</span>foc <span class="kw">and</span> <span class="op">@</span>eq<span class="op">-</span>optimal_portfolio_defines_an_SDF <span class="cf">for</span> <span class="bu">long</span><span class="op">-</span>only portfolios. By contrast, <span class="op">@</span>breiman1961optimal <span class="kw">is</span> a classic <span class="kw">and</span> early source <span class="cf">for</span> log<span class="op">-</span>optimal investing that emphasizes probabilistic properties rather than connections to information theory.</span>
@@ -3065,7 +3065,7 @@ Vecer, Jan. 2026. <em>Numeraire Invariance of Entropy-Projected Martingale Measu
 <span id="cb3-804"><a href="#cb3-804" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-805"><a href="#cb3-805" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-806"><a href="#cb3-806" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-807"><a href="#cb3-807" aria-hidden="true" tabindex="-1"></a><span class="co"># References {.unnumbered}</span></span>
+<span id="cb3-807"><a href="#cb3-807" aria-hidden="true" tabindex="-1"></a><span class="co">## References {.unnumbered}</span></span>
 <span id="cb3-808"><a href="#cb3-808" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-809"><a href="#cb3-809" aria-hidden="true" tabindex="-1"></a>::: {<span class="co">#refs}</span></span>
 <span id="cb3-810"><a href="#cb3-810" aria-hidden="true" tabindex="-1"></a>:::</span>
