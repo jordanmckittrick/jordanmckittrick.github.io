@@ -14,7 +14,16 @@ The two Monte-Carlo figures (wealth, growth-rate convergence) share a skeleton
 -- faint spaghetti under a percentile band, across stacked panels on a common
 period axis -- so that structure lives in the small private helpers at the top.
 The wealth figure alone adds a lower "fraction of paths above break-even" panel.
+
+Every ``create_*`` builder takes ``alt=``: the cell's ``fig-alt``, read back
+with :func:`fig_alt`. Quarto puts ``fig-alt`` only on images, so for these
+HTML figures it is carried as ``role="img"`` plus ``aria-label`` instead.
 """
+
+import html
+import json
+import re
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -33,6 +42,72 @@ _LN2 = np.log(2.0)
 # enough to lift the text off the lines, sheer enough to still read as one of
 # them underneath.
 _LABEL_SCRIM = "rgba(255, 255, 255, 0.72)"
+
+
+# --------------------------------------------------------------------------- #
+#  Alt text for screen readers
+# --------------------------------------------------------------------------- #
+def fig_alt(label: str, qmd: str | Path = "index.qmd") -> str:
+    """The ``#| fig-alt:`` text of the code cell labelled ``label`` in ``qmd``.
+
+    Quarto strips a cell's ``#|`` options before the code reaches the kernel,
+    so a cell cannot see its own ``fig-alt``; this reads it back from the post,
+    so the text lives in one place. Raises if the cell or its ``fig-alt`` is
+    missing, which fails the render rather than shipping an unlabelled figure.
+    """
+    lines = Path(qmd).read_text(encoding="utf-8").split("\n")
+    try:
+        i = lines.index(f"#| label: {label}")
+    except ValueError:
+        raise ValueError(f"no cell labelled {label!r} in {qmd}") from None
+    j, k = i, i
+    while j > 0 and lines[j - 1].startswith("#|"):
+        j -= 1
+    while k + 1 < len(lines) and lines[k + 1].startswith("#|"):
+        k += 1
+    for ln in lines[j:k + 1]:
+        m = re.match(r"#\|\s*fig-alt:\s*(.*)$", ln)
+        if m:
+            v = m.group(1).strip()
+            return json.loads(v) if v.startswith('"') else v
+    raise ValueError(f"cell {label!r} in {qmd} has no #| fig-alt")
+
+
+class _AltTextFigure(go.Figure):
+    """A ``go.Figure`` whose notebook HTML is labelled for screen readers.
+
+    The figure reaches the page as Plotly's notebook HTML, whose outermost
+    element is a bare ``<div>``; that tag gains ``role="img"`` and an
+    ``aria-label``. Nothing else changes: the bundle comes from the same
+    renderer, so the figure looks and behaves exactly as before.
+    """
+
+    def _repr_mimebundle_(self, *args, **kwargs):
+        bundle = super()._repr_mimebundle_(*args, **kwargs)
+        page = bundle.get("text/html")
+        if page is not None:
+            attrs = f'role="img" aria-label="{html.escape(self._alt_text, quote=True)}"'
+            bundle["text/html"] = (f"<div {attrs}>" + page[len("<div>"):]
+                                   if page.startswith("<div>") else f"<div {attrs}>{page}</div>")
+        return bundle
+
+    def _ipython_display_(self):
+        # Plotly's own hook displays through pio.show(), which builds the same
+        # bundle without calling _repr_mimebundle_, so display ours instead.
+        import plotly.io as pio
+        from IPython.display import display
+        if pio.renderers.render_on_display and pio.renderers.default:
+            display(self._repr_mimebundle_(), raw=True)
+        else:
+            super()._ipython_display_()
+
+
+def _with_alt(fig: go.Figure, alt: str | None) -> go.Figure:
+    """``fig`` itself (not a copy), labelled for screen readers when ``alt`` is given."""
+    if alt:
+        fig.__class__ = _AltTextFigure
+        fig._alt_text = alt
+    return fig
 
 
 # --------------------------------------------------------------------------- #
@@ -163,6 +238,7 @@ def create_wealth_plot(
     *,
     max_paths: int = 300,
     seed: int = 0,
+    alt: str | None = None,
 ) -> go.Figure:
     """Log-wealth fan chart over time, with the median/mean gap made visible.
 
@@ -286,7 +362,7 @@ def create_wealth_plot(
         showlegend=False,
     )
     _apply_spikes(fig)
-    return fig
+    return _with_alt(fig, alt)
 
 
 # --------------------------------------------------------------------------- #
@@ -358,6 +434,7 @@ def create_growth_rate_convergence_plot(
     from_period: int | None = None,
     y_range_risky: tuple[float, float] | None = None,
     y_range_optimal: tuple[float, float] | None = None,
+    alt: str | None = None,
 ) -> go.Figure:
     """The law of large numbers doing its work, on a lemon and on the demon.
 
@@ -508,7 +585,7 @@ def create_growth_rate_convergence_plot(
     # nowhere near -- appearing precisely when there is no readout to anchor it.
     # It also does not survive the script's Fx.hover echo, so it goes missing in
     # the one case it could have helped. Wrong in both directions; dropped.
-    return fig
+    return _with_alt(fig, alt)
 
 
 # --------------------------------------------------------------------------- #
@@ -517,6 +594,8 @@ def create_growth_rate_convergence_plot(
 def create_no_loss_probability_plot(
     df: pd.DataFrame,
     title: str = "",
+    *,
+    alt: str | None = None,
 ) -> go.Figure:
     """P(no loss) over time: the exact tail probability and its Chernoff bound.
 
@@ -588,7 +667,7 @@ def create_no_loss_probability_plot(
         showlegend=False,
     )
     _apply_spikes(fig)
-    return fig
+    return _with_alt(fig, alt)
 
 
 # --------------------------------------------------------------------------- #
@@ -641,6 +720,8 @@ def _direct_label(fig, x, y, text, color, row, col, *, above: bool, xshift: int 
 def create_arithmetic_vs_geometric_plot(
     df: pd.DataFrame,
     opt_result_for_CRP: opt.OptimizeResult,
+    *,
+    alt: str | None = None,
 ) -> go.Figure:
     """Two-panel arithmetic-vs-geometric figure with the compounding drag.
 
@@ -799,4 +880,4 @@ def create_arithmetic_vs_geometric_plot(
         width=820, height=700, margin=dict(t=40, r=40),
         showlegend=False,
     )
-    return fig
+    return _with_alt(fig, alt)

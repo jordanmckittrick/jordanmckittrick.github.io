@@ -86,10 +86,11 @@ wealth_summary_df_risky = ensemble_risky.summarize_across_paths(ensemble_risky.r
 #| echo: false
 #| label: fig-risky-wealth
 #| fig-cap: "Simulated wealth paths for a portfolio held entirely in the risky asset. Top: wealth as a multiple of starting wealth, drawn on a logarithmic scale, with the empirical median, the empirical mean, and the middle 95% of paths (300 paths shown). Not shown: the expected value path. The empirical mean underestimates the true expected value at any feasible number of paths, as the latter is carried by extremely rare paths. Bottom: the fraction of paths still above break-even."
+#| fig-alt: "Two stacked charts summarizing 10,000 simulated wealth paths for a portfolio held entirely in the risky asset, over 500 coin flips. Top: wealth on a logarithmic scale; the median path drifts steadily downward, far below the starting wealth; the shaded middle 95% of paths, whose upper edge first rises well above the starting wealth, also ends far below it; and the empirical mean sits above the median. Bottom: the fraction of paths still above break-even falls below 10% within 100 flips and to essentially zero by flip 500."
 ##### WEALTH OVER TIME (spaghetti paths), risky asset #####
 
 import pandas as pd
-from plotting_functions import create_wealth_plot
+from plotting_functions import create_wealth_plot, fig_alt
 wealth_paths_risky_asset = pd.DataFrame(
     ensemble_risky.running_wealth_ratio.T,
     index=wealth_summary_df_risky.index,
@@ -98,6 +99,7 @@ wealth_paths_risky_asset = pd.DataFrame(
 create_wealth_plot(
     wealth_paths_risky_asset,
     wealth_summary_df_risky,
+    alt=fig_alt("fig-risky-wealth"),
 )
 ```
 
@@ -183,12 +185,13 @@ The Chernoff bound then implies that $\mathbb{P}(S_n \geq 1) \leq e^{-n D_{\text
 #| echo: false
 #| label: fig-no-loss-probability
 #| fig-cap: "The probability of not having lost money after $n$ coin flips, $\\mathbb{P}(S_n \\geq 1)$, together with its Chernoff upper bound $e^{-n D}$. This is the same quantity the bottom panel of @fig-risky-wealth estimates by simulation, resolved far into the tail."
+#| fig-alt: "A chart of the probability of not having lost money after n coin flips, for n up to 500. The exact probability falls steadily by nearly three orders of magnitude, and the Chernoff upper bound lies above it at every n, declining exponentially alongside it."
 ##### PROBABILITY OF NOT LOSING MONEY (exact vs Chernoff bound) #####
 from plotting_data import generate_no_loss_probability_data
 from plotting_functions import create_no_loss_probability_plot
 
 no_loss_probability_df = generate_no_loss_probability_data(coin_flip_model, num_periods)
-create_no_loss_probability_plot(no_loss_probability_df)
+create_no_loss_probability_plot(no_loss_probability_df, alt=fig_alt("fig-no-loss-probability"))
 ```
 
 
@@ -227,12 +230,13 @@ assert np.isclose(f_star, f_star_from_formula)
 assert np.isclose(f_star, 0.38, atol=0.01) # the prose quotes f* ≈ 0.38
 ```
 
-Let's now simulate the performance of a portfolio using this optimal weighting to see whether my theoretical claims hold water. (For the reader more easily convinced by theory than by simulation, one of the canonical papers providing a theoretical justification for maximizing $W$ is [@breiman1961optimal].) Using the same sequences of coin flips, I have simulated the performance of a portfolio using the optimal CRP strategy, as seen in @fig-optimal-crp-wealth. A striking feature of this simulation is that after only roughly 100 periods, about two-thirds of wealth paths are above break-even.
+Let's now simulate the performance of a portfolio using this optimal weighting to see whether my theoretical claims hold water. For the reader more easily convinced by theory than by simulation, one of the canonical papers providing a theoretical justification for maximizing $W$ is @breiman1961optimal. Using the same sequences of coin flips, I have simulated the performance of a portfolio using the optimal CRP strategy, as seen in @fig-optimal-crp-wealth. A striking feature of this simulation is that after only roughly 100 periods, about two-thirds of wealth paths are above break-even.
 
 ```{python}
 #| echo: false
 #| label: fig-optimal-crp-wealth
 #| fig-cap: "Simulated wealth paths for a portfolio using the optimal CRP strategy. Top: wealth as a multiple of starting wealth, drawn on a logarithmic scale, with the empirical median, the empirical mean, and the middle 95% of paths (300 paths shown). Bottom: the fraction of paths still above break-even."
+#| fig-alt: "Two stacked charts summarizing the same 10,000 simulated coin-flip sequences, now for the growth-optimal constant rebalanced portfolio, which keeps about 38% of wealth in the risky asset. Top: wealth on a logarithmic scale; the median path drifts upward over 500 periods, while the middle 95% of paths fans out both above and below the starting wealth. Bottom: the fraction of paths above break-even reaches about two-thirds by period 100, and is about 83% at period 500."
 ##### WEALTH OVER TIME (spaghetti paths), optimal CRP #####
 
 perf_optimal_CRP_matrix = crp_performance(weights_for_optimal_CRP, gross_returns_tensor)
@@ -250,6 +254,7 @@ wealth_paths_optimal_CRP = pd.DataFrame(
 create_wealth_plot(
     wealth_paths_optimal_CRP,
     wealth_summary_df_optimal_CRP,
+    alt=fig_alt("fig-optimal-crp-wealth"),
 )
 ```
 
@@ -261,6 +266,7 @@ This may seem like magic or sleight of hand, but it most certainly is not. Where
 #| echo: false
 #| label: fig-growth-convergence
 #| fig-cap: "The empirical growth rate $W_n$ converging on the theoretical growth rate $W(w)$, over the same simulated paths as above. Top: the risky asset alone, whose asymptote lies *below* break-even. Bottom: the growth-optimal CRP, whose asymptote lies *above* it. Each panel shows the individual paths (300 paths shown), the middle 95% of them, and the asymptote (dashed, periwinkle); the neutral dashed line is break-even. The panels carry different vertical scales, and the opening periods swing well outside the frame. Both panels are driven by the same simulated coin flips, so hovering over any path lights up the same sequence in both. This is one run of luck with two allocations."
+#| fig-alt: "Two stacked charts of the empirical growth rate over 500 periods, for the same simulated coin flips. Top: holding only the risky asset, the paths converge toward a negative asymptote of about minus 0.16 bits per period, below the break-even line. Bottom: with the growth-optimal rebalanced portfolio, they converge toward a positive asymptote of about 0.018 bits per period. In both, the spread of the paths narrows over time. Hovering on a path highlights the same coin-flip sequence in both charts."
 ##### EMPIRICAL GROWTH RATE OVER TIME (spaghetti paths), risky asset vs optimal CRP #####
 from plotting_functions import create_growth_rate_convergence_plot
 
@@ -281,6 +287,7 @@ create_growth_rate_convergence_plot(
     growth_rate_summary_df_optimal_CRP,
     weights_for_optimal_CRP,
     coin_flip_model,
+    alt=fig_alt("fig-growth-convergence"),
 )
 ```
 
@@ -396,10 +403,11 @@ The concavity of $W$ shows the value of diversification in a new light. In tradi
 #| echo: false
 #| label: fig-arithmetic-vs-geometric
 #| fig-cap: "Arithmetic and geometric returns as a function of the fraction $f$ allocated to the risky asset. Top: arithmetic and geometric means of the portfolio gross returns $Y(f)$. Bottom: the base-2 logarithm of the curves above, where the log of the geometric mean is the growth rate, and where the shaded band is the compounding drag $\\log_2 \\mathbb{E}[Y] - \\mathbb{E}[\\log_2 Y]$. The growth-optimal allocation $f^*$ is marked."
+#| fig-alt: "Two stacked charts plotted against the fraction of wealth in the risky asset. Top: the arithmetic mean of the portfolio's gross return rises in a straight line, while the geometric mean rises, peaks and falls. Bottom: the base-2 logarithms of both curves. The log of the geometric mean is the growth rate, which is positive only between two marked points and peaks at the growth-optimal fraction, about 0.38; the shaded band between the two curves is the compounding drag."
 from plotting_data import generate_arithmetic_vs_geometric_data
 from plotting_functions import create_arithmetic_vs_geometric_plot
 arith_geo_df = generate_arithmetic_vs_geometric_data(coin_flip_model)
-create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP)
+create_arithmetic_vs_geometric_plot(arith_geo_df, opt_result_for_CRP, alt=fig_alt("fig-arithmetic-vs-geometric"))
 ```
 
 
