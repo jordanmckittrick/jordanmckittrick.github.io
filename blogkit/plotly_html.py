@@ -15,12 +15,19 @@ This module writes the figure's HTML itself:
 * MathJax is never loaded: the page's own MathJax 3 typesets the page;
 * the figure's ``fig-alt`` is passed through as ``role="img"`` plus an
   ``aria-label`` on the figure's outer ``<div>``, since Quarto puts ``fig-alt``
-  only on images.
+  only on images;
+* a figure with a fixed ``layout.width`` is drawn at that width (its design
+  width) or the text column's, whichever is narrower: the div gets
+  ``width: <design width>px; max-width: 100%``, and ``layout.width`` is left
+  out so that plotly.js sizes the plot to the div, and re-sizes it when the
+  window changes (``config.responsive``). Its height stays fixed. With
+  ``styles.css``'s grid rule for code-cell figures, the caption wraps at the
+  plot's edge at every width.
 
-The figure itself is serialized exactly as :func:`plotly.io.to_html` does it
+Otherwise the figure is serialized exactly as :func:`plotly.io.to_html` does it
 (``to_json_plotly`` on the figure dict; a div sized from ``layout.width`` and
-``layout.height``; ``config`` defaulting ``responsive`` to true), so a figure
-renders the same as it did through the notebook renderer.
+``layout.height``; ``config`` defaulting ``responsive`` to true), so at its
+design width it renders the same as it did through the notebook renderer.
 
 Usage, in a figure builder::
 
@@ -106,6 +113,7 @@ def figure_html(
     div_id: str | None = None,
     config: dict | None = None,
     post_script: str | None = None,
+    fit_column: bool = True,
 ) -> str:
     """The HTML for one figure: an optional labelled wrapper, the plot div, a script.
 
@@ -124,10 +132,18 @@ def figure_html(
         plotly.js config, over the default ``{"responsive": True}``.
     post_script
         JavaScript run once the plot exists, with ``gd`` bound to the plot div.
+    fit_column
+        Draw a figure with a fixed ``layout.width`` at that width or the
+        column's, whichever is narrower (see the module docstring). False keeps
+        the fixed width at every window size.
     """
     fig_dict = fig.to_dict()
     layout = fig_dict.get("layout", {})
     template_layout = layout.get("template", {}).get("layout", {})
+    max_width = ""
+    if fit_column and layout.get("width") is not None and layout.get("autosize") is not False:
+        design_width = layout.pop("width")   # plotly.js now takes the width from the div
+        max_width = " max-width:100%;"
     jdata = to_json_plotly(fig_dict.get("data", []))
     jlayout = to_json_plotly(layout)
     jframes = to_json_plotly(fig_dict["frames"]) if fig_dict.get("frames") else None
@@ -137,7 +153,10 @@ def figure_html(
     if div_id is None:
         h = hashlib.sha1((jdata + jlayout + (jframes or "") + jconfig).encode("utf-8")).hexdigest()
         div_id = f"plotly-{h[:12]}"
-    width = _css_size(layout.get("width", template_layout.get("width")), "100%")
+    if max_width:
+        width = _css_size(design_width, "100%")
+    else:
+        width = _css_size(layout.get("width", template_layout.get("width")), "100%")
     height = _css_size(layout.get("height", template_layout.get("height")), "100%")
 
     then = ""
@@ -158,7 +177,7 @@ def figure_html(
     )
     attrs = f' role="img" aria-label="{html.escape(alt, quote=True)}"' if alt else ""
     return (f"<div{attrs}>\n"
-            f'<div id="{div_id}" class="plotly-graph-div" style="height:{height}; width:{width};"></div>\n'
+            f'<div id="{div_id}" class="plotly-graph-div" style="height:{height}; width:{width};{max_width}"></div>\n'
             f"<script>\n{script}\n</script>\n"
             "</div>")
 
@@ -188,6 +207,7 @@ def page_figure(
     alt: str | None = None,
     config: dict | None = None,
     post_script: str | None = None,
+    fit_column: bool = True,
 ) -> PageFigure:
     """``fig`` itself (not a copy), displayed through :func:`figure_html`.
 
@@ -195,7 +215,7 @@ def page_figure(
     displayed.
     """
     fig.__class__ = PageFigure
-    fig._blogkit_html = dict(alt=alt, config=config, post_script=post_script)
+    fig._blogkit_html = dict(alt=alt, config=config, post_script=post_script, fit_column=fit_column)
     return fig
 
 

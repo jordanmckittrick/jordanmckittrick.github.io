@@ -50,7 +50,9 @@ def _with_alt(fig: go.Figure, alt: str | None) -> go.Figure:
 
     That writes the figure's HTML itself rather than through Plotly's notebook
     renderer, so the page loads plotly.js once and no MathJax 2, and ``alt``
-    (the cell's ``fig-alt``) becomes ``role="img"`` plus an ``aria-label``.
+    (the cell's ``fig-alt``) becomes ``role="img"`` plus an ``aria-label``. Each
+    figure's ``layout.width`` is its design width: it is drawn at that width or
+    the text column's, whichever is narrower, at its fixed height.
     """
     return page_figure(fig, alt=alt)
 

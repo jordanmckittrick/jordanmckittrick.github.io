@@ -44,6 +44,12 @@ git-ignored):
 * ``measurements.json`` (everything above) and ``summary.md`` (the same as
   tables).
 
+The resize check loads each page at the widest width, resizes the viewport
+down through the other widths and back up, and compares every figure's plot and
+caption edges and height at each step with a fresh load at that width; back at
+the widest width it also pixel-diffs each plot against the fresh load's crop.
+Skip it with ``--no-resize-check``.
+
 ``--diff-against DIR`` compares every ``plots/`` crop with the one of the same
 name in an earlier run and reports the number of differing pixels; nonzero
 diffs are written to ``plots-diff/``. The diff is a report, not a failure.
@@ -53,7 +59,8 @@ It exits 1 if, on any page at any width or mode:
 * the page is wider than the viewport;
 * a figure's plot or caption lies outside the text column (0.5 px tolerance);
 * MathJax 2 is on the page (a script tag, or ``.MathJax_SVG`` output);
-* plotly.js is loaded more than once.
+* plotly.js is loaded more than once;
+* the resize check finds a figure that does not return to its fresh layout.
 
 Console errors are reported but do not fail the run. Needs network access:
 pages load MathJax and plotly.js from their CDNs. Setup, once::
@@ -425,6 +432,85 @@ def measure(browser, base_url: str, name: str, path: str, width: int, mode: str,
     return load
 
 
+def _edges(f: dict) -> dict:
+    return {k: (None if f[k] is None else (round(f[k]["left"], 1), round(f[k]["right"], 1),
+                                           round(f[k]["bottom"] - f[k]["top"], 1)))
+            for k in ("plot", "caption")}
+
+
+def resize_check(browser, base_url: str, name: str, path: str, loads: list[Load],
+                 out: Path, shots: bool) -> tuple[list[str], list[str]]:
+    """Resize one page down through the widths and back, as a reader turning a tablet does.
+
+    Loads the page (light mode) at the widest width, steps the viewport down
+    through every other width and back up again, and at each step compares
+    every figure's plot and caption (left and right edges, and height) with a
+    fresh load at that width. A figure that does not come back to its fresh
+    layout -- a width that ratchets down, say -- is a failure. Back at the
+    widest width, each plot is cropped again (``plots-resized/``) and
+    pixel-diffed against the fresh load's crop. Returns (log lines, failures).
+    """
+    fresh = {l.width: l.data for l in loads if l.page == name and l.mode == loads[0].mode}
+    ws = sorted(fresh, reverse=True)
+    steps = ws + ws[-2::-1]
+    log, failures = [f"sequence: {' → '.join(map(str, steps))} px ({loads[0].mode})"], []
+    ctx = browser.new_context(viewport={"width": steps[0], "height": VIEWPORT_HEIGHT},
+                              device_scale_factor=1, color_scheme="light")
+    page = ctx.new_page()
+    try:
+        page.goto(base_url + path, wait_until="load", timeout=60000)
+        try:
+            page.wait_for_load_state("networkidle", timeout=20000)
+        except Exception:
+            pass
+        page.mouse.move(0, 0)
+        page.evaluate(SETTLE_JS)
+        if loads[0].mode == "dark":
+            _switch_to_dark(page)
+        for i, w in enumerate(steps):
+            if i:
+                page.set_viewport_size({"width": w, "height": VIEWPORT_HEIGHT})
+                page.wait_for_timeout(700)          # plotly.js debounces its resize by 100 ms
+                page.evaluate(SETTLE_JS)
+            d = page.evaluate(MEASURE_JS, TOLERANCE_PX)
+            ref = {f["id"]: _edges(f) for f in fresh[w]["figures"]}
+            bad = []
+            for f in d["figures"]:
+                e = _edges(f)
+                r = ref.get(f["id"])
+                if r is None:
+                    continue
+                for k in ("plot", "caption"):
+                    if e[k] and r[k] and any(abs(a - b) > TOLERANCE_PX for a, b in zip(e[k], r[k])):
+                        bad.append(f"{f['id']} {k} {e[k][0]}–{e[k][1]} (h {e[k][2]}) "
+                                   f"vs fresh {r[k][0]}–{r[k][1]} (h {r[k][2]})")
+            log.append(f"step {i + 1}, {w} px: " + ("matches a fresh load" if not bad else "; ".join(bad)))
+            failures += [f"resize, step {i + 1} ({w} px): {b}" for b in bad]
+        if shots:
+            (out / "plots-resized").mkdir(parents=True, exist_ok=True)
+            page.add_style_tag(content="#quarto-header, .headroom { visibility: hidden !important; }")
+            res = []
+            for f in page.evaluate(MEASURE_JS, TOLERANCE_PX)["figures"]:
+                stem = f"{name}_{f['id']}_{steps[-1]}_{loads[0].mode}.png"
+                pinned = page.evaluate(PIN_JS, f["id"])
+                if not pinned:
+                    continue
+                clip = dict(x=pinned["left"], y=0, width=round(pinned["right"] - pinned["left"]),
+                            height=round(pinned["bottom"]))
+                page.screenshot(path=str(out / "plots-resized" / stem), clip=clip)
+                page.evaluate(UNPIN_JS, f["id"])
+                if (out / "plots" / stem).exists():
+                    r = _diff_pair(out / "plots-resized" / stem, out / "plots" / stem)
+                    res.append(f"{f['id']}: {r}")
+                    if r != "identical":
+                        failures.append(f"resize, back at {steps[-1]} px: {f['id']} plot {r}")
+            if res:
+                log.append(f"back at {steps[-1]} px, plot pixels against the fresh load: " + "; ".join(res))
+    finally:
+        ctx.close()
+    return log, failures
+
+
 # --------------------------------------------------------------------------- #
 #  Reports
 # --------------------------------------------------------------------------- #
@@ -553,10 +639,25 @@ def contact_sheet(out: Path, name: str, loads: list[Load]) -> Path | None:
     return path
 
 
-def diff_against(out: Path, ref: Path) -> list[tuple[str, str]]:
-    """(crop name, result) for every plots/ crop present in both runs."""
+def _diff_pair(p: Path, q: Path, mask: Path | None = None) -> str:
+    """'identical', or how image ``p`` differs from reference ``q`` (mask of changes to ``mask``)."""
     import numpy as np
     from PIL import Image
+    a, b = Image.open(p).convert("RGB"), Image.open(q).convert("RGB")
+    if a.size != b.size:
+        return f"size differs: {a.size} vs reference {b.size}"
+    d = np.abs(np.asarray(a, dtype=np.int16) - np.asarray(b, dtype=np.int16))
+    changed = d.max(axis=2) > 0
+    n = int(changed.sum())
+    if not n:
+        return "identical"
+    if mask is not None:
+        Image.fromarray(np.where(changed, 255, 0).astype(np.uint8)).save(mask)
+    return f"{n} pixel(s) differ (max channel delta {int(d.max())})"
+
+
+def diff_against(out: Path, ref: Path) -> list[tuple[str, str]]:
+    """(crop name, result) for every plots/ crop present in both runs."""
     results = []
     (out / "plots-diff").mkdir(exist_ok=True)
     for p in sorted((out / "plots").glob("*.png")):
@@ -564,19 +665,7 @@ def diff_against(out: Path, ref: Path) -> list[tuple[str, str]]:
         if not q.exists():
             results.append((p.name, "no reference"))
             continue
-        a, b = Image.open(p).convert("RGB"), Image.open(q).convert("RGB")
-        if a.size != b.size:
-            results.append((p.name, f"size differs: {a.size} vs reference {b.size}"))
-            continue
-        d = np.abs(np.asarray(a, dtype=np.int16) - np.asarray(b, dtype=np.int16))
-        changed = d.max(axis=2) > 0
-        n = int(changed.sum())
-        if n:
-            mx = int(d.max())
-            Image.fromarray(np.where(changed, 255, 0).astype(np.uint8)).save(out / "plots-diff" / p.name)
-            results.append((p.name, f"{n} pixel(s) differ (max channel delta {mx})"))
-        else:
-            results.append((p.name, "identical"))
+        results.append((p.name, _diff_pair(p, q, out / "plots-diff" / p.name)))
     return results
 
 
@@ -596,6 +685,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-screenshots", action="store_true", help="measure only")
     ap.add_argument("--diff-against", type=Path, metavar="DIR",
                     help="an earlier run's folder: pixel-diff each plot crop against it")
+    ap.add_argument("--no-resize-check", action="store_true",
+                    help="skip resizing each page down through the widths and back")
     args = ap.parse_args(argv)
 
     from playwright.sync_api import sync_playwright
@@ -609,6 +700,7 @@ def main(argv: list[str] | None = None) -> int:
     out.mkdir(parents=True, exist_ok=True)
 
     loads: list[Load] = []
+    resized: dict[str, tuple[list[str], list[str]]] = {}
     with SiteServer(args.site) as srv, sync_playwright() as pw:
         browser = pw.chromium.launch()
         try:
@@ -621,6 +713,13 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"{name} {w} {m}: scrollWidth {load.data['scrollWidth']}, "
                               f"mjx {load.data['mjx_container']}, MathJax_SVG {load.data['mathjax_svg']}, "
                               f"plotly.js {len(load.data['plotly_scripts'])}: {status}", file=sys.stderr)
+            if not args.no_resize_check and len(args.widths) > 1:
+                for name, path in pages:
+                    log, fails = resize_check(browser, srv.url, name, path, loads, out,
+                                              not args.no_screenshots)
+                    resized[name] = (log, fails)
+                    print(f"{name} resize check: {'ok' if not fails else f'{len(fails)} failure(s)'}",
+                          file=sys.stderr)
         finally:
             browser.close()
 
@@ -628,6 +727,10 @@ def main(argv: list[str] | None = None) -> int:
         [dict(page=l.page, width=l.width, mode=l.mode, console_errors=l.console_errors,
               failures=l.failures, **l.data) for l in loads], indent=1))
     md = summary_markdown(loads)
+    if resized:
+        md += "\n## Resize check\n"
+        for name, (log, fails) in resized.items():
+            md += f"\n{name}:\n\n" + "\n".join(f"- {x}" for x in log) + "\n"
     if not args.no_screenshots:
         sheets = [contact_sheet(out, n, loads) for n, _ in pages]
         md += "\nContact sheets: " + ", ".join(str(s.relative_to(out)) for s in sheets if s) + "\n"
@@ -639,7 +742,9 @@ def main(argv: list[str] | None = None) -> int:
     print(md)
 
     failures = [(l, f) for l in loads for f in l.failures]
-    print(f"{len(failures)} failure(s) in {len(loads)} page load(s); output in {out}", file=sys.stderr)
+    failures += [(None, f) for _, fails in resized.values() for f in fails]
+    print(f"{len(failures)} failure(s) in {len(loads)} page load(s) and the resize check; "
+          f"output in {out}", file=sys.stderr)
     return 1 if failures else 0
 
 

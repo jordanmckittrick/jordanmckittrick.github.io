@@ -101,16 +101,21 @@ figure .quarto-layout-row figure figcaption {
   .quarto-figure img.figure-img { width: 100% !important; }
 }
 
-/* Plotly writes an explicit pixel width onto its own div (e.g. 841px), narrower
-   than the 920px body. Left to itself the <figure> still fills the body, so the
-   caption wraps at 920px and spills past the plot's right edge. A single-column
-   grid sized to min-content takes its width from the plot's fixed width -- the
-   caption's min-content is just its longest word -- so the caption now wraps at
-   exactly the plot's edge. Scoped to code-cell output: the paintings are plain
+/* A code-cell figure is as wide as its plot, and its caption wraps at the
+   plot's edge. Plotly divs carry an explicit pixel width (e.g. 841px), narrower
+   than the 920px body; left to itself the <figure> would still fill the body,
+   so the caption would wrap at 920px and spill past the plot's right edge. A
+   single-column grid sized to min-content takes its width from the plot's
+   width -- the caption's min-content is just its longest word -- so the caption
+   wraps at exactly the plot's edge. The track's minimum is 0, not min-content,
+   so in a column narrower than the plot the track shrinks to the column rather
+   than overflowing it on both sides; a plot that may shrink (blogkit's
+   figures: width = design width, max-width: 100%) then fills the column, and
+   the caption with it. Scoped to code-cell output: the paintings are plain
    markdown images and already size correctly. */
 .cell-output-display > figure {
   display: grid;
-  grid-template-columns: min-content;
+  grid-template-columns: minmax(0, min-content);
   justify-content: center;
 }
 
