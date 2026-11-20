@@ -17,7 +17,7 @@ color: # Note that these colors are used as a reference for the brand. You can't
   background: "#ffffff" # white
   primary: periwinkle # lapis_lazuli is the back up primary color
 
-typography:
+typography:   # theme/fonts.scss sets the font stack (Apple's Baskerville first) over this, in light and dark mode
   fonts:
     - family: Libre Baskerville
       source: google         # Quarto loads it; Apple users get true Baskerville

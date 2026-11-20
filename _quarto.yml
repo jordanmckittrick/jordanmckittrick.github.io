@@ -45,8 +45,8 @@ website:
 format:
   html:
     theme:
-      light: [cosmo, theme/light.scss]
-      dark:  [darkly, theme/dark.scss]   # the moon toggle in the navbar switches these
+      light: [cosmo, theme/fonts.scss, theme/light.scss]
+      dark:  [darkly, theme/fonts.scss, theme/dark.scss]   # the moon toggle in the navbar switches these
     css: styles.css
     toc: true
     toc-depth: 3

@@ -93,4 +93,4 @@ For posts with heavy computation, put the math/simulation logic in a sibling `.p
 
 ## Theming
 
-Light/dark SCSS overrides live in `theme/light.scss` and `theme/dark.scss`, applied on top of the `cosmo`/`darkly` Quarto base themes. `styles.css` and `ratings.css` add global and page-specific styles.
+Light/dark SCSS overrides live in `theme/light.scss` and `theme/dark.scss`, applied on top of the `cosmo`/`darkly` Quarto base themes. `theme/fonts.scss` is listed in both theme arrays in `_quarto.yml` and is the one place the body and heading font stack is set (Apple's Baskerville first, then Libre Baskerville), so both modes use the same font; it overrides `_brand.yml`'s typography. `styles.css` and `ratings.css` add global and page-specific styles.

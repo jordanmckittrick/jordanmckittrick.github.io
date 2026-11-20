@@ -1,0 +1,11 @@
+/*-- scss:defaults --*/
+// Body and heading fonts for both colour schemes. _quarto.yml lists this file
+// in both theme arrays (light and dark), so the font stack is set here only.
+// Apple's own Baskerville comes first; elsewhere Libre Baskerville, which
+// $web-font-path (and _brand.yml) load from Google Fonts; then Georgia.
+// _brand.yml's typography still names Libre Baskerville: this file overrides
+// it in both modes. Setting $web-font-path here also replaces each base
+// theme's own web font (cosmo's Source Sans Pro, darkly's Lato).
+$web-font-path: "https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap";
+$font-family-base:      Baskerville, "Libre Baskerville", Georgia, serif;
+$headings-font-family:  $font-family-base;
