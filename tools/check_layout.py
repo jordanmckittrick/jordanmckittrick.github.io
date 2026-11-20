@@ -1,0 +1,647 @@
+#!/usr/bin/env python3
+"""Layout checks for the built site: does each page fit the screen it is read on?
+
+Usage::
+
+    uv run python tools/check_layout.py                          # every non-draft post
+    uv run python tools/check_layout.py --pages shannons-demon stranded
+    uv run python tools/check_layout.py --out _layout/after --diff-against _layout/before
+
+It serves ``_site/`` (build it first: ``uv run quarto render``) on a local port
+and loads each page in headless Chromium (Playwright) at viewport widths of
+1440, 1180, 820, 390 and 360 px, in light mode and in dark mode. Dark mode is
+switched on the way a reader does it: by clicking the navbar toggle (opening
+the collapsed navbar first on narrow screens). Each load is a fresh browser
+context, so nothing carries over between widths or modes.
+
+What it measures, per page, width and mode:
+
+* the page's ``scrollWidth`` against the viewport width;
+* the left and right edges of the text column (``main``'s content box);
+* for every figure (each ``div#fig-*``, plus any unlabelled code-cell output
+  holding a plot or image): the left and right edges of its plot (the Plotly
+  div, or else its image) and of its caption, and whether either lies outside
+  the column;
+* the number of ``mjx-container`` elements (MathJax 3) and ``.MathJax_SVG``
+  elements (MathJax 2), the ``<script>`` tags that load MathJax 2, and those
+  that load plotly.js (by URL, or inlined as a bundle);
+* console errors and uncaught page errors;
+* when the page is wider than the viewport, the outermost elements that make it
+  so (anything inside a scrolling or clipping box is skipped, since it cannot
+  widen the page).
+
+What it writes, under ``--out`` (default ``_layout/latest/``; ``_layout/`` is
+git-ignored):
+
+* ``figures/<post>_<figure>_<width>_<mode>.png``: each figure with its caption,
+  framed by the text column so overflow past either edge shows;
+* ``plots/<post>_<figure>_<width>_<mode>.png``: the plot (or image) alone,
+  for pixel diffs: pinned to the top of the viewport at its measured size, so
+  that its pixels do not depend on where it sits on the page (see ``PIN_JS``);
+  one too big for the viewport is cropped in place instead;
+* ``<post>_contact.png``: one contact sheet per post (rows are figures, columns
+  are widths, light and dark side by side);
+* ``measurements.json`` (everything above) and ``summary.md`` (the same as
+  tables).
+
+``--diff-against DIR`` compares every ``plots/`` crop with the one of the same
+name in an earlier run and reports the number of differing pixels; nonzero
+diffs are written to ``plots-diff/``. The diff is a report, not a failure.
+
+It exits 1 if, on any page at any width or mode:
+
+* the page is wider than the viewport;
+* a figure's plot or caption lies outside the text column (0.5 px tolerance);
+* MathJax 2 is on the page (a script tag, or ``.MathJax_SVG`` output);
+* plotly.js is loaded more than once.
+
+Console errors are reported but do not fail the run. Needs network access:
+pages load MathJax and plotly.js from their CDNs. Setup, once::
+
+    uv sync && uv run playwright install chromium
+"""
+
+from __future__ import annotations
+
+import argparse
+import functools
+import http.server
+import json
+import sys
+import threading
+from dataclasses import dataclass, field
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import check_post  # noqa: E402  (front-matter reader, for draft status)
+
+WIDTHS = (1440, 1180, 820, 390, 360)
+MODES = ("light", "dark")
+VIEWPORT_HEIGHT = 900
+TOLERANCE_PX = 0.5
+
+
+# --------------------------------------------------------------------------- #
+#  Pages
+# --------------------------------------------------------------------------- #
+def is_draft(qmd: Path) -> bool:
+    d = check_post.load_doc(qmd.resolve()).front_value("draft")
+    return d is not None and check_post.yaml_scalar(d[1]).lower() == "true"
+
+
+def default_pages(root: Path) -> list[str]:
+    """Slugs of every post whose ``draft:`` is not true."""
+    return [q.parent.name for q in sorted((root / "posts").glob("*/index.qmd"))
+            if not is_draft(q)]
+
+
+def page_path(spec: str) -> tuple[str, str]:
+    """(name, site-relative URL path) for a slug, a post folder/qmd, or an .html path."""
+    s = spec.strip().rstrip("/")
+    if s.endswith(".html"):
+        name = Path(s).parent.name if Path(s).name == "index.html" else Path(s).stem
+        return name or "index", s.lstrip("/")
+    if s.endswith(".qmd"):
+        s = str(Path(s).parent)
+    slug = Path(s).name
+    return slug, f"posts/{slug}/index.html"
+
+
+# --------------------------------------------------------------------------- #
+#  A static file server for _site/
+# --------------------------------------------------------------------------- #
+class _QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *args):  # noqa: D401 - silence per-request logging
+        pass
+
+
+class SiteServer:
+    def __init__(self, directory: Path):
+        handler = functools.partial(_QuietHandler, directory=str(directory))
+        self.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        self.url = f"http://127.0.0.1:{self.httpd.server_address[1]}/"
+        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+
+    def __enter__(self):
+        self.thread.start()
+        return self
+
+    def __exit__(self, *exc):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+
+# --------------------------------------------------------------------------- #
+#  In-page JavaScript
+# --------------------------------------------------------------------------- #
+# Resolves once fonts, MathJax (2 or 3) and every Plotly div have finished.
+SETTLE_JS = """
+async () => {
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const frame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await document.fonts.ready;
+  for (let i = 0; i < 100; i++) {           // MathJax 3 may not exist yet (defer)
+    const MJ = window.MathJax;
+    if (MJ && ((MJ.startup && MJ.startup.promise) || MJ.Hub)) break;
+    await sleep(100);
+  }
+  const MJ = window.MathJax;
+  try {
+    if (MJ && MJ.startup && MJ.startup.promise) await MJ.startup.promise;
+    if (MJ && MJ.Hub && MJ.Hub.Queue) await new Promise(r => MJ.Hub.Queue(r));
+  } catch (e) {}
+  for (let i = 0; i < 200; i++) {
+    const gds = [...document.querySelectorAll('.plotly-graph-div')];
+    if (gds.every(gd => gd._fullLayout && gd.querySelector('.main-svg'))) break;
+    await sleep(100);
+  }
+  await document.fonts.ready;
+  await frame();
+  await sleep(400);
+  await frame();
+  return true;
+}
+"""
+
+MEASURE_JS = """
+(tol) => {
+  const de = document.documentElement;
+  const vw = de.clientWidth;
+  const box = (el) => {
+    const b = el.getBoundingClientRect();
+    return {left: b.left + scrollX, right: b.right + scrollX,
+            top: b.top + scrollY, bottom: b.bottom + scrollY};
+  };
+  const union = (rs) => rs.length ? {
+    left: Math.min(...rs.map(r => r.left)), right: Math.max(...rs.map(r => r.right)),
+    top: Math.min(...rs.map(r => r.top)), bottom: Math.max(...rs.map(r => r.bottom))} : null;
+  const nonEmpty = (el) => { const b = el.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+  const out = {viewport: vw, innerWidth: innerWidth,
+               scrollWidth: Math.max(de.scrollWidth, document.body.scrollWidth),
+               dark: document.body.classList.contains('quarto-dark')};
+
+  // Text column: main's content box.
+  const main = document.querySelector('main#quarto-document-content') || document.querySelector('main');
+  let col = null;
+  if (main) {
+    const s = getComputedStyle(main), b = box(main);
+    col = {left: b.left + parseFloat(s.paddingLeft) + parseFloat(s.borderLeftWidth),
+           right: b.right - parseFloat(s.paddingRight) - parseFloat(s.borderRightWidth)};
+  }
+  out.column = col;
+
+  // Figures: every div#fig-*, plus unlabelled code-cell output with a plot/image.
+  const containers = [...document.querySelectorAll('div[id^="fig-"]')];
+  document.querySelectorAll('.cell-output-display').forEach(d => {
+    if (!d.closest('div[id^="fig-"]') && d.querySelector('.plotly-graph-div, img')) containers.push(d);
+  });
+  const set = new Set(containers);
+  const owner = (e) => { let a = e.parentElement; while (a && !set.has(a)) a = a.parentElement; return a; };
+  const outside = (r) => !!(col && r && (r.left < col.left - tol || r.right > col.right + tol));
+  let cellN = 0;
+  out.figures = containers.map(c => {
+    const owned = (sel) => [...c.querySelectorAll(sel)].filter(e => owner(e) === c && nonEmpty(e));
+    let media = owned('.plotly-graph-div'), kind = 'plotly';
+    if (!media.length) { media = owned('img'); kind = 'img'; }
+    if (!media.length) { media = owned('svg'); kind = 'svg'; }
+    const cap = owned('figure > figcaption').filter(f => f.parentElement.parentElement === c ||
+                                                       owner(f.parentElement) === c)[0];
+    const fid = c.id || ('cell-' + (cellN + 1));
+    c.setAttribute('data-layout-fig', fid);
+    media.forEach(m => m.setAttribute('data-layout-media', fid));
+    const plot = union(media.map(box));
+    const caption = cap ? box(cap) : null;
+    // Extent of the figure's HTML (not SVG) content, for framing screenshots:
+    // overlay labels can reach past the plot, while SVG paths can run far
+    // outside a clipped plot area and would mislead.
+    const html = [c, ...c.querySelectorAll('*')].filter(e => !(e instanceof SVGElement) && nonEmpty(e));
+    const ink = union(html.map(box));
+    if (!c.id) ++cellN;
+    return {id: fid, kind, n_media: media.length,
+            plot, caption, ink,
+            plot_outside: outside(plot), caption_outside: outside(caption)};
+  });
+
+  // MathJax and plotly.js.
+  const scripts = [...document.scripts];
+  out.mjx_container = document.querySelectorAll('mjx-container').length;
+  out.mathjax_svg = document.querySelectorAll('.MathJax_SVG').length;
+  out.mathjax2_scripts = scripts.map(s => s.src).filter(u => /mathjax\\/2\\.|\\/MathJax\\.js(\\?|$)/i.test(u));
+  const plotlyRe = /(^|\\/)plotly(-[a-z]+)?(-[0-9.]+|-latest)?(\\.min)?\\.js(\\?|$)/i;
+  out.plotly_scripts = scripts.map(s => s.src).filter(u => u && plotlyRe.test(new URL(u).pathname))
+    .concat(scripts.filter(s => !s.src && /plotly\\.js v\\d/.test(s.text.slice(0, 400))).map(() => '(inline bundle)'));
+
+  // What makes the page wider than the viewport: the outermost overflowing
+  // elements that no scrolling/clipping ancestor contains.
+  out.overflowing = [];
+  if (out.scrollWidth > vw) {
+    // Only the right edge can widen a page: nothing left of 0 is scrollable.
+    const over = (b) => b.right > vw + tol;
+    for (const el of document.body.querySelectorAll('*')) {
+      const b = el.getBoundingClientRect();
+      if ((b.width === 0 && b.height === 0) || !over(b)) continue;
+      const p = el.parentElement;
+      if (p && p !== document.body && over(p.getBoundingClientRect())) {
+        // the parent overflows too; report only if the parent is a clipper
+        if (getComputedStyle(p).overflowX === 'visible') continue;
+      }
+      let a = el.parentElement, clipped = false;
+      while (a && a !== document.body && a !== de) {
+        const s = getComputedStyle(a);
+        if (s.overflowX !== 'visible' || s.position === 'fixed') { clipped = true; break; }
+        a = a.parentElement;
+      }
+      if (clipped || getComputedStyle(el).position === 'fixed') continue;
+      const fig = el.closest('div[id^="fig-"]');
+      out.overflowing.push({
+        tag: el.tagName.toLowerCase(), id: el.id || null,
+        cls: (typeof el.className === 'string' ? el.className : '').slice(0, 60) || null,
+        in_figure: fig ? fig.id : null,
+        // MathJax 3 draws glyphs with CSS, so take an equation's text from its
+        // container (which carries the assistive MathML).
+        text: ((el.closest('mjx-container') || el).textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 70),
+        left: Math.round(b.left * 10) / 10, right: Math.round(b.right * 10) / 10});
+      if (out.overflowing.length >= 40) break;
+    }
+  }
+  return out;
+}
+"""
+
+DARK_JS_STATE = "() => document.body.classList.contains('quarto-dark')"
+
+# Pin a figure's plot to the top of the viewport, for a crop that can be
+# compared pixel for pixel with the same plot from another build. In place, a
+# plot's pixels depend on where it sits on the page, not only on what is in it:
+# Chrome rasterizes the page in tiles, and moving content by a few pixels (text
+# above it changing height, say) moves the tile seams across it and changes a
+# row or a patch of anti-aliased pixels. Even an unchanged image differs. So the
+# plot (each media element, at its measured size) is taken out of the flow and
+# fixed at the viewport's top edge, at a whole-pixel left edge and on the page's
+# background colour, which puts it in the same place for every build. Returns
+# its box in viewport pixels, or null if it does not fit in the viewport (the
+# caller then crops it in place). `unpin` restores it.
+PIN_JS = """
+(id) => {
+  const ms = [...document.querySelectorAll(`[data-layout-media="${id}"]`)];
+  if (!ms.length) return null;
+  const bs = ms.map(m => m.getBoundingClientRect());
+  const L = Math.min(...bs.map(b => b.left)), T = Math.min(...bs.map(b => b.top));
+  const W = Math.max(...bs.map(b => b.right)) - L, H = Math.max(...bs.map(b => b.bottom)) - T;
+  const vw = document.documentElement.clientWidth;
+  if (W > vw || H > innerHeight) return null;
+  const x0 = Math.min(Math.max(0, Math.round(L)), Math.floor(vw - W));
+  const bg = getComputedStyle(document.body).backgroundColor;
+  ms.forEach((m, i) => {
+    const b = bs[i];
+    m.dataset.layoutSaved = m.getAttribute('style') || '';
+    m.style.cssText += `;position:fixed !important;left:${x0 + b.left - L}px !important;` +
+      `top:${b.top - T}px !important;width:${b.width}px !important;height:${b.height}px !important;` +
+      `margin:0 !important;max-width:none !important;z-index:2147483647 !important;background:${bg} !important;`;
+  });
+  return {left: x0, top: 0, right: x0 + W, bottom: H};
+}
+"""
+UNPIN_JS = """
+(id) => {
+  document.querySelectorAll(`[data-layout-media="${id}"]`).forEach(m => {
+    if (m.dataset.layoutSaved === undefined) return;
+    m.setAttribute('style', m.dataset.layoutSaved);
+    delete m.dataset.layoutSaved;
+  });
+}
+"""
+
+
+# --------------------------------------------------------------------------- #
+#  One page load
+# --------------------------------------------------------------------------- #
+@dataclass
+class Load:
+    page: str
+    width: int
+    mode: str
+    data: dict = field(default_factory=dict)
+    console_errors: list[str] = field(default_factory=list)
+    failures: list[str] = field(default_factory=list)
+
+
+def _switch_to_dark(page) -> None:
+    """Click the navbar's colour-scheme toggle, opening a collapsed navbar first."""
+    toggle = page.locator("header .quarto-color-scheme-toggle").first
+    opened = False
+    if not toggle.is_visible():
+        page.locator("header .navbar-toggler").first.click()
+        opened = True
+        toggle.wait_for(state="visible", timeout=5000)
+    toggle.click()
+    page.wait_for_function(DARK_JS_STATE, timeout=5000)
+    if opened:
+        page.locator("header .navbar-toggler").first.click()
+        page.wait_for_function(
+            "() => !document.querySelector('header .navbar-collapse.show, header .navbar-collapse.collapsing')",
+            timeout=5000)
+    page.mouse.move(0, 0)
+    page.evaluate("() => new Promise(r => setTimeout(r, 300))")
+
+
+def _shoot(page, load: Load, out: Path, figs: list[dict], col: dict | None, scroll_w: int) -> None:
+    """Save each figure (framed by the column) and its plot alone."""
+    page.add_style_tag(content="#quarto-header, .headroom { visibility: hidden !important; }")
+    (out / "figures").mkdir(parents=True, exist_ok=True)
+    (out / "plots").mkdir(parents=True, exist_ok=True)
+    for f in figs:
+        ink = f["ink"]
+        if not ink:
+            continue
+        stem = f"{load.page}_{f['id']}_{load.width}_{load.mode}.png"
+        left = min(ink["left"], col["left"]) if col else ink["left"]
+        right = max(ink["right"], col["right"]) if col else ink["right"]
+        x0, x1 = max(0, left - 8), min(scroll_w, right + 8)
+        clip = dict(x=round(x0), y=round(ink["top"] - 8),
+                    width=round(x1 - x0), height=round(ink["bottom"] - ink["top"] + 16))
+        page.screenshot(path=str(out / "figures" / stem), clip=clip, full_page=True)
+        pinned = page.evaluate(PIN_JS, f["id"])
+        if pinned:
+            clip = dict(x=pinned["left"], y=0, width=round(pinned["right"] - pinned["left"]),
+                        height=round(pinned["bottom"]))
+            page.screenshot(path=str(out / "plots" / stem), clip=clip)
+            page.evaluate(UNPIN_JS, f["id"])
+            continue
+        p = f["plot"]                      # too big to pin: crop it where it is
+        if p and p["right"] > p["left"]:
+            x0, x1 = max(0, p["left"]), min(scroll_w, p["right"])
+            clip = dict(x=round(x0), y=round(p["top"]),
+                        width=round(x1) - round(x0), height=round(p["bottom"]) - round(p["top"]))
+            if clip["width"] > 0 and clip["height"] > 0:
+                page.screenshot(path=str(out / "plots" / stem), clip=clip, full_page=True)
+
+
+def measure(browser, base_url: str, name: str, path: str, width: int, mode: str,
+            out: Path, shots: bool) -> Load:
+    load = Load(name, width, mode)
+    ctx = browser.new_context(viewport={"width": width, "height": VIEWPORT_HEIGHT},
+                              device_scale_factor=1, color_scheme="light")
+    page = ctx.new_page()
+    def on_console(m):
+        if m.type == "error":
+            url = (m.location or {}).get("url", "")
+            load.console_errors.append(m.text[:300] + (f" [{url[:200]}]" if url else ""))
+    page.on("console", on_console)
+    page.on("pageerror", lambda e: load.console_errors.append(f"pageerror: {str(e)[:300]}"))
+    try:
+        page.goto(base_url + path, wait_until="load", timeout=60000)
+        try:
+            page.wait_for_load_state("networkidle", timeout=20000)
+        except Exception:
+            pass
+        page.mouse.move(0, 0)
+        page.evaluate(SETTLE_JS)
+        if mode == "dark":
+            _switch_to_dark(page)
+            page.evaluate(SETTLE_JS)
+        load.data = page.evaluate(MEASURE_JS, TOLERANCE_PX)
+        if shots:
+            _shoot(page, load, out, load.data["figures"], load.data["column"], load.data["scrollWidth"])
+    finally:
+        ctx.close()
+
+    d = load.data
+    if mode == "dark" and not d.get("dark"):
+        load.failures.append("dark mode did not switch on")
+    if d["scrollWidth"] > d["viewport"]:
+        load.failures.append(f"page is {d['scrollWidth']} px wide in a {d['viewport']} px viewport")
+    for f in d["figures"]:
+        if f["plot_outside"]:
+            load.failures.append(f"{f['id']}: plot outside the column")
+        if f["caption_outside"]:
+            load.failures.append(f"{f['id']}: caption outside the column")
+    if d["mathjax2_scripts"] or d["mathjax_svg"]:
+        load.failures.append(f"MathJax 2 on the page ({len(d['mathjax2_scripts'])} script(s), "
+                             f"{d['mathjax_svg']} .MathJax_SVG)")
+    if len(d["plotly_scripts"]) > 1:
+        load.failures.append(f"plotly.js loaded {len(d['plotly_scripts'])} times")
+    return load
+
+
+# --------------------------------------------------------------------------- #
+#  Reports
+# --------------------------------------------------------------------------- #
+def _e(r: dict | None) -> str:
+    if not r:
+        return "-"
+    return f"{r['left']:.1f}–{r['right']:.1f} ({r['right'] - r['left']:.1f})"
+
+
+def summary_markdown(loads: list[Load]) -> str:
+    lines: list[str] = []
+    for name in dict.fromkeys(l.page for l in loads):
+        mine = [l for l in loads if l.page == name]
+        lines += [f"## {name}", "",
+                  "| width | mode | scrollWidth | column | mjx-container | .MathJax_SVG "
+                  "| MathJax 2 scripts | plotly.js scripts | console errors | failures |",
+                  "|--:|:--|--:|:--|--:|--:|--:|--:|--:|:--|"]
+        for l in mine:
+            d = l.data
+            lines.append(
+                f"| {l.width} | {l.mode} | {d['scrollWidth']} | {_e(d['column'])} | {d['mjx_container']} "
+                f"| {d['mathjax_svg']} | {len(d['mathjax2_scripts'])} | {len(d['plotly_scripts'])} "
+                f"| {len(l.console_errors)} | {len(l.failures)} |")
+        figs = list(dict.fromkeys(f["id"] for l in mine for f in l.data["figures"]))
+        lines += ["", "Figures, light mode (plot | caption; left–right (width), page px). "
+                  "`!` = outside the column; `*` = dark mode's edges differ.", ""]
+        widths = list(dict.fromkeys(l.width for l in mine))
+        lines.append("| figure | " + " | ".join(f"{w}" for w in widths) + " |")
+        lines.append("|:--|" + "|".join(":--" for _ in widths) + "|")
+        for fid in figs:
+            cells = []
+            for w in widths:
+                by_mode = {l.mode: next((f for f in l.data["figures"] if f["id"] == fid), None)
+                           for l in mine if l.width == w}
+                f = by_mode.get("light") or next(iter(by_mode.values()))
+                if f is None:
+                    cells.append("-")
+                    continue
+                differs = len({json.dumps([[round(r[k], 1) for k in ("left", "right")] if r else None
+                                           for r in (g["plot"], g["caption"])])
+                               for g in by_mode.values() if g}) > 1
+                cells.append(f"{_e(f['plot'])}{'!' if f['plot_outside'] else ''} \\| "
+                             f"{_e(f['caption'])}{'!' if f['caption_outside'] else ''}"
+                             f"{' *' if differs else ''}")
+            lines.append(f"| {fid} | " + " | ".join(cells) + " |")
+        past = []
+        for l in mine:
+            c = l.data["column"]
+            for f in l.data["figures"]:
+                k = f["ink"]
+                if c and k and (k["left"] < c["left"] - TOLERANCE_PX or k["right"] > c["right"] + TOLERANCE_PX):
+                    past.append(f"- {l.width} {l.mode}: {f['id']} reaches {k['left']:.1f}–{k['right']:.1f} "
+                                f"(column {c['left']:.1f}–{c['right']:.1f})")
+        if past:
+            lines += ["", "Figure content (any HTML in the figure, e.g. overlay labels) past the column, "
+                      "whether or not it is clipped:", ""] + past
+        over = [(l, o) for l in mine for o in l.data.get("overflowing", [])]
+        if over:
+            lines += ["", "Wider than the viewport, because of:", ""]
+            seen = set()
+            for l, o in over:
+                key = (l.width, l.mode, o["tag"], o["id"], o["cls"], o["text"])
+                if key in seen:
+                    continue
+                seen.add(key)
+                lines.append(f"- {l.width} {l.mode}: `<{o['tag']}{' #' + o['id'] if o['id'] else ''}"
+                             f"{' .' + o['cls'] if o['cls'] else ''}>` {o['left']}–{o['right']}"
+                             f"{' in ' + o['in_figure'] if o['in_figure'] else ''}: {o['text']!r}")
+        errs = sorted({e for l in mine for e in l.console_errors})
+        if errs:
+            lines += ["", "Console errors (all widths and modes):", ""] + [f"- `{e}`" for e in errs]
+        fails = [(l, x) for l in mine for x in l.failures]
+        if fails:
+            lines += ["", "Failures:", ""] + [f"- {l.width} {l.mode}: {x}" for l, x in fails]
+        lines.append("")
+    return "\n".join(lines)
+
+
+def contact_sheet(out: Path, name: str, loads: list[Load]) -> Path | None:
+    from PIL import Image, ImageDraw, ImageFont
+    mine = [l for l in loads if l.page == name]
+    cols = [(l.width, l.mode) for l in mine]
+    figs = list(dict.fromkeys(f["id"] for l in mine for f in l.data["figures"]))
+    if not figs:
+        return None
+    target = 420                                       # cell width cap; phones at 1:1
+    grid: dict[tuple[str, int, str], Image.Image] = {}
+    for fid in figs:
+        for w, m in cols:
+            p = out / "figures" / f"{name}_{fid}_{w}_{m}.png"
+            if p.exists():
+                im = Image.open(p).convert("RGB")
+                s = min(1.0, target / im.width)
+                grid[(fid, w, m)] = im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))),
+                                              Image.LANCZOS) if s < 1 else im
+    if not grid:
+        return None
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 15)
+    except OSError:
+        font = ImageFont.load_default()
+    gap, head = 12, 28
+    col_w = [max((grid[(f, w, m)].width for f in figs if (f, w, m) in grid), default=60) for w, m in cols]
+    row_h = [max((grid[(f, w, m)].height for w, m in cols if (f, w, m) in grid), default=40) + head
+             for f in figs]
+    W = sum(col_w) + gap * (len(cols) + 1)
+    H = head + sum(row_h) + gap * (len(figs) + 1)
+    sheet = Image.new("RGB", (W, H), (200, 200, 205))
+    draw = ImageDraw.Draw(sheet)
+    x = gap
+    for (w, m), cw in zip(cols, col_w):
+        draw.text((x, 6), f"{w} px · {m}", fill=(0, 0, 0), font=font)
+        x += cw + gap
+    y = head + gap
+    for f, rh in zip(figs, row_h):
+        draw.text((gap, y), f, fill=(0, 0, 0), font=font)
+        x = gap
+        for (w, m), cw in zip(cols, col_w):
+            im = grid.get((f, w, m))
+            if im is not None:
+                sheet.paste(im, (x, y + head))
+            x += cw + gap
+        y += rh + gap
+    path = out / f"{name}_contact.png"
+    sheet.save(path, optimize=True)
+    return path
+
+
+def diff_against(out: Path, ref: Path) -> list[tuple[str, str]]:
+    """(crop name, result) for every plots/ crop present in both runs."""
+    import numpy as np
+    from PIL import Image
+    results = []
+    (out / "plots-diff").mkdir(exist_ok=True)
+    for p in sorted((out / "plots").glob("*.png")):
+        q = ref / "plots" / p.name
+        if not q.exists():
+            results.append((p.name, "no reference"))
+            continue
+        a, b = Image.open(p).convert("RGB"), Image.open(q).convert("RGB")
+        if a.size != b.size:
+            results.append((p.name, f"size differs: {a.size} vs reference {b.size}"))
+            continue
+        d = np.abs(np.asarray(a, dtype=np.int16) - np.asarray(b, dtype=np.int16))
+        changed = d.max(axis=2) > 0
+        n = int(changed.sum())
+        if n:
+            mx = int(d.max())
+            Image.fromarray(np.where(changed, 255, 0).astype(np.uint8)).save(out / "plots-diff" / p.name)
+            results.append((p.name, f"{n} pixel(s) differ (max channel delta {mx})"))
+        else:
+            results.append((p.name, "identical"))
+    return results
+
+
+# --------------------------------------------------------------------------- #
+#  Main
+# --------------------------------------------------------------------------- #
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="Layout checks on the built site, in headless Chromium.")
+    ap.add_argument("--pages", nargs="+", metavar="PAGE",
+                    help="post slugs, post folders or .qmd files, or site-relative .html paths "
+                         "(default: every non-draft post)")
+    ap.add_argument("--site", type=Path, default=REPO_ROOT / "_site", help="built site (default: _site)")
+    ap.add_argument("--out", type=Path, default=REPO_ROOT / "_layout" / "latest",
+                    help="output folder (default: _layout/latest)")
+    ap.add_argument("--widths", nargs="+", type=int, default=list(WIDTHS))
+    ap.add_argument("--modes", nargs="+", choices=MODES, default=list(MODES))
+    ap.add_argument("--no-screenshots", action="store_true", help="measure only")
+    ap.add_argument("--diff-against", type=Path, metavar="DIR",
+                    help="an earlier run's folder: pixel-diff each plot crop against it")
+    args = ap.parse_args(argv)
+
+    from playwright.sync_api import sync_playwright
+
+    specs = args.pages or default_pages(REPO_ROOT)
+    pages = [page_path(s) for s in specs]
+    missing = [p for _, p in pages if not (args.site / p).is_file()]
+    if missing:
+        ap.error(f"not in {args.site}: {missing[0]} (render the site first)")
+    out = args.out
+    out.mkdir(parents=True, exist_ok=True)
+
+    loads: list[Load] = []
+    with SiteServer(args.site) as srv, sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        try:
+            for name, path in pages:
+                for w in args.widths:
+                    for m in args.modes:
+                        load = measure(browser, srv.url, name, path, w, m, out, not args.no_screenshots)
+                        loads.append(load)
+                        status = "ok" if not load.failures else f"{len(load.failures)} failure(s)"
+                        print(f"{name} {w} {m}: scrollWidth {load.data['scrollWidth']}, "
+                              f"mjx {load.data['mjx_container']}, MathJax_SVG {load.data['mathjax_svg']}, "
+                              f"plotly.js {len(load.data['plotly_scripts'])}: {status}", file=sys.stderr)
+        finally:
+            browser.close()
+
+    (out / "measurements.json").write_text(json.dumps(
+        [dict(page=l.page, width=l.width, mode=l.mode, console_errors=l.console_errors,
+              failures=l.failures, **l.data) for l in loads], indent=1))
+    md = summary_markdown(loads)
+    if not args.no_screenshots:
+        sheets = [contact_sheet(out, n, loads) for n, _ in pages]
+        md += "\nContact sheets: " + ", ".join(str(s.relative_to(out)) for s in sheets if s) + "\n"
+    if args.diff_against:
+        res = diff_against(out, args.diff_against)
+        md += f"\n## Plot pixel diff against {args.diff_against}\n\n" + "\n".join(
+            f"- {n}: {r}" for n, r in res) + "\n"
+    (out / "summary.md").write_text(md)
+    print(md)
+
+    failures = [(l, f) for l in loads for f in l.failures]
+    print(f"{len(failures)} failure(s) in {len(loads)} page load(s); output in {out}", file=sys.stderr)
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

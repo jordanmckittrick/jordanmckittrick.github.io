@@ -12,6 +12,9 @@ uv run quarto publish gh-pages                        # render locally, push to 
 uv run python tools/check_post.py posts/<slug>/index.qmd   # mechanical checks on one post
 uv run python tools/check_post.py --all               # every post, plus draft status and unused bib entries
 uv run python -m pytest tools/                        # tests for the checker
+uv run playwright install chromium                    # one-time setup for the layout check
+uv run python tools/check_layout.py                   # layout of every non-draft post on the built _site/: 1440–360 px, light and dark
+uv run python tools/check_layout.py --pages <slug> --out _layout/<run> --diff-against _layout/<earlier-run>
 ```
 
 `uv run` executes inside the project's venv — no activation step needed.
@@ -28,10 +31,12 @@ This is a [Quarto](https://quarto.org) website published to GitHub Pages. Conten
 **`blogkit/` — shared Python package:**
 - Installed as an editable package so any notebook can `import blogkit`.
 - `blogkit/brand_plotly.py` — registers a `"blog"` Plotly template and sets it as the default (`plotly_white+blog`). Import it once at the top of a notebook to get consistent styling. Exports semantic colour constants (`HERO`, `SECONDARY`, `ACCENT`) for use in individual figures.
+- `blogkit/plotly_html.py` — writes a Plotly figure's HTML itself instead of going through Plotly's notebook renderer: plotly.js loads once per page, no MathJax 2 (which would take over the page's MathJax 3), and the cell's `fig-alt` becomes `role="img"` plus `aria-label`. Return `page_figure(fig, alt=fig_alt("fig-…"))` from a figure builder.
 
 **`tools/` — pre-publish checks:**
 - `tools/check_post.py` — standard-library checker for mechanical errors (math delimiters, link syntax, unresolved cross-references, bare `@sec-` references, unknown citation keys, placeholders, image files and alt text, indented headings/divs, a post-level `bibliography:`). Prints `path:line: [ERROR|WARN] rule: message` and exits non-zero on any ERROR. Its docstring lists every rule.
 - `tools/test_check_post.py` — pytest suite; fixture posts live in `tools/_fixtures/site/`. The leading underscore keeps Quarto from rendering them as site pages — keep it.
+- `tools/check_layout.py` — serves `_site/` and loads pages in headless Chromium (Playwright) at 1440, 1180, 820, 390 and 360 px, light and dark. Measures page width, the text column, each figure's plot and caption edges, MathJax and plotly.js script counts, and console errors; writes screenshots, contact sheets and `summary.md` to `_layout/` (git-ignored). Exits non-zero if a page is wider than the viewport, a figure or caption leaves the column, MathJax 2 is on the page, or plotly.js loads more than once. Its docstring has the details.
 
 **Freeze mechanism (`_freeze/`):**
 - With `freeze: auto`, Quarto caches executed cell outputs in `_freeze/`. Subsequent renders skip re-execution unless the post's `.qmd` changes, so editing a post that has code re-executes it on the next render. (Editing only a sibling `.py` module does not; force it with `uv run quarto render posts/<slug>/index.qmd`.)
@@ -42,7 +47,7 @@ This is a [Quarto](https://quarto.org) website published to GitHub Pages. Conten
 **Python dependencies** (managed by `uv`/`pyproject.toml`):
 - `finlib` — public package from `github.com/jordanmckittrick/finlib`
 - Standard scientific stack: numpy, scipy, pandas, matplotlib, plotly
-- Dev only: `pytest` (in the `dev` dependency group)
+- Dev only: `pytest` and `playwright` (in the `dev` dependency group)
 
 ## Bibliography
 
@@ -51,7 +56,7 @@ This is a [Quarto](https://quarto.org) website published to GitHub Pages. Conten
 
 ## Checks
 
-Run `uv run python tools/check_post.py <post>` after every batch of edits to a post, and before any commit that touches a post. Fix every ERROR; read every WARN. Before a publish, run it with `--all` to see each post's `draft:` value.
+Run `uv run python tools/check_post.py <post>` after every batch of edits to a post, and before any commit that touches a post. Fix every ERROR; read every WARN. Before a publish, run it with `--all` to see each post's `draft:` value, and run `tools/check_layout.py` on a fresh `uv run quarto render`.
 
 ## Git and publishing
 

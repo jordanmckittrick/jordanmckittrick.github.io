@@ -17,13 +17,10 @@ The wealth figure alone adds a lower "fraction of paths above break-even" panel.
 
 Every ``create_*`` builder takes ``alt=``: the cell's ``fig-alt``, read back
 with :func:`fig_alt`. Quarto puts ``fig-alt`` only on images, so for these
-HTML figures it is carried as ``role="img"`` plus ``aria-label`` instead.
+HTML figures it is carried as ``role="img"`` plus ``aria-label`` instead. Each
+builder returns its figure through ``blogkit.plotly_html.page_figure``, which
+writes the figure's HTML itself: plotly.js once per page, and no MathJax 2.
 """
-
-import html
-import json
-import re
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -34,6 +31,7 @@ import scipy.optimize as opt
 from coin_flip_with_riskless_asset_model import CoinFlipWithRisklessAssetModel
 
 from blogkit.brand_plotly import HERO, SECONDARY, ACCENT, INK, LABEL, with_alpha
+from blogkit.plotly_html import fig_alt, page_figure  # noqa: F401  (fig_alt: the post imports it from here)
 
 GOLDEN_RATIO = (1 + np.sqrt(5)) / 2
 _LN2 = np.log(2.0)
@@ -45,69 +43,16 @@ _LABEL_SCRIM = "rgba(255, 255, 255, 0.72)"
 
 
 # --------------------------------------------------------------------------- #
-#  Alt text for screen readers
+#  How the figures reach the page
 # --------------------------------------------------------------------------- #
-def fig_alt(label: str, qmd: str | Path = "index.qmd") -> str:
-    """The ``#| fig-alt:`` text of the code cell labelled ``label`` in ``qmd``.
-
-    Quarto strips a cell's ``#|`` options before the code reaches the kernel,
-    so a cell cannot see its own ``fig-alt``; this reads it back from the post,
-    so the text lives in one place. Raises if the cell or its ``fig-alt`` is
-    missing, which fails the render rather than shipping an unlabelled figure.
-    """
-    lines = Path(qmd).read_text(encoding="utf-8").split("\n")
-    try:
-        i = lines.index(f"#| label: {label}")
-    except ValueError:
-        raise ValueError(f"no cell labelled {label!r} in {qmd}") from None
-    j, k = i, i
-    while j > 0 and lines[j - 1].startswith("#|"):
-        j -= 1
-    while k + 1 < len(lines) and lines[k + 1].startswith("#|"):
-        k += 1
-    for ln in lines[j:k + 1]:
-        m = re.match(r"#\|\s*fig-alt:\s*(.*)$", ln)
-        if m:
-            v = m.group(1).strip()
-            return json.loads(v) if v.startswith('"') else v
-    raise ValueError(f"cell {label!r} in {qmd} has no #| fig-alt")
-
-
-class _AltTextFigure(go.Figure):
-    """A ``go.Figure`` whose notebook HTML is labelled for screen readers.
-
-    The figure reaches the page as Plotly's notebook HTML, whose outermost
-    element is a bare ``<div>``; that tag gains ``role="img"`` and an
-    ``aria-label``. Nothing else changes: the bundle comes from the same
-    renderer, so the figure looks and behaves exactly as before.
-    """
-
-    def _repr_mimebundle_(self, *args, **kwargs):
-        bundle = super()._repr_mimebundle_(*args, **kwargs)
-        page = bundle.get("text/html")
-        if page is not None:
-            attrs = f'role="img" aria-label="{html.escape(self._alt_text, quote=True)}"'
-            bundle["text/html"] = (f"<div {attrs}>" + page[len("<div>"):]
-                                   if page.startswith("<div>") else f"<div {attrs}>{page}</div>")
-        return bundle
-
-    def _ipython_display_(self):
-        # Plotly's own hook displays through pio.show(), which builds the same
-        # bundle without calling _repr_mimebundle_, so display ours instead.
-        import plotly.io as pio
-        from IPython.display import display
-        if pio.renderers.render_on_display and pio.renderers.default:
-            display(self._repr_mimebundle_(), raw=True)
-        else:
-            super()._ipython_display_()
-
-
 def _with_alt(fig: go.Figure, alt: str | None) -> go.Figure:
-    """``fig`` itself (not a copy), labelled for screen readers when ``alt`` is given."""
-    if alt:
-        fig.__class__ = _AltTextFigure
-        fig._alt_text = alt
-    return fig
+    """``fig`` itself (not a copy), written to the page by ``blogkit.plotly_html``.
+
+    That writes the figure's HTML itself rather than through Plotly's notebook
+    renderer, so the page loads plotly.js once and no MathJax 2, and ``alt``
+    (the cell's ``fig-alt``) becomes ``role="img"`` plus an ``aria-label``.
+    """
+    return page_figure(fig, alt=alt)
 
 
 # --------------------------------------------------------------------------- #

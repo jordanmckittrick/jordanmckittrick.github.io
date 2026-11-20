@@ -38,6 +38,7 @@ finlib = { git = "https://github.com/jordanmckittrick/finlib" }
 
 [dependency-groups]
 dev = [
+    "playwright>=1.65.2",
     "pytest>=9.2.0",
 ]
 

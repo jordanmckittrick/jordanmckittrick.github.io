@@ -62,3 +62,6 @@ _*.ipynb
 posts/you-cant-bet-on-china/china_figure_pacing.png
 posts/you-cant-bet-on-china/china_figure_copy.xlsx
 posts/you-cant-bet-on-china/china_figure_copy.numbers
+
+# Layout harness output (tools/check_layout.py)
+/_layout/
