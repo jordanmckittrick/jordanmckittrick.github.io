@@ -1,6 +1,7 @@
 ---
 title: "2: Stranded"
 subtitle: "Measuring the cost of market incompleteness using information theory"
+description: "Measuring the cost of market incompleteness using information theory"
 date: 2026-11-17
 categories: [quantitative finance, information theory, incomplete markets, risk-neutral measure, log-optimal investing]
 image: gardanne-1920px.jpg

@@ -1,6 +1,7 @@
 ---
 title: "6: Money for Nothing, _Leverage_ Not for Free"
 subtitle: "Why even true arbitrage ain't all it's cracked up to be"
+description: "Why even true arbitrage ain't all it's cracked up to be"
 date: 2027-01-31
 categories: []
 image: parable-of-the-hidden-treasure-by-rembrandt.jpg

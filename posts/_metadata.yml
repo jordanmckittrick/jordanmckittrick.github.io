@@ -3,4 +3,7 @@ author: "Jordan McKittrick"
 toc: true
 freeze: auto
 title-block-banner: false
+# `description:` is for the Essays listing (and the page's meta description);
+# keep it out of the post's own title block, where it would repeat the subtitle.
+hide-description: true
 bibliography: ../references.bib

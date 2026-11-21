@@ -1,6 +1,7 @@
 ---
 title: "5: The More the Merrier"
 subtitle: "Why it's better to trade more stocks rather than fewer"
+description: "Why it's better to trade more stocks rather than fewer"
 date: 2026-12-15
 categories: []
 image: dance-at-le-moulin-2400px.jpg

@@ -1,6 +1,7 @@
 ---
 title: "7: Caged In"
 subtitle: "The cost of shorting and leverage constraints on performance -- the perspective of information theory"
+description: "The cost of shorting and leverage constraints on performance -- the perspective of information theory"
 date: 2027-03-15
 categories: []
 image: pope-innocent-x.jpg

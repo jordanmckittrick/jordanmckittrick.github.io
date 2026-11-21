@@ -4,10 +4,12 @@ listing:
   contents: posts          # auto-lists every post under posts/
   sort: "date desc"
   type: default            # try: grid, table
+  fields: [image, date, title, description]   # no author, categories, or body excerpt
   categories: true         # clickable topic tags in a sidebar
   sort-ui: false
   filter-ui: true
   feed: true               # generates an RSS feed
 page-layout: full
 title-block-banner: false
+code-tools: false
 ---

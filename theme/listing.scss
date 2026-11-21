@@ -1,0 +1,25 @@
+/*-- scss:rules --*/
+// Essays listing (blog.qmd): the type hierarchy within each entry. Listed in
+// both theme arrays in _quarto.yml, like fonts.scss, so the colour and the
+// heading sizes below are each colour scheme's own.
+
+// Titles upright. Explicit *emphasis* in a title still renders italic: <em>
+// sets its own font-style.
+div.quarto-post .body h3.listing-title {
+  font-style: normal;
+}
+
+// Description (and subtitle, should that field be listed): two steps down the
+// heading scale from the title, which is an h3, in the theme's secondary text
+// colour (what .text-muted renders as: $body-color at 75%). Not $text-muted:
+// in Quarto's darkly build that compiles to #6c757d, about 3.4:1 on the dark
+// background. Quarto colours every link in an entry $body-color (white in
+// dark mode), and the text sits inside a link, so the colour goes on the <a>.
+div.quarto-post .body .listing-description,
+div.quarto-post .body .listing-subtitle {
+  font-size: $h5-font-size;
+}
+div.quarto-post .body .listing-description a,
+div.quarto-post .body .listing-subtitle a {
+  color: $body-secondary-color;
+}

@@ -1,6 +1,7 @@
 ---
 title: "4: _Hic Sunt Dracones_"
 subtitle: "Why the no-arbitrage condition is information theory in disguise"
+description: "Why the no-arbitrage condition is information theory in disguise"
 date: 2026-12-5
 categories: []
 image: dragons-from-psalter-map-middle-third.jpg
