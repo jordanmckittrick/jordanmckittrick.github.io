@@ -15,6 +15,7 @@ uv run python -m pytest tools/                        # tests for the checker
 uv run playwright install chromium                    # one-time setup for the layout check
 uv run python tools/check_layout.py                   # layout of every non-draft post on the built _site/: 1440–360 px, light and dark
 uv run python tools/check_layout.py --pages <slug> --out _layout/<run> --diff-against _layout/<earlier-run>
+uv run python tools/check_layout.py --sweep-only      # every 10 px from 320 to 1440 px, light mode, measurements only (about 6 minutes)
 ```
 
 `uv run` executes inside the project's venv — no activation step needed.
@@ -36,7 +37,7 @@ This is a [Quarto](https://quarto.org) website published to GitHub Pages. Conten
 **`tools/` — pre-publish checks:**
 - `tools/check_post.py` — standard-library checker for mechanical errors (math delimiters, link syntax, unresolved cross-references, bare `@sec-` references, unknown citation keys, placeholders, image files and alt text, indented headings/divs, a post-level `bibliography:`). Prints `path:line: [ERROR|WARN] rule: message` and exits non-zero on any ERROR. Its docstring lists every rule.
 - `tools/test_check_post.py` — pytest suite; fixture posts live in `tools/_fixtures/site/`. The leading underscore keeps Quarto from rendering them as site pages — keep it.
-- `tools/check_layout.py` — serves `_site/` and loads pages in headless Chromium (Playwright) at 1440, 1180, 820, 390 and 360 px, light and dark. Measures page width, the text column, each figure's plot and caption edges, MathJax and plotly.js script counts, and console errors; writes screenshots, contact sheets and `summary.md` to `_layout/` (git-ignored). Also resizes each page down through the widths and back, checking every figure returns to its fresh layout. Exits non-zero if a page is wider than the viewport, a figure or caption leaves the column, MathJax 2 is on the page, plotly.js loads more than once, or a figure fails the resize check. Its docstring has the details.
+- `tools/check_layout.py` — serves `_site/` and loads pages in headless Chromium (Playwright) at 1440, 1180, 820, 390 and 360 px, light and dark. Measures page width, the text column, each figure's plot, caption and overlay-label edges (the simplex's HTML labels, readout and slider labels), MathJax and plotly.js script counts, and console errors; writes screenshots, contact sheets and `summary.md` to `_layout/` (git-ignored). Also resizes each page down through the widths and back, checking every figure returns to its fresh layout. `--sweep` (or `--sweep-only`) also loads each page at every 10 px from 320 to 1440 px and applies the width checks there. Exits non-zero if a page is wider than the viewport, a figure, caption or overlay label leaves the column, MathJax 2 is on the page, plotly.js loads more than once, or a figure fails the resize check. Its docstring has the details.
 
 **Freeze mechanism (`_freeze/`):**
 - With `freeze: auto`, Quarto caches executed cell outputs in `_freeze/`. Subsequent renders skip re-execution unless the post's `.qmd` changes, so editing a post that has code re-executes it on the next render. (Editing only a sibling `.py` module does not; force it with `uv run quarto render posts/<slug>/index.qmd`.)
@@ -56,7 +57,7 @@ This is a [Quarto](https://quarto.org) website published to GitHub Pages. Conten
 
 ## Checks
 
-Run `uv run python tools/check_post.py <post>` after every batch of edits to a post, and before any commit that touches a post. Fix every ERROR; read every WARN. Before a publish, run it with `--all` to see each post's `draft:` value, and run `tools/check_layout.py` on a fresh `uv run quarto render`.
+Run `uv run python tools/check_post.py <post>` after every batch of edits to a post, and before any commit that touches a post. Fix every ERROR; read every WARN. Before a publish, run it with `--all` to see each post's `draft:` value, and run `tools/check_layout.py --sweep` on a fresh `uv run quarto render`.
 
 ## Git and publishing
 

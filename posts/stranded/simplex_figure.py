@@ -331,11 +331,14 @@ _MARGIN_PX = 8
 _REF_WIDTH = 920                       # Quarto grid body-width; the assertion harness's
                                        # reference column (the JS fit() measures the real one)
 _WIDTH_FRACTION = 0.90                 # render at 90% of the measured column, centred, so the
-                                       # figure clears a laptop viewport and keeps the caption on
+                                       # figure clears a laptop viewport and keeps the caption on;
+                                       # less where the vertex labels would then leave the column
+                                       # (see simplex_figure_html)
 _COLUMN_PX = 613                       # measured Quarto body column; sizes the text-fit checks
-                                       # to the narrowest common render, and below it (a phone,
-                                       # a tablet) the figure is laid out exactly as in this
-                                       # column and scaled to fit (see simplex_figure_html)
+                                       # to the narrowest common render: a plot of
+                                       # _WIDTH_FRACTION * _COLUMN_PX = 552 px, the narrowest
+                                       # the figure is laid out at; narrower columns (a phone,
+                                       # a tablet) scale that layout down (see simplex_figure_html)
 _MIN_CONTOUR_LABEL_PX = 10             # in that scaled layout the contour values are hidden
                                        # when they would render smaller than this: below a
                                        # scale of 10/14 (a phone; a tablet keeps them)
@@ -898,13 +901,26 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     ``alt`` as its ``aria-label``. The slider stays outside that element, since
     ``role="img"`` hides its descendants from assistive technology.
 
-    In a column narrower than :data:`_COLUMN_PX` (a phone, a tablet), the whole
-    figure -- plot, labels, readout and slider -- is laid out exactly as it is in
-    a :data:`_COLUMN_PX` column, then scaled uniformly (a CSS transform) so that
-    it fills the column: the figure and its fixed labels, which reach a little
-    past the plot, span the column's width. At :data:`_COLUMN_PX` and wider
-    nothing is scaled. The contour values are hidden when the scale would draw
-    them smaller than :data:`_MIN_CONTOUR_LABEL_PX`.
+    The plot's width follows the column, in three bands, so that the figure and
+    all its labels lie inside the column at every width, the labels at their
+    designed size wherever possible. The vertex labels are fixed-size text that
+    reaches past the plot's sides (about 51 px each side at a 552 px plot, less
+    at a wider one), so:
+
+    * where they fit with the plot at :data:`_WIDTH_FRACTION` of the column
+      (from about a 778 px column up), the plot takes that share, as designed;
+    * in a narrower column, the plot takes the widest width at which they still
+      fit, down to ``_WIDTH_FRACTION * _COLUMN_PX`` (552 px, the narrowest
+      layout the label checks verify; reached at about a 655 px column);
+    * in a column narrower still (a phone, a tablet), the whole figure -- plot,
+      labels, readout and slider -- is laid out at that 552 px width, then
+      scaled uniformly (a CSS transform) so that the figure and its labels span
+      the column's width. The scale is 1 where this band meets the one above,
+      so the figure is continuous across widths. The contour values are hidden
+      when the scale would draw them smaller than :data:`_MIN_CONTOUR_LABEL_PX`.
+
+    The label widths are measured in the browser, so these thresholds are
+    worked out there, not fixed here.
     """
     import html
     import json
@@ -999,11 +1015,11 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
 </div>
 </div></div>
 <style>
-/* The scaled layout (a column narrower than {_COLUMN_PX}px): fit() gives the inner
-   box the width the figure has in a {_COLUMN_PX}px column and scales it; the inner
+/* The scaled layout (a column too narrow for the 552px layout and its labels):
+   fit() gives the inner box the width of that layout and scales it; the inner
    box contains its children's margins, so its height is the whole figure's, and
-   the outer box takes the scaled height (a transform doesn't change layout). At
-   {_COLUMN_PX}px and wider both boxes are plain blocks and nothing is scaled. */
+   the outer box takes the scaled height (a transform doesn't change layout). In
+   a wider column both boxes are plain blocks and nothing is scaled. */
 .simplex-scale.is-scaled > .simplex-scale-inner {{ display: flow-root; transform-origin: 0 0; }}
 /* Set by scaleFit() when the scale would draw the contour values below
    {_MIN_CONTOUR_LABEL_PX}px. */
@@ -1191,8 +1207,10 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     bodyPct = (bodyC && bodyC.style.fontSize) ? bodyC.style.fontSize : null;
     roRenderMath(roFrame);
     typesetLabels();                       // swap every label's fallback for typeset math
-    positionStatics(); frameLabels(roFrame);
-    scaleFit();                            // typeset labels have new widths
+    // Typeset labels have new widths: re-fit if the figure's width changes with
+    // them, else just re-place the labels.
+    if (window.Plotly && columnPx() && layoutWidth() !== fitW) fit();
+    else {{ positionStatics(); frameLabels(roFrame); scaleFit(); }}
     if (coldMs !== null && coldMs > 8 && window.requestIdleCallback && !warmed) {{
       warmed = true;                                   // pre-warm the cache in idle time
       var i = 0;
@@ -1251,7 +1269,7 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
   // The ink box is the element box shrunk by {{l,r}} horizontally, {{t,b}} vertically.
   function inkOff(L) {{ var k = L.spec.ink, f = L.fs || L.spec.size;
     return k ? {{t: k.t * f, b: k.b * f, l: k.l * f, r: k.r * f}} : {{t: 0, b: 0, l: 0, r: 0}}; }}
-  function placeStatic(L, ppu) {{
+  function staticPos(L, ppu) {{
     var s = L.spec, ax = pxx(s.xy[0], ppu), ay = pyy(s.xy[1], ppu), tf = "", left, top, io = inkOff(L);
     if (s.place === "below") {{                    // ink TOP = marker bottom + GAP; ink centred on ax
       left = ax - L.w / 2 + (io.r - io.l) / 2 + (s.dx || 0);
@@ -1265,7 +1283,21 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     else if (s.place === "vbr") {{ left = ax; top = ay; }}
     else if (s.place === "vtc") {{ left = ax - L.w / 2; top = ay - L.h; }}
     else if (s.place === "rotated") {{ left = ax; top = ay; tf = "translate(-50%,-50%) rotate(" + s.angle + "deg)"; }}
-    L.el.style.left = left + "px"; L.el.style.top = top + "px"; L.el.style.transform = tf;
+    return {{left: left, top: top, tf: tf, ax: ax}};
+  }}
+  function placeStatic(L, ppu) {{
+    var p = staticPos(L, ppu);
+    L.el.style.left = p.left + "px"; L.el.style.top = p.top + "px"; L.el.style.transform = p.tf;
+  }}
+  // A static label's horizontal extent [left, right] in layout px at ppu: each
+  // sits a fixed number of px from its anchor, which moves with the plot's scale.
+  // A rotated (contour) label is centred on its anchor.
+  function staticSpan(L, ppu) {{
+    var p = staticPos(L, ppu);
+    if (L.spec.place !== "rotated") return [p.left, p.left + L.w];
+    var a = L.spec.angle * Math.PI / 180;
+    var hw = (Math.abs(Math.cos(a)) * L.w + Math.abs(Math.sin(a)) * L.h) / 2;
+    return [p.ax - hw, p.ax + hw];
   }}
   function mLineY(x) {{ return MSEG[0][1] + (x - MSEG[0][0]) / (MSEG[1][0] - MSEG[0][0]) * (MSEG[1][1] - MSEG[0][1]); }}
   function placeMoving(L, xy, place, ppu, qxy) {{
@@ -1363,10 +1395,33 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
   }});
 
   // ---- Fit: fill the column at WFRAC width, centred; keep aspect; place readout.
-  //      In a column narrower than COL, lay the figure out exactly as in a COL
-  //      column, then scale the whole of it (plot, labels, readout and slider)
-  //      to fill the column: see scaleFit() ----
-  var COL = {_COLUMN_PX}, scaled = false, colW = 0, scaleS = 1;
+  //      Narrower where the vertex labels would leave the column (layoutWidth);
+  //      in a column too narrow even for a WMIN-wide figure and its labels, lay
+  //      the figure out at WMIN and scale the whole of it (plot, labels, readout
+  //      and slider) to fill the column: see scaleFit() ----
+  var COL = {_COLUMN_PX}, WMIN = Math.round(COL * WFRAC), scaled = false, colW = 0, scaleS = 1, fitW = 0;
+  // Do the static labels (the vertex labels reach past the plot's sides) lie
+  // inside a column C px wide, with the figure w px wide and centred in it?
+  function labelsFit(w, C) {{
+    var ppu = (w - 2 * MARG) / XSPAN, side = (C - w) / 2;
+    for (var i = 0; i < STATIC_LABELS.length; i++) {{
+      var L = STATIC_LABELS[i]; if (!L.w) continue;
+      var sp = staticSpan(L, ppu);
+      if (sp[0] < -side || sp[1] > w + side) return false;
+    }}
+    return true;
+  }}
+  // The figure's (unscaled) width in the column: WFRAC of the column, as
+  // designed, if its labels fit there; else the widest width at which they do,
+  // down to WMIN; 0 if not even WMIN fits (the scaled layout). The designed
+  // width is taken from the column's whole-px width (clientWidth), as it always
+  // has been; the fit is tested against its exact width.
+  function columnPx() {{ return (host() && host().clientWidth) || gd.offsetWidth; }}
+  function layoutWidth() {{
+    var C = host() ? host().getBoundingClientRect().width : gd.offsetWidth;
+    for (var w = Math.round(columnPx() * WFRAC); w >= WMIN; w--) if (labelsFit(w, C)) return w;
+    return 0;
+  }}
   function host() {{ return gd.closest(".cell-output-display") || gd.parentElement; }}
   function unscale() {{
     scaleBox.classList.remove("is-scaled", "simplex-no-contours");
@@ -1393,8 +1448,13 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
       lo = Math.min(lo, r.left - ir.left); hi = Math.max(hi, r.right - ir.left);
     }}
     scaleS = colW / (hi - lo);
+    var x = -lo * scaleS;
+    // Never above 1: where the scaled band meets the one above, rounding in the
+    // measured widths can leave the figure a fraction of a px narrower than the
+    // column; it is then centred at its own size.
+    if (scaleS > 1) {{ scaleS = 1; x = -lo + (colW - (hi - lo)) / 2; }}
     scaleBox.classList.toggle("simplex-no-contours", {_CONTOUR_FONT} * scaleS < {_MIN_CONTOUR_LABEL_PX});
-    scaleInner.style.transform = "translate(" + (-lo * scaleS) + "px, 0) scale(" + scaleS + ")";
+    scaleInner.style.transform = "translate(" + x + "px, 0) scale(" + scaleS + ")";
     scaleBox.style.height = scaleInner.offsetHeight * scaleS + "px";
   }}
   if (window.ResizeObserver) {{                        // the inner box grows (e.g. the slider's
@@ -1404,10 +1464,11 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
   }}
   function fit() {{
     if (!window.Plotly) {{ return setTimeout(fit, 30); }}
-    var measured = (host() && host().clientWidth) || gd.offsetWidth;
+    var measured = columnPx();
     if (!measured) {{ return setTimeout(fit, 30); }}
-    scaled = measured < COL;
-    var w = Math.round((scaled ? COL : measured) * WFRAC);
+    fitW = layoutWidth();
+    scaled = !fitW;
+    var w = scaled ? WMIN : fitW;
     var h = Math.round((w - 2 * MARG) * {_ASPECT:.6f} + 2 * MARG);
     figWrap.style.width = w + "px";                    // centre the wrapper (CSS margin:auto)
     if (scaled) {{
