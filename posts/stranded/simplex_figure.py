@@ -332,8 +332,13 @@ _REF_WIDTH = 920                       # Quarto grid body-width; the assertion h
                                        # reference column (the JS fit() measures the real one)
 _WIDTH_FRACTION = 0.90                 # render at 90% of the measured column, centred, so the
                                        # figure clears a laptop viewport and keeps the caption on
-_COLUMN_PX = 613                       # measured Quarto body column; used only to size the
-                                       # text-fit checks to the narrowest common render
+_COLUMN_PX = 613                       # measured Quarto body column; sizes the text-fit checks
+                                       # to the narrowest common render, and below it (a phone,
+                                       # a tablet) the figure is laid out exactly as in this
+                                       # column and scaled to fit (see simplex_figure_html)
+_MIN_CONTOUR_LABEL_PX = 10             # in that scaled layout the contour values are hidden
+                                       # when they would render smaller than this: below a
+                                       # scale of 10/14 (a phone; a tablet keeps them)
 
 
 def _figure_height() -> int:
@@ -892,6 +897,14 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     (``.simplex-fig-wrap``: plot, labels and readout) becomes ``role="img"`` with
     ``alt`` as its ``aria-label``. The slider stays outside that element, since
     ``role="img"`` hides its descendants from assistive technology.
+
+    In a column narrower than :data:`_COLUMN_PX` (a phone, a tablet), the whole
+    figure -- plot, labels, readout and slider -- is laid out exactly as it is in
+    a :data:`_COLUMN_PX` column, then scaled uniformly (a CSS transform) so that
+    it fills the column: the figure and its fixed labels, which reach a little
+    past the plot, span the column's width. At :data:`_COLUMN_PX` and wider
+    nothing is scaled. The contour values are hidden when the scale would draw
+    them smaller than :data:`_MIN_CONTOUR_LABEL_PX`.
     """
     import html
     import json
@@ -967,7 +980,8 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     # the wrapper's JS-set width and centring are untouched.
     img_attrs = (f' role="img" aria-label="{html.escape(alt, quote=True)}"'
                  if alt else "")
-    return f"""<div class="simplex-readout-slot"></div>
+    return f"""<div class="simplex-scale"><div class="simplex-scale-inner">
+<div class="simplex-readout-slot"></div>
 <div class="simplex-fig-wrap"{img_attrs}>
 {fig_html}
 <div class="simplex-label-layer"></div>
@@ -983,7 +997,17 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
   <span class="simplex-landmark simplex-landmark-qs" style="left: {left_qs};">q<sup>*</sup></span>
   <span class="simplex-thumb-label">q</span>
 </div>
+</div></div>
 <style>
+/* The scaled layout (a column narrower than {_COLUMN_PX}px): fit() gives the inner
+   box the width the figure has in a {_COLUMN_PX}px column and scales it; the inner
+   box contains its children's margins, so its height is the whole figure's, and
+   the outer box takes the scaled height (a transform doesn't change layout). At
+   {_COLUMN_PX}px and wider both boxes are plain blocks and nothing is scaled. */
+.simplex-scale.is-scaled > .simplex-scale-inner {{ display: flow-root; transform-origin: 0 0; }}
+/* Set by scaleFit() when the scale would draw the contour values below
+   {_MIN_CONTOUR_LABEL_PX}px. */
+.simplex-scale.simplex-no-contours .simplex-contour-label {{ visibility: hidden; }}
 /* The delta_1 / delta_2 corner labels are drawn with cliponaxis=False and, being
    fixed-pixel text, reach a little past the plot's SVG box -- more so now the
    figure renders at {_WIDTH_FRACTION:.0%} width. Let them show in the centring
@@ -1073,7 +1097,15 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
   var XSPAN = {_X_SPAN:.6f}, X0 = {_X_RANGE[0]}, Y1 = {_Y_RANGE[1]}, APEX = {apex:.10f};
   var gd = document.getElementById("{div_id}");
   var figWrap = gd.closest(".simplex-fig-wrap");
-  var scope = figWrap.parentNode;
+  var scope = figWrap.parentNode;                      // the scale boxes: see fit()
+  var scaleInner = scope, scaleBox = scope.parentNode;
+  // The figure's current scale: 1 unless fit() has scaled it. Divides a measured
+  // (on-screen) distance back into layout px, the units everything is placed in.
+  function scaleNow() {{
+    if (!scaleInner.style.transform) return 1;
+    var r = figWrap.getBoundingClientRect();
+    return figWrap.offsetWidth ? r.width / figWrap.offsetWidth : 1;
+  }}
   var sliderWrap = scope.querySelector(".simplex-slider-wrap");
   var layer = figWrap.querySelector(".simplex-readout-layer");
   var slot = scope.querySelector(".simplex-readout-slot");
@@ -1131,9 +1163,9 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     if (readout.parentNode !== layer) layer.appendChild(readout);
     readout.style.left = (MARG + 1) + "px";
     readout.style.top = (MARG + (Y1 - APEX) * ppu) + "px";
-    var br = readout.getBoundingClientRect(), fr = figWrap.getBoundingClientRect();
-    var boxRight = X0 + (br.right - fr.left - MARG) / ppu;
-    var boxBottom = Y1 - (br.bottom - fr.top - MARG) / ppu;
+    var br = readout.getBoundingClientRect(), fr = figWrap.getBoundingClientRect(), k = scaleNow();
+    var boxRight = X0 + ((br.right - fr.left) / k - MARG) / ppu;
+    var boxBottom = Y1 - ((br.bottom - fr.top) / k - MARG) / ppu;
     var edgeX = boxBottom / Math.sqrt(3.0);            // triangle left edge at box bottom
     if ((edgeX - boxRight) * ppu < 6) {{               // crowds the triangle -> block mode
       readout.classList.add("ro-block");
@@ -1160,6 +1192,7 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     roRenderMath(roFrame);
     typesetLabels();                       // swap every label's fallback for typeset math
     positionStatics(); frameLabels(roFrame);
+    scaleFit();                            // typeset labels have new widths
     if (coldMs !== null && coldMs > 8 && window.requestIdleCallback && !warmed) {{
       warmed = true;                                   // pre-warm the cache in idle time
       var i = 0;
@@ -1318,7 +1351,7 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
   // width (px -> frames from the thumb's usable travel, recomputed per release).
   var LANDMARKS = [{idx_qt}, {idx_qs}], SNAP_PX = 4, N = {n};
   function snapTol() {{
-    var travel = input.getBoundingClientRect().width - THUMB_D;
+    var travel = input.getBoundingClientRect().width / scaleNow() - THUMB_D;
     return Math.max(1, Math.round(SNAP_PX * (N - 1) / travel));
   }}
   input.addEventListener("change", function () {{
@@ -1329,15 +1362,62 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     roSchedule(parseInt(input.value, 10));             // keep the readout in step with the snap
   }});
 
-  // ---- Fit: fill the column at WFRAC width, centred; keep aspect; place readout ----
+  // ---- Fit: fill the column at WFRAC width, centred; keep aspect; place readout.
+  //      In a column narrower than COL, lay the figure out exactly as in a COL
+  //      column, then scale the whole of it (plot, labels, readout and slider)
+  //      to fill the column: see scaleFit() ----
+  var COL = {_COLUMN_PX}, scaled = false, colW = 0, scaleS = 1;
   function host() {{ return gd.closest(".cell-output-display") || gd.parentElement; }}
+  function unscale() {{
+    scaleBox.classList.remove("is-scaled", "simplex-no-contours");
+    scaleBox.style.width = scaleBox.style.height = "";
+    scaleInner.style.width = scaleInner.style.transform = "";
+    scaleS = 1;
+  }}
+  // The scale that makes the figure and its fixed labels (the vertex labels reach
+  // past the plot) span the column, then the outer box's height to match. Every
+  // label is placed in layout px, so the scale changes nothing but the drawing.
+  function scaleFit() {{
+    if (!scaled) return;
+    // Measure with the transform off (no frame is drawn in between), so the extent
+    // is exact layout px: measured through the last scale, rounding noise would
+    // nudge the new scale, and Chrome can then draw the figure a pixel differently.
+    scaleInner.style.transform = "";
+    var ir = scaleInner.getBoundingClientRect(), lo = Infinity, hi = -Infinity;
+    var els = [figWrap, readout, sliderWrap], i;
+    for (i = 0; i < STATIC_LABELS.length; i++) els.push(STATIC_LABELS[i].el);
+    for (i = 0; i < sLabels.length; i++) if (sLabels[i].el) els.push(sLabels[i].el);
+    for (i = 0; i < els.length; i++) {{
+      var r = els[i].getBoundingClientRect();
+      if (!r.width) continue;
+      lo = Math.min(lo, r.left - ir.left); hi = Math.max(hi, r.right - ir.left);
+    }}
+    scaleS = colW / (hi - lo);
+    scaleBox.classList.toggle("simplex-no-contours", {_CONTOUR_FONT} * scaleS < {_MIN_CONTOUR_LABEL_PX});
+    scaleInner.style.transform = "translate(" + (-lo * scaleS) + "px, 0) scale(" + scaleS + ")";
+    scaleBox.style.height = scaleInner.offsetHeight * scaleS + "px";
+  }}
+  if (window.ResizeObserver) {{                        // the inner box grows (e.g. the slider's
+    new ResizeObserver(function () {{                  // top margin, once its label is typeset)
+      if (scaled) scaleBox.style.height = scaleInner.offsetHeight * scaleS + "px";
+    }}).observe(scaleInner);
+  }}
   function fit() {{
     if (!window.Plotly) {{ return setTimeout(fit, 30); }}
     var measured = (host() && host().clientWidth) || gd.offsetWidth;
     if (!measured) {{ return setTimeout(fit, 30); }}
-    var w = Math.round(measured * WFRAC);
+    scaled = measured < COL;
+    var w = Math.round((scaled ? COL : measured) * WFRAC);
     var h = Math.round((w - 2 * MARG) * {_ASPECT:.6f} + 2 * MARG);
     figWrap.style.width = w + "px";                    // centre the wrapper (CSS margin:auto)
+    if (scaled) {{
+      colW = host() ? host().getBoundingClientRect().width : measured;
+      scaleBox.classList.add("is-scaled");
+      scaleBox.style.width = colW + "px";              // the column, whatever the inner box's width
+      scaleInner.style.width = w + "px";               // centres the readout and slider on the figure
+    }} else {{
+      unscale();
+    }}
     Plotly.relayout(gd, {{
       width: w, height: h, autosize: false,
       "xaxis.range": [{_X_RANGE[0]}, {_X_RANGE[1]}],
@@ -1348,6 +1428,7 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
       gd.style.height = gd._fullLayout.height + "px";
       roPlace();                                       // reposition the readout for the new width
       positionStatics(); frameLabels(roFrame);         // and every overlay label
+      scaleFit();
     }});
     sliderWrap.style.width = Math.round((w - 2 * MARG) / {_X_SPAN:.4f}) + "px";
   }}
@@ -1355,9 +1436,9 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
   // ---- Audit (?simplex-audit): step all frames, measure every label + marker ----
   function runAudit() {{
     var ppu = ppuNow(); if (ppu <= 0) return setTimeout(runAudit, 100);
-    var fr = figWrap.getBoundingClientRect();
+    var fr = figWrap.getBoundingClientRect(), k = scaleNow();   // boxes in layout px
     function boxOf(el) {{ var b = el.getBoundingClientRect();
-      return {{l: b.left - fr.left, t: b.top - fr.top, r: b.right - fr.left, bo: b.bottom - fr.top}}; }}
+      return {{l: (b.left - fr.left) / k, t: (b.top - fr.top) / k, r: (b.right - fr.left) / k, bo: (b.bottom - fr.top) / k}}; }}
     // Collision box: the INK box for point labels (element box shrunk by the ink
     // insets), the element box for everything else (lines, vertices, contours).
     function cbox(L) {{ var b = boxOf(L.el); if (!L.spec.ink) return b;
@@ -1428,7 +1509,8 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     // Thumb label clearances (rev 13, item 2): across the full range, the min gap
     // from the "q" thumb label to the delta_2 vertex label (approached at far
     // right) and to the Q track label (approached at far left). Viewport coords --
-    // these live in different containers. Negative == overlap.
+    // these live in different containers -- divided back into layout px by the
+    // figure's scale. Negative == overlap.
     function gapRect(a, b) {{
       var dx = Math.max(b.left - a.right, a.left - b.right), dy = Math.max(b.top - a.bottom, a.top - b.bottom);
       if (dx < 0 && dy < 0) return Math.max(dx, dy);
@@ -1440,8 +1522,8 @@ def simplex_figure_html(fig: go.Figure, alt: str | None = None) -> str:
     var thumbToDelta2 = 1e9, thumbToQ = 1e9;
     if (Lqt.el && Lqt.w) for (var ti = 0; ti < N; ti++) {{
       placeThumb(ti); var tR = Lqt.el.getBoundingClientRect();
-      if (d2R) thumbToDelta2 = Math.min(thumbToDelta2, gapRect(tR, d2R));
-      if (qTR) thumbToQ = Math.min(thumbToQ, gapRect(tR, qTR));
+      if (d2R) thumbToDelta2 = Math.min(thumbToDelta2, gapRect(tR, d2R) / k);
+      if (qTR) thumbToQ = Math.min(thumbToQ, gapRect(tR, qTR) / k);
     }}
     frameLabels(roFrame);
     var out = {{width: Math.round(figWrap.clientWidth), hardCount: hard.length, hard: hard.slice(0, 40),
