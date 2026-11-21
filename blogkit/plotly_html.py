@@ -25,7 +25,10 @@ This module writes the figure's HTML itself:
   plot's edge at every width;
 * such a figure also has a compact layout, for when its plot is narrower than
   :data:`COMPACT_BELOW_PX` (a phone, or a tablet with a table of contents
-  beside the text): see "The compact layout" below.
+  beside the text): see "The compact layout" below;
+* on a touch screen every figure, at every width, has no drag-to-zoom and no
+  mode bar, so a swipe that starts on it scrolls the page: see "The touch
+  interaction" below.
 
 Otherwise the figure is serialized exactly as :func:`plotly.io.to_html` does it
 (``to_json_plotly`` on the figure dict; a div sized from ``layout.width`` and
@@ -65,10 +68,8 @@ whole array, since ``Plotly.relayout`` mis-indexes a mix of the two::
 trace's index in ``fig.data`` to style attributes applied with
 ``Plotly.restyle`` (both in one ``Plotly.update``). Use ``traces`` for
 attributes such as ``visible`` or ``textposition``, never for a trace's data:
-the data are the same in both layouts. Every compact layout also turns off
-drag-to-zoom (``dragmode: false`` and every axis ``fixedrange``) and hides the
-mode bar, so a swipe that starts on the figure scrolls the page; hover is
-left as it is.
+the data are the same in both layouts. A figure in its compact layout also
+takes the touch interaction (below), whatever the input.
 
 Leaving the compact layout puts back the desktop value of every attribute
 the override set (one it had not set is reset to plotly.js's default), so the
@@ -84,6 +85,26 @@ as its own window-resize handler does. Without that, the switch runs before
 the handler has noticed the new width, so the plot is drawn at its old width,
 and the axis ranges plotly.js widens to fit annotations at that width stay
 widened when the handler redraws it at the new one.
+
+The touch interaction
+---------------------
+Plotly's drag-to-zoom takes a drag that starts on the plot as a zoom (or a
+selection box), so on a touch screen a reader who swipes across a figure to
+scroll gets a zoom instead. The interaction is therefore chosen by the input,
+not the width: where the primary input is a touch screen
+(:data:`TOUCH_QUERY`: it cannot hover and its pointer is coarse), every
+figure, at every width, has no drag-to-zoom (``dragmode: false`` and every
+axis ``fixedrange``, which also rules out scroll zoom) and no mode bar, so a
+swipe that starts on it scrolls the page. Hover is left as it is: a tap
+shows the readout. A figure in its compact layout gets the same interaction
+with a mouse too, so on a narrow window nothing on the figure catches a
+drag. Otherwise (a mouse or trackpad as the primary input, and the desktop
+layout) the figure keeps Plotly's own interaction.
+
+The layout still follows the plot's width alone. Like the compact layout,
+the interaction is merged into the figure before its first draw, and is
+switched (and put back to the desktop values) when the input changes, or
+when the compact layout comes or goes.
 """
 
 from __future__ import annotations
@@ -143,11 +164,16 @@ def _loader_js() -> str:
 
 
 # --------------------------------------------------------------------------- #
-#  The compact layout
+#  The compact layout and the touch interaction
 # --------------------------------------------------------------------------- #
 #: A figure whose plot is narrower than this (px) takes its compact layout.
 #: Bootstrap's "sm" breakpoint: below it is a phone.
 COMPACT_BELOW_PX = 576
+
+#: Where this media query matches, the primary input is a touch screen (it
+#: cannot hover, and its pointer is coarse), and every figure takes the touch
+#: interaction (see the module docstring).
+TOUCH_QUERY = "(hover: none) and (pointer: coarse)"
 
 _PATH_TOKEN = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
 # An edit to one item of a layout array: "annotations[3]" or "shapes[0].x0".
@@ -204,24 +230,34 @@ def _whole_arrays(layout: dict, edits: dict) -> dict:
     return out
 
 
+def _touch_spec(layout: dict) -> dict:
+    """The touch interaction, and the desktop values it replaces.
+
+    ``on`` turns off drag-to-zoom: ``dragmode: false`` and every axis
+    ``fixedrange``; ``off`` holds the desktop value of each (None, which
+    plotly.js reads as "reset to default", where the desktop layout leaves it
+    unset). The mode bar is hidden by the div's class, not the layout.
+    """
+    axes = {k for k in layout if re.fullmatch(r"[xy]axis\d*", k)} | {"xaxis", "yaxis"}
+    on = {"dragmode": False}
+    on.update({f"{ax}.fixedrange": True for ax in sorted(axes)})
+    return {"query": TOUCH_QUERY, "on": on, "off": {k: _get_path(layout, k) for k in on}}
+
+
 def _compact_spec(fig_dict: dict, compact: dict | None) -> dict:
     """The compact override and the desktop values it replaces, for the script.
 
-    ``on`` is the compact layout: the interaction every compact figure gets,
-    then the figure's own ``compact["layout"]``; ``off`` holds the desktop
-    value of each attribute ``on`` sets (None, which plotly.js reads as
-    "reset to default", where the desktop layout leaves it unset). Trace
-    attributes are laid out as ``Plotly.update`` takes them: one list per
-    attribute, aligned with ``indices``.
+    ``on`` is the figure's own ``compact["layout"]`` and ``compact["traces"]``;
+    ``off`` holds the desktop value of each attribute ``on`` sets (None where
+    the desktop layout leaves it unset). Trace attributes are laid out as
+    ``Plotly.update`` takes them: one list per attribute, aligned with
+    ``indices``. (The interaction a compact figure takes is the touch spec's.)
     """
     compact = compact or {}
     layout = fig_dict.get("layout", {})
     data = fig_dict.get("data", [])
 
-    axes = {k for k in layout if re.fullmatch(r"[xy]axis\d*", k)} | {"xaxis", "yaxis"}
-    on_layout = {"dragmode": False}
-    on_layout.update({f"{ax}.fixedrange": True for ax in sorted(axes)})
-    on_layout.update(_whole_arrays(layout, compact.get("layout", {})))
+    on_layout = _whole_arrays(layout, compact.get("layout", {}))
     if "height" in on_layout:
         # Given a height, Plotly.relayout also writes the plot's current width
         # into the layout, which stops plotly.js sizing the plot to its div: a
@@ -246,20 +282,29 @@ def _compact_spec(fig_dict: dict, compact: dict | None) -> dict:
     }
 
 
-def _compact_js() -> str:
-    """``window.blogkitCompact``: the switching script, shared by every figure.
+def _figure_spec(fig_dict: dict, compact: dict | None, fit_column: bool) -> dict:
+    """What the switching script needs for one figure: the touch interaction,
+    and the compact layout (None for a figure not drawn at the column's width)."""
+    return {"touch": _touch_spec(fig_dict.get("layout", {})),
+            "compact": _compact_spec(fig_dict, compact) if fit_column else None}
 
-    ``narrow`` says whether a plot div should be compact (a div with no width
-    yet, such as one in a hidden tab, is not: it switches once it is shown);
-    ``mark`` sets the div's class (which hides the mode bar) and height;
-    ``prepare`` merges the compact override into the figure before its first
-    draw; ``watch`` switches the drawn figure whenever its width crosses the
-    threshold.
+
+def _switch_js() -> str:
+    """``window.blogkitFigures``: the switching script, shared by every figure.
+
+    ``state`` says which layout and which interaction a plot div should have:
+    ``compact`` while its width is under the threshold (a div with no width
+    yet, such as one in a hidden tab, is not compact: it switches once it is
+    shown), and ``touch`` (the touch interaction) on a touch screen or while
+    compact. ``mark`` sets the div's classes (``blogkit-touch`` hides the
+    mode bar) and its height; ``prepare`` merges both into the figure before
+    its first draw; ``watch`` switches the drawn figure whenever either
+    changes: its width crossing the threshold, or the input changing.
     """
     return (
-        "window.blogkitCompact = window.blogkitCompact || (function () {\n"
+        "window.blogkitFigures = window.blogkitFigures || (function () {\n"
         "  var css = document.createElement('style');\n"
-        "  css.textContent = '.plotly-graph-div.blogkit-compact .modebar-container { display: none !important; }';\n"
+        "  css.textContent = '.plotly-graph-div.blogkit-touch .modebar-container { display: none !important; }';\n"
         "  document.head.appendChild(css);\n"
         "  function setPath(obj, path, value) {\n"
         "    var t = [];\n"
@@ -270,38 +315,54 @@ def _compact_js() -> str:
         "    }\n"
         "    if (value === null) delete obj[t[t.length - 1]]; else obj[t[t.length - 1]] = value;\n"
         "  }\n"
-        "  function narrow(gd, spec) {\n"
-        "    var w = gd.getBoundingClientRect().width;\n"
-        "    return w > 0 && w < spec.below;\n"
+        "  function merge(obj, edits) {\n"
+        "    Object.keys(edits).forEach(function (k) { setPath(obj, k, edits[k]); });\n"
         "  }\n"
-        "  function mark(gd, spec, on) {\n"
-        "    var s = on ? spec.on : spec.off;\n"
-        "    gd.classList.toggle('blogkit-compact', on);\n"
-        "    if (s.height != null) gd.style.height = s.height + 'px';\n"
+        "  function state(gd, spec) {\n"
+        "    var c = spec.compact, w = gd.getBoundingClientRect().width;\n"
+        "    var compact = !!c && w > 0 && w < c.below;\n"
+        "    return {compact: compact, touch: compact || window.matchMedia(spec.touch.query).matches};\n"
+        "  }\n"
+        "  function mark(gd, spec, st) {\n"
+        "    gd.classList.toggle('blogkit-compact', st.compact);\n"
+        "    gd.classList.toggle('blogkit-touch', st.touch);\n"
+        "    var h = spec.compact && (st.compact ? spec.compact.on : spec.compact.off).height;\n"
+        "    if (h != null) gd.style.height = h + 'px';\n"
         "  }\n"
         "  return {\n"
-        "    narrow: narrow,\n"
+        "    state: state,\n"
         "    mark: mark,\n"
         "    prepare: function (gd, spec, data, layout) {\n"
-        "      var on = narrow(gd, spec);\n"
-        "      mark(gd, spec, on);\n"
-        "      if (on) {\n"
-        "        Object.keys(spec.on.layout).forEach(function (k) { setPath(layout, k, spec.on.layout[k]); });\n"
-        "        Object.keys(spec.on.traces).forEach(function (k) {\n"
-        "          spec.indices.forEach(function (i, j) { setPath(data[i], k, spec.on.traces[k][j]); });\n"
+        "      var st = state(gd, spec), c = spec.compact;\n"
+        "      mark(gd, spec, st);\n"
+        "      if (st.compact) {\n"
+        "        merge(layout, c.on.layout);\n"
+        "        Object.keys(c.on.traces).forEach(function (k) {\n"
+        "          c.indices.forEach(function (i, j) { setPath(data[i], k, c.on.traces[k][j]); });\n"
         "        });\n"
         "      }\n"
-        "      return on;\n"
+        "      if (st.touch) merge(layout, spec.touch.on);\n"
+        "      return st;\n"
         "    },\n"
-        "    watch: function (gd, spec, on) {\n"
-        "      new ResizeObserver(function () {\n"
-        "        var want = narrow(gd, spec);\n"
-        "        if (want === on) return;\n"
-        "        on = want;\n"
-        "        var s = on ? spec.on : spec.off;\n"
-        "        mark(gd, spec, on);\n"
-        "        Plotly.update(gd, s.traces, Object.assign({autosize: true}, s.layout), spec.indices);\n"
-        "      }).observe(gd);\n"
+        "    watch: function (gd, spec, st) {\n"
+        "      function update() {\n"
+        "        var want = state(gd, spec);\n"
+        "        if (want.compact === st.compact && want.touch === st.touch) return;\n"
+        "        var layout = {}, traces = {}, indices = [];\n"
+        "        if (want.compact !== st.compact) {\n"
+        "          var s = want.compact ? spec.compact.on : spec.compact.off;\n"
+        "          layout = Object.assign({autosize: true}, s.layout);\n"
+        "          traces = s.traces;\n"
+        "          indices = spec.compact.indices;\n"
+        "        }\n"
+        "        if (want.touch !== st.touch) Object.assign(layout, want.touch ? spec.touch.on : spec.touch.off);\n"
+        "        st = want;\n"
+        "        mark(gd, spec, st);\n"
+        "        Plotly.update(gd, traces, layout, indices);\n"
+        "      }\n"
+        "      if (spec.compact) new ResizeObserver(update).observe(gd);\n"
+        "      var mq = window.matchMedia(spec.touch.query);\n"
+        "      if (mq.addEventListener) mq.addEventListener('change', update);\n"
         "    }\n"
         "  };\n"
         "})();\n"
@@ -355,7 +416,8 @@ def figure_html(
         The figure's compact override (see "The compact layout" in the module
         docstring): ``{"layout": {...}, "traces": {index: {...}}}``. Applies
         only to a figure drawn at the column's width; one with no override of
-        its own still gets the compact interaction.
+        its own still switches to the touch interaction while compact. Every
+        figure takes the touch interaction on a touch screen.
     """
     fig_dict = fig.to_dict()
     layout = fig_dict.get("layout", {})
@@ -370,9 +432,9 @@ def figure_html(
     cfg = {"responsive": True}
     cfg.update(config or {})
     jconfig = json.dumps(cfg)
-    jspec = to_json_plotly(_compact_spec(fig_dict, compact)) if max_width else None
+    jspec = to_json_plotly(_figure_spec(fig_dict, compact, bool(max_width)))
     if div_id is None:
-        h = hashlib.sha1((jdata + jlayout + (jframes or "") + jconfig + (jspec or "")).encode("utf-8")).hexdigest()
+        h = hashlib.sha1((jdata + jlayout + (jframes or "") + jconfig + jspec).encode("utf-8")).hexdigest()
         div_id = f"plotly-{h[:12]}"
     if max_width:
         width = _css_size(design_width, "100%")
@@ -386,42 +448,30 @@ def figure_html(
     if post_script:
         then += f".then(function (gd) {{\n{post_script}\n  return gd;\n}})"
     jid = json.dumps(div_id)
-    if jspec:
-        # The div's height is set as soon as it is parsed, so the page reserves
-        # the right space before plotly.js arrives; the layout is chosen again
-        # at the first draw, in case the width has changed since.
-        script = (
-            "(function () {\n"
-            + _loader_js()
-            + _compact_js()
-            + "window.PLOTLYENV = window.PLOTLYENV || {};\n"
-            f"var spec = {jspec};\n"
-            f"var div = document.getElementById({jid});\n"
-            "if (div) window.blogkitCompact.mark(div, spec, window.blogkitCompact.narrow(div, spec));\n"
-            "window.blogkitPlotly.then(function (Plotly) {\n"
-            f"  var gd = document.getElementById({jid});\n"
-            "  if (!gd) return;\n"
-            f"  var data = {jdata};\n"
-            f"  var layout = {jlayout};\n"
-            "  var compact = window.blogkitCompact.prepare(gd, spec, data, layout);\n"
-            f"  return Plotly.newPlot(gd, data, layout, {jconfig})"
-            ".then(function (gd) { window.blogkitCompact.watch(gd, spec, compact); return gd; })"
-            f"{then};\n"
-            "});\n"
-            "})();"
-        )
-    else:
-        script = (
-            "(function () {\n"
-            + _loader_js()
-            + "window.PLOTLYENV = window.PLOTLYENV || {};\n"
-            "window.blogkitPlotly.then(function (Plotly) {\n"
-            f"  var gd = document.getElementById({jid});\n"
-            "  if (!gd) return;\n"
-            f"  return Plotly.newPlot(gd, {jdata}, {jlayout}, {jconfig}){then};\n"
-            "});\n"
-            "})();"
-        )
+    # The div's classes and height are set as soon as it is parsed, so the
+    # page reserves the right space before plotly.js arrives; the layout and
+    # interaction are chosen again at the first draw, in case the width has
+    # changed since.
+    script = (
+        "(function () {\n"
+        + _loader_js()
+        + _switch_js()
+        + "window.PLOTLYENV = window.PLOTLYENV || {};\n"
+        f"var spec = {jspec};\n"
+        f"var div = document.getElementById({jid});\n"
+        "if (div) window.blogkitFigures.mark(div, spec, window.blogkitFigures.state(div, spec));\n"
+        "window.blogkitPlotly.then(function (Plotly) {\n"
+        f"  var gd = document.getElementById({jid});\n"
+        "  if (!gd) return;\n"
+        f"  var data = {jdata};\n"
+        f"  var layout = {jlayout};\n"
+        "  var st = window.blogkitFigures.prepare(gd, spec, data, layout);\n"
+        f"  return Plotly.newPlot(gd, data, layout, {jconfig})"
+        ".then(function (gd) { window.blogkitFigures.watch(gd, spec, st); return gd; })"
+        f"{then};\n"
+        "});\n"
+        "})();"
+    )
     attrs = f' role="img" aria-label="{html.escape(alt, quote=True)}"' if alt else ""
     return (f"<div{attrs}>\n"
             f'<div id="{div_id}" class="plotly-graph-div" style="height:{height}; width:{width};{max_width}"></div>\n'
