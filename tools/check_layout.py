@@ -45,10 +45,11 @@ git-ignored):
   tables).
 
 The resize check loads each page at the widest width, resizes the viewport
-down through the other widths and back up, and compares every figure's plot and
-caption edges and height at each step with a fresh load at that width; back at
-the widest width it also pixel-diffs each plot against the fresh load's crop.
-Skip it with ``--no-resize-check``.
+down through the other widths and back up, and compares every figure's plot
+(and, for a Plotly figure, the SVG drawn in it) and caption edges and height at
+each step with a fresh load at that width; back at the widest width it also
+pixel-diffs each plot against the fresh load's crop. Skip it with
+``--no-resize-check``.
 
 ``--diff-against DIR`` compares every ``plots/`` crop with the one of the same
 name in an earlier run and reports the number of differing pixels; nonzero
@@ -218,6 +219,8 @@ MEASURE_JS = """
     c.setAttribute('data-layout-fig', fid);
     media.forEach(m => m.setAttribute('data-layout-media', fid));
     const plot = union(media.map(box));
+    // What plotly.js drew (its SVG), which need not fill the div it sits in.
+    const drawn = kind === 'plotly' ? union(media.map(m => m.querySelector('.main-svg')).filter(Boolean).map(box)) : null;
     const caption = cap ? box(cap) : null;
     // Extent of the figure's HTML (not SVG) content, for framing screenshots:
     // overlay labels can reach past the plot, while SVG paths can run far
@@ -226,7 +229,7 @@ MEASURE_JS = """
     const ink = union(html.map(box));
     if (!c.id) ++cellN;
     return {id: fid, kind, n_media: media.length,
-            plot, caption, ink,
+            plot, drawn, caption, ink,
             plot_outside: outside(plot), caption_outside: outside(caption)};
   });
 
@@ -435,7 +438,7 @@ def measure(browser, base_url: str, name: str, path: str, width: int, mode: str,
 def _edges(f: dict) -> dict:
     return {k: (None if f[k] is None else (round(f[k]["left"], 1), round(f[k]["right"], 1),
                                            round(f[k]["bottom"] - f[k]["top"], 1)))
-            for k in ("plot", "caption")}
+            for k in ("plot", "drawn", "caption")}
 
 
 def resize_check(browser, base_url: str, name: str, path: str, loads: list[Load],
@@ -445,10 +448,12 @@ def resize_check(browser, base_url: str, name: str, path: str, loads: list[Load]
     Loads the page (light mode) at the widest width, steps the viewport down
     through every other width and back up again, and at each step compares
     every figure's plot and caption (left and right edges, and height) with a
-    fresh load at that width. A figure that does not come back to its fresh
-    layout -- a width that ratchets down, say -- is a failure. Back at the
-    widest width, each plot is cropped again (``plots-resized/``) and
-    pixel-diffed against the fresh load's crop. Returns (log lines, failures).
+    fresh load at that width; for a Plotly figure, also the SVG plotly.js drew,
+    which can come out a different size from its div. A figure that does not
+    come back to its fresh layout -- a width that ratchets down, say -- is a
+    failure. Back at the widest width, each plot is cropped again
+    (``plots-resized/``) and pixel-diffed against the fresh load's crop.
+    Returns (log lines, failures).
     """
     fresh = {l.width: l.data for l in loads if l.page == name and l.mode == loads[0].mode}
     ws = sorted(fresh, reverse=True)
@@ -480,7 +485,7 @@ def resize_check(browser, base_url: str, name: str, path: str, loads: list[Load]
                 r = ref.get(f["id"])
                 if r is None:
                     continue
-                for k in ("plot", "caption"):
+                for k in ("plot", "drawn", "caption"):
                     if e[k] and r[k] and any(abs(a - b) > TOLERANCE_PX for a, b in zip(e[k], r[k])):
                         bad.append(f"{f['id']} {k} {e[k][0]}–{e[k][1]} (h {e[k][2]}) "
                                    f"vs fresh {r[k][0]}–{r[k][1]} (h {r[k][2]})")

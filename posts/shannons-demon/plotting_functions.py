@@ -45,7 +45,7 @@ _LABEL_SCRIM = "rgba(255, 255, 255, 0.72)"
 # --------------------------------------------------------------------------- #
 #  How the figures reach the page
 # --------------------------------------------------------------------------- #
-def _with_alt(fig: go.Figure, alt: str | None) -> go.Figure:
+def _with_alt(fig: go.Figure, alt: str | None, compact: dict | None = None) -> go.Figure:
     """``fig`` itself (not a copy), written to the page by ``blogkit.plotly_html``.
 
     That writes the figure's HTML itself rather than through Plotly's notebook
@@ -53,8 +53,57 @@ def _with_alt(fig: go.Figure, alt: str | None) -> go.Figure:
     (the cell's ``fig-alt``) becomes ``role="img"`` plus an ``aria-label``. Each
     figure's ``layout.width`` is its design width: it is drawn at that width or
     the text column's, whichever is narrower, at its fixed height.
+
+    ``compact`` is the figure's compact override, the layout it takes while its
+    plot is narrower than 576 px (a phone; see ``blogkit.plotly_html``). Each
+    builder writes its own next to the desktop layout it changes.
     """
-    return page_figure(fig, alt=alt)
+    return page_figure(fig, alt=alt, compact=compact)
+
+
+# --------------------------------------------------------------------------- #
+#  The compact layout (phones)
+# --------------------------------------------------------------------------- #
+# In the compact layout a plot is 300-575 px wide instead of 820-841, so labels
+# that sat in the open at desktop width run off the right edge or into each
+# other. Labels are placed for the narrowest case, a 360 px phone (a plot about
+# 210 px wide between its axes), and checked at 390 and 820 px too.
+#
+# The right margin only has to clear half of the last x tick label ("500", "1"):
+# the desktop's 40 px was room for labels that now sit inside the plot.
+_COMPACT_MARGIN_R = 18
+
+
+def _compact_curve_label(
+    x, y, text: str, color: str, *, at: float, reach: float, side: str,
+    xref: str = "x", yref: str = "y", log: bool = False, size: int = 12,
+) -> dict:
+    """A direct label for a curve, as an annotation for the compact layout.
+
+    The label's near end sits at ``x = at`` (right-anchored if ``reach`` is to
+    the left of ``at``, left-anchored if to the right), and its body runs
+    toward ``reach``: the farthest the text can reach along the axis at the
+    narrowest compact width. It sits ``side`` ("above" or "below") the curve's
+    highest or lowest point over that stretch, a few pixels off, so the curve
+    never runs through the text whatever the width.
+
+    Placed this way round -- right-anchored above a rising curve or below a
+    falling one, left-anchored the other way about -- the curve moves away
+    from the label along its whole length. ``log``: the y-axis is logarithmic,
+    where an annotation's y is given as log10 of the value.
+    """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    lo, hi = min(at, reach), max(at, reach)
+    span = y[(x >= lo) & (x <= hi)]
+    y_edge = float(span.max() if side == "above" else span.min())
+    return dict(
+        xref=xref, yref=yref, x=at, y=float(np.log10(y_edge)) if log else y_edge,
+        text=text, showarrow=False, font=dict(size=size, color=color),
+        xanchor="right" if reach < at else "left",
+        yanchor="bottom" if side == "above" else "top",
+        yshift=3 if side == "above" else -3,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -265,13 +314,23 @@ def create_wealth_plot(
     # mean is the steeper climb -- so by the end of the words its own line has
     # risen to meet them, while the flatter median stays put. The extra 0.03 of
     # the decade-range is worth about one letter-height at 13px on this panel.
+    #
+    # Compact layout: at phone width those labels would run off the right edge,
+    # so they are hidden and drawn again as annotations that end at the
+    # right-hand end of their curves. The mean is the upper curve in both
+    # figures, so its label goes above it; the median's goes above it where it
+    # rises (the optimal CRP, well below the mean) and below it where it falls
+    # (the risky asset, where above would be into the curve).
     i_label = int(round(0.8 * (len(summary) - 1)))
     x_label = summary.index[i_label]
     span = np.log10(summary["CI Upper"].max()) - np.log10(summary["CI Lower"].min())
+    i_reach = int(round(0.45 * (len(summary) - 1)))   # how far back a label reaches at 360 px
+    label_traces, compact_labels = [], []
     for label, col_name, color, clearance in (
             ("empirical median", "Median", HERO, 0.08),
             ("empirical mean", "Mean", SECONDARY, 0.11)):
         lift = 10.0 ** (clearance * span)
+        label_traces.append(len(fig.data))
         fig.add_trace(
             go.Scatter(x=[x_label], y=[summary[col_name].iloc[i_label] * lift],
                        mode="text", text=[f"<b>{label}</b>"], textposition="top right",
@@ -279,6 +338,11 @@ def create_wealth_plot(
                        cliponaxis=False, hoverinfo="skip", showlegend=False),
             row=1, col=1,
         )
+        rising = summary[col_name].iloc[-1] > summary[col_name].iloc[i_reach]
+        compact_labels.append(_compact_curve_label(
+            summary.index, summary[col_name], f"<b>{label}</b>", color,
+            at=summary.index[-1], reach=summary.index[i_reach],
+            side="above" if col_name == "Mean" or rising else "below", log=True, size=13))
     # Dashed guide at break-even (wealth = 1), no label: the line plus the 10^0
     # tick already say "break-even", so the text was redundant ink.
     fig.add_hline(y=1.0, line_width=1.2, line_dash="dash",
@@ -309,7 +373,16 @@ def create_wealth_plot(
         showlegend=False,
     )
     _apply_spikes(fig)
-    return _with_alt(fig, alt)
+    # Compact layout: shorter, and the labels drawn as annotations (see above).
+    # Without a subplot heading the top margin only has to clear the top tick
+    # label.
+    compact = {
+        "layout": {"height": 480, "margin.r": _COMPACT_MARGIN_R, "annotations": compact_labels},
+        "traces": {i: {"visible": False} for i in label_traces},
+    }
+    if not title:
+        compact["layout"]["margin.t"] = 20
+    return _with_alt(fig, alt, compact)
 
 
 # --------------------------------------------------------------------------- #
@@ -484,7 +557,13 @@ def create_growth_rate_convergence_plot(
     # never lands in the gap between the two lines -- a gap only 0.018 bits wide
     # in the lower panel. The label rides over the spaghetti at the right-hand
     # end, so it needs a scrim to stay legible against the cloud.
+    #
+    # Compact layout: the same labels, shortened to fit a phone-width panel.
+    # The units are in the figure title, and the caption calls the line the
+    # asymptote.
+    compact_layout = {}
     for row, asymptote in ((1, asymptote_risky), (2, asymptote_optimal)):
+        compact_layout[f"annotations[{len(fig.layout.annotations)}].text"] = f"asymptote = {asymptote:.3f}"
         fig.add_annotation(
             xref=f"x{row if row > 1 else ''} domain", x=0.99,
             yref=f"y{row if row > 1 else ''}", y=asymptote,
@@ -532,7 +611,10 @@ def create_growth_rate_convergence_plot(
     # nowhere near -- appearing precisely when there is no readout to anchor it.
     # It also does not survive the script's Fx.hover echo, so it goes missing in
     # the one case it could have helped. Wrong in both directions; dropped.
-    return _with_alt(fig, alt)
+    #
+    # Compact layout: shorter, with the asymptote labels shortened (see above).
+    compact_layout.update({"height": 600, "margin.t": 54, "margin.r": _COMPACT_MARGIN_R})
+    return _with_alt(fig, alt, {"layout": compact_layout})
 
 
 # --------------------------------------------------------------------------- #
@@ -586,18 +668,34 @@ def create_no_loss_probability_plot(
     # through the text on the log axis. Not bold: unlike the wealth chart, whose
     # labels sit over the spaghetti cloud, these sit on clean white, so the
     # weight would be gratuitous.
+    #
+    # Compact layout: from 80% of the horizon they would run off the right edge
+    # of a phone-width plot, so they are hidden and drawn again as annotations.
+    # Both curves fall, and at the same rate, so a label between them would run
+    # into the upper one within its own width. So each goes on its curve's
+    # outer side: the bound's runs rightward above it from half way, as its
+    # curve drops away; the exact probability's ends at the right-hand end,
+    # below its curve, which rises away to the left.
     i_label = int(round(0.8 * (len(df) - 1)))
     x_label = n[i_label]
     span = np.log10(df["Chernoff bound"].max()) - np.log10(df["Exact"].min())
     lift = 10.0 ** (0.08 * span)
+    label_traces, compact_labels = [], []
     for label, col_name, color in (("exact probability", "Exact", HERO),
                                    ("Chernoff bound", "Chernoff bound", SECONDARY)):
+        label_traces.append(len(fig.data))
         fig.add_trace(
             go.Scatter(x=[x_label], y=[df[col_name].iloc[i_label] * lift],
                        mode="text", text=[label], textposition="top right",
                        textfont=dict(size=13, color=color),
                        cliponaxis=False, hoverinfo="skip", showlegend=False),
         )
+        if col_name == "Exact":
+            where = dict(at=n[-1], reach=n[len(n) // 2], side="below")
+        else:
+            where = dict(at=n[len(n) // 2], reach=n[-1], side="above")
+        compact_labels.append(_compact_curve_label(n, df[col_name], label, color,
+                                                   log=True, size=13, **where))
 
     # dtick=1 pins one label per decade. Left to itself, Plotly adds intermediate
     # ticks at 2x10^n and 5x10^n on a short (~3-decade) log axis, and
@@ -614,7 +712,14 @@ def create_no_loss_probability_plot(
         showlegend=False,
     )
     _apply_spikes(fig)
-    return _with_alt(fig, alt)
+    # Compact layout: shorter, and the labels drawn as annotations (see above).
+    compact = {
+        "layout": {"height": 400, "margin.r": _COMPACT_MARGIN_R, "annotations": compact_labels},
+        "traces": {i: {"visible": False} for i in label_traces},
+    }
+    if not title:
+        compact["layout"]["margin.t"] = 20
+    return _with_alt(fig, alt, compact)
 
 
 # --------------------------------------------------------------------------- #
@@ -703,6 +808,13 @@ def create_arithmetic_vs_geometric_plot(
     at_label = int(np.argmin(np.abs(f - 0.82)))
     label_x = f[at_label]
 
+    # Compact layout (a phone): the attributes it changes, filled in as each
+    # label is placed. Every label is placed for the narrowest plot, about
+    # 210 px between the axes. Callouts are placed in data units (axref/ayref
+    # set to the axis), so each keeps its place among the curves at every
+    # compact width.
+    compact = {}
+
     # No subplot titles: each panel's y-axis already names it ("Gross return per
     # period", "Growth rate (bits / period)"), so headings would just repeat it.
     # The "bottom is the log of the top" note lives in the figure caption instead.
@@ -725,8 +837,17 @@ def create_arithmetic_vs_geometric_plot(
     )
     # Both curves climb/fall left-to-right through their tags, closing on the
     # trailing edge, so nudge each a character left to keep clear of the line.
+    #
+    # Compact: centred tags would close on their curves at this width, so each
+    # ends near the right-hand end of its curve instead, above the rising lime
+    # line and below the falling periwinkle one (see _compact_curve_label).
+    i = len(fig.layout.annotations)
     _direct_label(fig, label_x, arithmetic[at_label], "arithmetic mean", SECONDARY, 1, 1, above=True, xshift=-7)
     _direct_label(fig, label_x, geometric[at_label], "geometric mean", HERO, 1, 1, above=False, xshift=-7)
+    compact[f"annotations[{i}]"] = _compact_curve_label(
+        f, arithmetic, "arithmetic mean", SECONDARY, at=0.95, reach=0.55, side="above")
+    compact[f"annotations[{i + 1}]"] = _compact_curve_label(
+        f, geometric, "geometric mean", HERO, at=0.92, reach=0.52, side="below")
 
     fig.add_hline(y=1.0, line_width=1.5, line_dash="dash", line_color="black",
                   row=1, col=1)
@@ -737,6 +858,11 @@ def create_arithmetic_vs_geometric_plot(
         row=1, col=1,
     )
     # label sent DOWN-right into open space below the curves (clear of the lime line)
+    #
+    # Compact: on two lines, sent down-LEFT instead, into the open space under
+    # both curves left of f* (down-right is where "geometric mean" now sits):
+    # centred half way to f*, below where both curves start.
+    i = len(fig.layout.annotations)
     fig.add_annotation(
         x=f_star, y=geometric_star,
         text=f"f* = {f_star:.3f},  geo = {geometric_star:.3f}",
@@ -744,6 +870,11 @@ def create_arithmetic_vs_geometric_plot(
         font=dict(size=12), bgcolor=_CALLOUT_BG,
         bordercolor=_CALLOUT_BORDER, borderwidth=1, row=1, col=1,
     )
+    compact.update({
+        f"annotations[{i}].text": f"f* = {f_star:.3f}<br>geo = {geometric_star:.3f}",
+        f"annotations[{i}].axref": "x", f"annotations[{i}].ax": 0.5 * f_star,
+        f"annotations[{i}].ayref": "y", f"annotations[{i}].ay": float(geometric[0]) - 0.04,
+    })
 
     # ---- Bottom: log space. Opaque fill first (beneath), crisp lines on top ----
     fig.add_trace(  # invisible upper boundary for the fill
@@ -768,11 +899,20 @@ def create_arithmetic_vs_geometric_plot(
                    hovertemplate="<b>growth rate:</b> %{y:.3f}<extra></extra>"),
         row=2, col=1,
     )
-    _direct_label(fig, label_x, ceiling_bits[at_label], "ceiling", SECONDARY, 2, 1, above=True)
     # The growth curve steepens as it falls, so it closes on the tag's trailing
     # edge; nudge the tag a character to the left to keep clear of the line.
+    #
+    # Compact: as in the top panel, each tag ends near the right-hand end of its
+    # curve; "growth rate" at the very end, below the curve's lowest point, so
+    # it stays clear of the right-hand "growth = 0" callout.
+    i = len(fig.layout.annotations)
+    _direct_label(fig, label_x, ceiling_bits[at_label], "ceiling", SECONDARY, 2, 1, above=True)
     _direct_label(fig, label_x, growth_bits[at_label], "growth rate", HERO, 2, 1,
                   above=False, xshift=-7)
+    compact[f"annotations[{i}]"] = _compact_curve_label(
+        f, ceiling_bits, "ceiling", SECONDARY, at=0.92, reach=0.75, side="above", xref="x2", yref="y2")
+    compact[f"annotations[{i + 1}]"] = _compact_curve_label(
+        f, growth_bits, "growth rate", HERO, at=1.0, reach=0.72, side="below", xref="x2", yref="y2")
 
     fig.add_hline(y=0.0, line_width=1.5, line_dash="dash", line_color="black",
                   row=2, col=1)
@@ -783,6 +923,12 @@ def create_arithmetic_vs_geometric_plot(
         row=2, col=1,
     )
     # label sent UP-left into open space ABOVE break-even (clear of the "growth = 0" tags below)
+    #
+    # Compact: the open space up-left is a narrow wedge between the axis and the
+    # ceiling line, so the callout goes on two lines, and without "at f* = ...",
+    # which the top panel's callout already gives (same f*, same guide line).
+    # Centred between the axis and the f* guide, which it clears at 360 px.
+    i = len(fig.layout.annotations)
     fig.add_annotation(
         x=f_star, y=growth_star_bits,
         text=f"max growth = {growth_star_bits:.3f} bits at f* = {f_star:.3f}",
@@ -790,6 +936,11 @@ def create_arithmetic_vs_geometric_plot(
         font=dict(size=12), bgcolor=_CALLOUT_BG,
         bordercolor=_CALLOUT_BORDER, borderwidth=1, row=2, col=1,
     )
+    compact.update({
+        f"annotations[{i}].text": f"max growth<br>= {growth_star_bits:.3f} bits",
+        f"annotations[{i}].axref": "x2", f"annotations[{i}].ax": 0.45 * f_star,
+        f"annotations[{i}].ayref": "y2", f"annotations[{i}].ay": 0.65 * float(ceiling_bits.max()),
+    })
     label_i = int(np.argmin(np.abs(f - 0.8)))   # "drag" tag out near f=0.8, in the bulk of the band
     fig.add_annotation(
         x=f[label_i], y=0.5 * ceiling_bits[label_i],   # halfway between break-even (0) and the ceiling
@@ -797,6 +948,10 @@ def create_arithmetic_vs_geometric_plot(
         row=2, col=1,
     )
     # Interior growth-rate zeros: labelled BELOW the break-even line.
+    #
+    # Compact: on one line the two callouts overlap (the zeros are about 90 px
+    # apart), so each goes on two lines, lower down: below where the growth
+    # curve starts, so the left one clears the curve's dip at small f.
     for fz in zeros:
         fig.add_trace(
             go.Scatter(x=[fz], y=[0.0], mode="markers",
@@ -804,11 +959,17 @@ def create_arithmetic_vs_geometric_plot(
                        hoverinfo="skip", showlegend=False, zorder=5),
             row=2, col=1,
         )
+        i = len(fig.layout.annotations)
         fig.add_annotation(x=fz, y=0.0, text=f"growth = 0 at f = {fz:.3f}",
                            showarrow=True, arrowhead=3, standoff=_ARROW_STANDOFF,
                            ax=0, ay=28, font=dict(size=11),
                            bgcolor=_CALLOUT_BG, bordercolor=_CALLOUT_BORDER,
                            borderwidth=1, row=2, col=1)
+        compact.update({
+            f"annotations[{i}].text": f"growth = 0<br>at f = {fz:.3f}",
+            f"annotations[{i}].axref": "x2", f"annotations[{i}].ax": fz,
+            f"annotations[{i}].ayref": "y2", f"annotations[{i}].ay": float(growth_bits[0]) - 0.055,
+        })
 
     # f* guide BELOW the traces so the stars always sit on top of it.
     fig.add_vline(x=f_star, line_width=1.0, line_dash="dash", line_color=_GUIDE,
@@ -827,4 +988,10 @@ def create_arithmetic_vs_geometric_plot(
         width=820, height=700, margin=dict(t=40, r=40),
         showlegend=False,
     )
-    return _with_alt(fig, alt)
+    # Compact layout: a little shorter, and the labels placed above. The x-axis
+    # is fixed to f = 0..1 with a little room on the left: autorange would
+    # start it at exactly 0 now that no callout reaches past the curves, and
+    # the "0" tick label would run into the lower panel's bottom y tick label.
+    compact.update({"height": 620, "margin.r": _COMPACT_MARGIN_R,
+                    "xaxis2.autorange": False, "xaxis2.range": [-0.05, 1.0]})
+    return _with_alt(fig, alt, {"layout": compact})
