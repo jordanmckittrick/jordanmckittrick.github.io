@@ -5,6 +5,49 @@
   margin: 1.1em 0;
 }
 
+/* Displayed math wider than the column (on a phone, a long equation or a
+   numbered one) scrolls sideways inside the equation instead of widening the
+   page. The scroll box is the <mjx-math> inside MathJax's container.
+   - A scroll box clips anything that reaches past its padding box, and glyphs
+     do: bracket tips by about half a pixel above and below, an italic
+     letter's overhang at the sides. So the box gets 0.25em of padding all
+     round, taken back by margins of -0.25em: the equation stays exactly
+     where it was, and nothing is clipped.
+   - max-width lets the box run 0.25em past each edge of the column, so a
+     scrolled equation's first glyph lines up with the text.
+   - !important: MathJax writes margin-left/right: 0 inline on display math.
+     .MJX-TEX outranks MathJax's own stylesheet, which is added after this one
+     and sets mjx-math's padding to 0.
+   - overflow-y: hidden, so there is never a vertical scrollbar. */
+mjx-container[jax="CHTML"][display="true"] > mjx-math.MJX-TEX {
+  box-sizing: border-box;
+  max-width: calc(100% + 0.5em);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25em;
+  margin: -0.25em !important;
+}
+/* Numbered equations (MathJax's width="full" layout, tag at the right).
+   MathJax gives the container an inline min-width as wide as the equation and
+   its tag, which would widen the page: let it shrink to the column. The math
+   inside is 100% wide by MathJax's rule; add the padding back, so the
+   equation and its tag keep the column's full width. */
+mjx-container[jax="CHTML"][display="true"][width="full"] {
+  min-width: 0 !important;
+}
+mjx-container[jax="CHTML"][display="true"][width="full"] > mjx-math.MJX-TEX {
+  width: calc(100% + 0.5em);
+}
+
+/* Long URLs (in the references, say) and other unbreakable strings wrap at
+   the column's edge rather than widening the page. break-word rather than
+   anywhere: it breaks only a word that would otherwise overflow its line, and
+   leaves min-content widths (tables, flex items) alone, so nothing that
+   already fits changes. */
+main {
+  overflow-wrap: break-word;
+}
+
 /* Keep listing thumbnails tidy. */
 .quarto-grid-item img.thumbnail-image {
   object-fit: cover;
@@ -101,16 +144,21 @@ figure .quarto-layout-row figure figcaption {
   .quarto-figure img.figure-img { width: 100% !important; }
 }
 
-/* Plotly writes an explicit pixel width onto its own div (e.g. 841px), narrower
-   than the 920px body. Left to itself the <figure> still fills the body, so the
-   caption wraps at 920px and spills past the plot's right edge. A single-column
-   grid sized to min-content takes its width from the plot's fixed width -- the
-   caption's min-content is just its longest word -- so the caption now wraps at
-   exactly the plot's edge. Scoped to code-cell output: the paintings are plain
+/* A code-cell figure is as wide as its plot, and its caption wraps at the
+   plot's edge. Plotly divs carry an explicit pixel width (e.g. 841px), narrower
+   than the 920px body; left to itself the <figure> would still fill the body,
+   so the caption would wrap at 920px and spill past the plot's right edge. A
+   single-column grid sized to min-content takes its width from the plot's
+   width -- the caption's min-content is just its longest word -- so the caption
+   wraps at exactly the plot's edge. The track's minimum is 0, not min-content,
+   so in a column narrower than the plot the track shrinks to the column rather
+   than overflowing it on both sides; a plot that may shrink (blogkit's
+   figures: width = design width, max-width: 100%) then fills the column, and
+   the caption with it. Scoped to code-cell output: the paintings are plain
    markdown images and already size correctly. */
 .cell-output-display > figure {
   display: grid;
-  grid-template-columns: min-content;
+  grid-template-columns: minmax(0, min-content);
   justify-content: center;
 }
 
